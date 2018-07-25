@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta content="text/html; charset=UTF-8" http-equiv="content-type" />
+<title>OW random tournament</title>
+<meta name="description" content="Overwatch random tournament">
+<link rel="stylesheet" href="style.css">
+
+<script src="ow_defines.js"></script>
+<script src="common.js"></script>
+<script src="owapi.js"></script>
+<script src="stats_updater.js"></script>
+<script src="import_export.js"></script>
+<script src="random_team_builder.js"></script>
+<script src="ui.js"></script>
+
+</head>
+
+<script language="JavaScript" type="text/javascript">
+//var selected_player_team1 = "";
+
+//var team1 = [];
+var lobby = [];
+
+var teams = [];
+
+var player_being_added;
+var current_player_edit = "";
+
+var team_size = 6;
+var region = "eu";
+
+var lobby_filter_timer = 0;
+
+
+
+// player stats fetcher
+var players_for_update = [];
+var total_players_for_update = 0;
+var min_api_request_interval = 6000; //milliseconds
+
+var stat_update_fails = 0;
+var silent_update = false; // show message when update completed successfully
+var silent_update_errors = false; // show message when update failed
+
+var stats_updater_ready = true; // set to false when update is done, but still need to wait for request interval before next update
+var stats_update_max_retry = 2;
+var stats_update_current_retry = 2;
+var stats_update_dbg = false;
+
+
+// init updater
+StatsUpdater.onPlayerUpdated = on_player_stats_updated;
+StatsUpdater.onComplete = on_stats_update_complete;
+StatsUpdater.onStart = on_stats_update_start;
+StatsUpdater.onProgressChange = on_stats_update_progress;
+StatsUpdater.onError = on_stats_update_error;
+
+</script>
+
+<body>
+
+<div class="page-title">Overwatch random tournament</div>
+<div class="copyright">2018 by <a href="https://github.com/adminimusRU">l33t m3at</a> | Stats data by <a href="https://github.com/SunDwarf/OWAPI">OWAPI</a></div>
+<br/>
+
+<br/>
+<span style="color: green; text-shadow: 0 0 3px green; font: bold 22pt sans-serif; vertical-align: sub;">+</span>
+<input id="new_player_id" name="new_player_id" type="text" size=35 placeholder="BattleTag" value="" onkeyup="new_player_keyup(event);"/> 
+<button onclick="add_player_click();" id="add_btn" >Add player</button>
+<br/>
+
+<div class="table workspace">
+	<div class="row">
+		<div class="cell workspace-cell">
+			<!-- lobby -->
+			
+			<div>
+			<span class="team-title">Lobby</span>
+			</div>
+			
+			<div class="team-toolbar">
+			<input title="Clear lobby" type="button" class="team_btn" onclick="clear_lobby_click();" value=" X "/>
+			<input title="Import lobby" id="import_lobby_btn" type="button" class="team_btn" onclick="import_lobby_dlg();" value="Import"/>
+			<input title="Export lobby" type="button" class="team_btn" onclick="export_lobby();" value="Export"/>
+			<input title="Sort lobby by SR" type="button" class="team_btn" onclick="sort_team(lobby, 'sr');redraw_teams();" value="&uarr;&darr;123"/>
+			<input title="Sort lobby by name" type="button" class="team_btn" onclick="sort_team(lobby, 'display_name');redraw_teams();" value="&uarr;&darr;Az"/>
+			</div>
+					
+			<span id="lobby_count">0</span> players<br/>
+			
+			<div style="display: flex;">
+				<label for="lobby_filter">Filter: &nbsp;</label>
+				<input id="lobby_filter" class="filter" type="text" size=35 autocomplete="off" placeholder="player name or battletag" value="" oninput="lobby_filter_change();"/> 
+				<span onclick="lobby_filter_clear();" style="cursor: default;" title="Clear filter" alt="Clear filter"> &#9003; </span>
+			</div>
+			
+			<div class="lobby-container">
+				<div class="table team" id="lobby">
+
+				</div>
+			</div>
+			
+			<br/>
+			<div title="Drop player here to delete" class="trashcan" id="trashcan" ondrop="player_drop(event)" ondragover="player_allowDrop(event)">				
+				&#9760; Delete player (drop here)
+			</div>
+		</div>
+		
+		
+		<div class="cell" style="width: 1em">
+		<!-- spacer -->
+		</div>
+	
+		<div class="cell workspace-cell main-toolbar">
+			<!-- main toolbar -->
+			
+			<br/>
+			<br/>
+			<div >
+				<input class="big-btn" type="button" id="balance_btn" onclick="roll_teams();" value="&#127922; Roll teams" title="Roll random teams from lobby"/>
+				<br/>
+				<br/>
+				
+				<input class="big-btn" type="button" onclick="add_empty_team();" value="&#10133; Add team" title="Add empty team"/>
+				<br/>
+				<br/>
+				
+				<input class="big-btn" type="button" onclick="export_teams_dlg();" value="Export teams"/>
+				<br/>
+				<br/>
+				
+				<input class="big-btn" type="button" onclick="reset_roll();" value="Reset" title="Move all players back to lobby"/>
+				<br/>
+				<br/>
+								
+				<input id="update_all_stats_btn" class="big-btn" type="button" onclick="update_all_stats();" value="&#8635; Update stats" title="Update stats for all players" />
+				<br/>
+				<br/>
+								
+				<input class="big-btn" type="button" id="settings_btn" onclick="open_settings();" value="&#9881; Settings" title="Open settings dialog"/>
+				<br/>
+				<br/>
+				<br/>
+				<br/>
+				
+				<input class="big-btn" type="button" onclick="generate_random_players();" value="Generate random players" />
+				<br/>
+				<br/>
+				
+				<input class="big-btn" type="button" onclick="generate_random_teams();" value="Generate random teams" />
+				<br/>
+				<br/>
+				
+				<input class="big-btn" type="button" onclick="test();" value="test" title=""/>
+			</div>
+			<br/>
+			
+			<div id="stats_updater_status">
+			</div>
+		</div>
+		
+		<div class="cell" style="width: 1em">
+		<!-- spacer -->
+		</div>
+		
+		<div class="cell workspace-cell">
+			<!-- rolled teams -->
+			
+			<div class="teams-container" id="teams_container">
+				
+				
+				
+			</div>
+			
+		</div>
+	</div>
+</div>
+
+<div id="popup_dlg" class="dlg" style="display:none">
+	<div class="dlg-background" onclick="close_dialog();"></div>
+	<div class="dlg-container">
+		<div class="dlg-content">
+			<span id="dlg_title" class="team-title">Title</span>
+			<input title="Close" type="button" class="team_btn dlg-close" onclick="close_dialog();" value="X"/>
+			<br/>
+			<br/>
+			<div id="dlg_import_export_format" class="dlg_options">
+				<label for="dlg_format_value"><span id="dlg_operation">Export</span> format: </label>
+				<select id="dlg_format_value">
+					<option value="json">JSON (full info)</option>
+					<option value="battletags">plain text (BattleTags only)</option>
+					<option value="csv" id="dlg_format_value_csv">CSV (for Excel)</option>
+				</select>
+			</div>
+			<div id="dlg_setup_share" class="dlg_options">
+				<label for="dlg_setup_format">Format: </label>
+				<select id="dlg_setup_format" onchange="save_settings_value(this);change_export_teams_format();">
+					<option value="text-list">plain text list</option>
+					<!--<option value="text-table">text table</option>
+					<option value="markdown-code-block" selected>Markdown code block (for Discord)</option>
+					<option value="html-table">HTML table</option>-->
+				</select>
+			</div>
+			<!--<div id="dlg_setup_share_options" class="dlg_options" onchange="save_settings_value(this);change_setup_format();">
+				<input type="checkbox" id="dlg_setup_share_sr">
+				<label for="dlg_setup_share_sr">Include SR</label>
+				<br/>
+				<input type="checkbox" id="dlg_setup_share_classes">
+				<label for="dlg_setup_share_classes">Include classes/roles</label>
+			</div>
+			-->
+			<textarea id="dlg_textarea" rows="20" cols="80"></textarea>
+			
+			<div id="dlg_player_edit" class="dlg_options table">
+				<div class="row">
+					<div class="cell">BattleTag:</div>
+					<div class="cell"><a href="" id="dlg_player_id"></a></div>
+				</div>
+				<div class="row">
+					<div class="cell"><label for="dlg_player_display_name">Name:</label></div>
+					<div class="cell">
+						<input id="dlg_player_display_name" type="text">
+						<span id="dlg_player_name_edited" class="dlg-edited-mark" title="Name was manually edited" onclick="clear_edited_mark('ne');">&#9997;</span>
+					</div>
+				</div>
+				<div class="row">
+					<div class="cell"><label for="dlg_player_level">Level:</label></div>
+					<div class="cell"><input id="dlg_player_level" type="text" readonly></div>
+				</div>
+				<div class="row">
+					<div class="cell"><label for="dlg_player_sr">SR:</label></div>
+					<div class="cell">
+						<input id="dlg_player_sr" type="number" min=0 max=5000>
+						<span id="dlg_player_sr_edited" class="dlg-edited-mark" title="SR was manually edited" onclick="clear_edited_mark('se');">&#9997;</span>
+					</div>
+				</div>
+			</div>
+			<div id="dlg_class_select" class="dlg_options table">
+				<div class="row">
+					<div class="cell">Main class: </div>
+					<div class="cell">
+						<select id="dlg_main_class">
+							<option value="dps">dps</option>
+							<option value="tank">tank</option>
+							<option value="support">support</option>
+						</select>
+						<span id="dlg_player_class1_edited" class="dlg-edited-mark" title="Classes were manually edited" onclick="clear_edited_mark('ce');">&#9997;</span>
+					</div>
+				</div>
+				<div class="row">
+					<div class="cell">Secondary class: </div>
+					<div class="cell">
+						<select id="dlg_secondary_class">
+							<option value="">-</option>
+							<option value="dps">dps</option>
+							<option value="tank">tank</option>
+							<option value="support">support</option>
+						</select>
+						<span id="dlg_player_class2_edited" class="dlg-edited-mark" title="Classes were manually edited" onclick="clear_edited_mark('ce');">&#9997;</span>
+					</div>
+				</div>	
+			</div>
+			<div id="dlg_top_heroes">
+				<br/>
+				<span>Top heroes:</span>
+				<br/>
+				<div id="dlg_top_heroes_icons" class="hero-icon-list"></div>
+				<br/>
+			</div>
+			<input id="dlg_update_player_stats" class="big-btn" type="button" value="&#8635; Update stats" onclick="update_current_player_stats();"/>
+			
+			<div id="dlg_settings">
+				<div class="group">
+					<div class="group-header">
+						Main settings
+					</div>
+					<div class="group-content">
+						<div class="table">
+							<div class="row">
+								<div class="cell">
+									Team size &nbsp;
+								</div>
+								<div class="cell">
+									<input id="team_size" name="team_size" type="number" size=3 min=1 max=12 style="width: 3em;" value="" onchange="apply_team_size();"/> players
+								</div>
+							</div>
+							<div class="row">
+								<div class="cell">
+									Region &nbsp;
+								</div>
+								<div class="cell">
+									<select id="region" onchange="update_region();">
+										<option value="eu">EU</option>
+										<option value="us">US</option>
+										<option value="kr">KR</option>
+									</select>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+				
+				</br>
+				
+				<div class="group">
+					<div class="group-header">
+						Balance settings
+					</div>
+					<div class="group-content">
+						<input type="checkbox" id="balance_adjust_sr" onchange="balance_adjust_sr_change();">
+						<label for="balance_adjust_sr">Adjust player SR by main class</label>
+						</br>
+						<div class="subgroup" id="balance_adjust_sr_sub">
+							<img src="class_icons/dps.png" style="height: 1em;"/>
+							<input disabled id="balance_adjust_sr_dps" class="percent" type="number" size=3 min=0 max=200 autocomplete="off" value="120" onchange="save_settings_value(this);"/>
+							% SR for dps mains </br>
+							<img src="class_icons/tank.png" style="height: 1em;"/>
+							<input disabled id="balance_adjust_sr_tank" class="percent" type="number" size=3 min=0 max=200 autocomplete="off" value="100" onchange="save_settings_value(this);"/>
+							% SR for tank mains </br>
+							<img src="class_icons/support.png" style="height: 1em;"/>
+							<input disabled id="balance_adjust_sr_support" class="percent" type="number" size=3 min=0 max=200 autocomplete="off" value="80" onchange="save_settings_value(this);"/>
+							% SR for support mains </br>
+						</div>
+						</br>
+											
+						<span>Balance algorithm tuning</span></br>
+						<input id="balance_class_uneveness_value" type="range" size=3 min=0 max=100 autocomplete="off" value="70" style="width:90%" onchange="save_settings_value(this);" />
+						</br>
+						<div style="position: relative; top: -0.5em;margin-left: 1em;margin-right: 1em;">
+							<span>equal SR</span>
+							<span style="position: absolute;right: 0;">equal classes</span>
+						</div>
+						</br>
+						
+						<input type="checkbox" id="balance_separate_otps" onchange="save_settings_value(this);">
+						<label for="balance_separate_otps">Do not place similar one-trick ponies into same team</label>
+						</br>
+						
+						<input type="checkbox" id="balance_enable_captains" onchange="enable_captains_change(); save_settings_value(this);">
+						<label for="balance_enable_captains">Enable team captains</label>
+					</div>
+				</div>
+				
+				</br>
+				
+				<div class="group">
+					<div class="group-header">
+						Stats updating settings
+					</div>
+					<div class="group-content">
+						<input type="checkbox" id="update_sr" onchange="save_settings_value(this);" checked>
+						<label for="update_sr">Update player SR</label>
+						</br>
+						<input type="checkbox" id="update_class" onchange="save_settings_value(this);" checked>
+						<label for="update_class">Update player class</label>
+						</br>
+						<input type="checkbox" id="update_edited_fields" onchange="save_settings_value(this);">
+						<label for="update_edited_fields">Force update manually edited fields (name, SR, class)</label>
+						</br>
+						<input type="checkbox" id="update_picked" onchange="save_settings_value(this);" checked>
+						<label for="update_picked">Update player stats when picked from lobby</label>
+						</br>
+					</div>
+				</div>
+			</div>
+			
+			<br/>
+			<input id="dlg_ok" class="big-btn" type="button" value="OK"/>
+		</div>
+	</div>
+</div>
+
+<div title="Balance debug" style="display: none;">
+Balance debug settings <br/>
+<input type="checkbox" title="balance debug out" id="balance_dbg"  autocomplete="off">
+<label for="balance_dbg">Print all possible team compositions</label>
+<br/>
+<input type="checkbox" title="balance debug sort" id="balance_dbg_sort" autocomplete="off">
+<label for="balance_dbg_sort">Sort team compositions</label>
+</div>
+
+<div id="balance_dbg_test_result" style="display: none;"></div>
+
+<div id="stats_update_log"></div>
+
+<script>
+//restore saved players to teams
+restore_saved_teams();
+
+
+
+// restore settings and team names
+var settings_list = [
+	"team_size",
+	"region",
+	"balance_adjust_sr",
+	"balance_adjust_sr_dps",
+	"balance_adjust_sr_tank",
+	"balance_adjust_sr_support",
+	"balance_class_uneveness_value",
+	"balance_separate_otps",
+	"update_class",
+	"update_sr",
+	"update_edited_fields",
+	"update_picked",
+	"dlg_setup_format",
+	"dlg_setup_share_sr",
+	"dlg_setup_share_classes"
+	];
+
+for ( i in settings_list ) {
+	var setting_value = localStorage.getItem(settings_list[i]);
+	if( setting_value !== null ) {
+		var setting_input = document.getElementById(settings_list[i]);
+		if ( setting_input.type == "checkbox" ) {
+			setting_input.checked = (setting_value == 'true');
+		} else if ( setting_input.type == "text" ) {
+			setting_input.value = setting_value;
+		} else if ( setting_input.type == "number" ) {
+			setting_input.value = Number(setting_value);
+		} else if ( setting_input.type == "range" ) {
+			setting_input.value = Number(setting_value);
+		}
+		
+		if (StatsUpdater.hasOwnProperty(settings_list[i])) {
+			StatsUpdater[settings_list[i]] = setting_value;
+		}
+	}
+}
+
+// set default values to inputs
+if (document.getElementById("team_size").value == 0 ) {
+	document.getElementById("team_size").value = team_size;
+}
+if (document.getElementById("region").value == "" ) {
+	document.getElementById("region").value = region;
+}
+
+apply_team_size();
+apply_region();
+apply_adjust_sr_change();
+
+
+// adjust lobby margin to account scrollbar width
+var lobby_container = document.getElementsByClassName("lobby-container").item(0);
+lobby_container.style.marginRight = "-"+get_scrollbar_width()+"px";
+lobby_container.style.paddingRight = ""+get_scrollbar_width()+"px";
+
+</script>
+
+<script>
+/*
+var ttt = [];
+var zzz = [];
+
+for( var i=0; i<6; i++ ) {
+	ttt.push(create_random_player( i ));
+	zzz.push( ttt[i] );
+}
+
+alert( ttt[3].display_name );
+zzz[3].display_name = "yolo";
+
+alert( ttt[3].display_name );
+*/
+</script>
+
+</body>
+</html>
