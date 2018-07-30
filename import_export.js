@@ -67,6 +67,7 @@ function import_lobby() {
 				}
 				
 				redraw_lobby();
+				save_players_list();
 			}
 			catch(err) {
 				// try to parse as plain battletag list?
@@ -100,6 +101,7 @@ function import_lobby() {
 			}
 			
 			redraw_lobby();
+			save_players_list();
 			
 			// get stats for added players
 			if (added_players.length > 0) {
