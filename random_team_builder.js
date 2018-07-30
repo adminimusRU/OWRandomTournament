@@ -13,7 +13,7 @@ var RandomTeamBuilder = {
 	OF_min_thresold: 0, // best found: 13
 	OF_max_thresold: 100, // best found: 13
 	balance_priority: 70, // 0 - prioritize SR, 100 - prioritize classes
-	max_combinations: 30000,
+	max_combinations: 1000,
 	// @ToDo add option: rolled team count should be power of 2, for better tournament bracket
 	
 	
@@ -76,8 +76,10 @@ var RandomTeamBuilder = {
 			var combinations_checked = 0;
 			
 			// init
-			// @ToDo: start at ...00000111111
-			this.player_selection_mask = Array(this.players.length).fill(0);
+			// start at ...00000111111
+			this.player_selection_mask = Array(this.players.length - this.team_size).fill(0).concat( Array(this.team_size).fill(1) );
+			this.player_selection_mask[this.players.length-1] = 0;
+			
 			this.OF_min = Number.MAX_VALUE;
 			this.best_roll = [];
 			
@@ -155,6 +157,7 @@ var RandomTeamBuilder = {
 		while(true) {
 			// binary increment mask
 			var buf = 1;
+			var bits_count = 0;
 			
 			for ( var index = this.player_selection_mask.length - 1; index >=0; index-- ) {
 				//var current_bit = this.player_selection_mask[ index ];
@@ -163,21 +166,28 @@ var RandomTeamBuilder = {
 				buf -= this.player_selection_mask[ index ];
 				buf = buf >> 1;
 				
-				//this.player_selection_mask[ index ] = current_bit;
+				bits_count += this.player_selection_mask[ index ];
 			}
-			
-			// @ToDo: stop at 111111000000...
 			
 			if ( buf > 0 ) {
 				return false; // overflow reached, no correct mask found
 			}
 			
 			// check if mask has needed amount of bits
-			var bits_count = this.player_selection_mask.reduce( 
+			/*var bits_count = this.player_selection_mask.reduce( 
 				function(accumulator, currentValue) { return accumulator += currentValue; },
-				0 );
+				0 );*/
 			if ( bits_count == this.team_size ) {
 				return true;
+			}
+			
+			// stop at 111111000000...
+			var sum_head = 0;
+			for ( index=0; index<this.team_size; index++ ) {
+				sum_head += this.player_selection_mask[ index ];
+			}
+			if ( sum_head == this.team_size ) {
+				return false;
 			}
 		} 
 		return false;
