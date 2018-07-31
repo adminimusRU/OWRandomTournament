@@ -161,7 +161,8 @@ span.sr-edited {
 	display: inline-block;
 	font-size: 14pt;
 	white-space: nowrap;
-	width: 9em;
+	/*width: 9em;*/
+	width: 8em;
 	overflow-x: hidden;
 }
 
