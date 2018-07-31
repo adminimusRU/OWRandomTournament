@@ -12,7 +12,7 @@
 <script src="owapi.js"></script>
 <script src="stats_updater.js"></script>
 <script src="import_export.js"></script>
-<script src="random_team_builder.js"></script>
+<!--<script src="random_team_builder.js"></script>-->
 <script src="ui.js"></script>
 
 </head>
@@ -56,6 +56,11 @@ StatsUpdater.onComplete = on_stats_update_complete;
 StatsUpdater.onStart = on_stats_update_start;
 StatsUpdater.onProgressChange = on_stats_update_progress;
 StatsUpdater.onError = on_stats_update_error;
+
+// team builder
+// RandomTeamBuilder inside worker thread
+var RtbWorker = new Worker('rtb_worker.js');
+RtbWorker.onmessage = on_rtb_worker_message;
 
 </script>
 
