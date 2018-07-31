@@ -31,7 +31,7 @@ function calc_team_sr( team ) {
 			team_sr += player_sr;
 		}
 		//team_sr = Math.round(team_sr / team.length);
-		team_sr = Math.round(team_sr / RandomTeamBuilder.team_size);
+		team_sr = Math.round(team_sr / team_size);
 	}
 	return team_sr;
 }
