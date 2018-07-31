@@ -159,42 +159,28 @@ function reset_roll() {
 }
 
 function roll_teams() {
+	// roll teams with worker
 	if ( teams.length > 0 ) {
 		reset_roll();
 	}
 	
-	RandomTeamBuilder.players = lobby.splice( 0, lobby.length );
-	RandomTeamBuilder.team_size = team_size;
+	var rtb_settings = {
+		OF_min_thresold: 20,
+		OF_max_thresold: 50,
+		balance_priority: 50,
+		max_combinations: 30000,
+	}
+		
+	RtbWorker.postMessage(["init", rtb_settings]);
 	
-	// @ToDo
-	RandomTeamBuilder.OF_min_thresold = 20; // hmmmmmm....
-	RandomTeamBuilder.OF_max_thresold = 50; // hmmmmmm....
-	RandomTeamBuilder.balance_priority = 70;
+	// dbg
+	document.getElementById("stats_update_log").innerHTML = "";
 	
-	document.getElementById("stats_update_log").innerHTML = "Rolling teams</br>";
-	
-	RandomTeamBuilder.onProgressChange = on_team_roll_progress;
-	RandomTeamBuilder.rollTeams();
-	
-	/*for( t in RandomTeamBuilder.teams ) {
-		teams.push( RandomTeamBuilder.teams.pop() );
-	}*/
-	teams = RandomTeamBuilder.teams.splice( 0, RandomTeamBuilder.teams.length );
-	RandomTeamBuilder.teams = [];
-	
-	// return remaining players to lobby
-	lobby = RandomTeamBuilder.players.splice( 0, RandomTeamBuilder.players.length );
-	RandomTeamBuilder.players = [];
-
-	save_players_list();
-	redraw_lobby();
-	redraw_teams();
+	RtbWorker.postMessage(["roll", lobby]);
 }
 
 function test() {
-	/*lobby[0].last_updated = new Date;
-	redraw_lobby();
-	save_players_list();*/
+	
 }
 
 function update_all_stats() {
@@ -237,6 +223,44 @@ function on_player_stats_updated( player_id ) {
 	}
 }
 
+function on_rtb_worker_message(e) {
+	if ( ! Array.isArray(e.data) ) {
+		return;
+	}
+	if ( e.data.length == 0 ) {
+		return;
+	}
+	
+	console.log('Main thread: message received, type '+e.data[0]);
+	
+	var event_type = e.data[0];
+	if ( event_type == "progress" ) {
+		if (e.data.length < 2) {
+			return;
+		}
+		var progress_struct = e.data[1];
+		document.getElementById("stats_updater_status").innerHTML = "Rolling teams</br>"+progress_struct.current_progress+"%</br>";
+	} else if ( event_type == "finish" ) {
+		if (e.data.length < 2) {
+			return;
+		}
+		var result_struct = e.data[1];
+		lobby = result_struct.players;
+		teams = result_struct.teams;
+		
+		save_players_list();
+		redraw_lobby();
+		redraw_teams();
+	} else if ( event_type == "dbg" ) {
+		if (e.data.length < 2) {
+			return;
+		}
+		
+		var dbg_msg = e.data[1];
+		document.getElementById("stats_update_log").innerHTML += dbg_msg+"</br>";
+	}
+}
+
 function on_stats_update_complete() {
 	document.getElementById("stats_updater_status").innerHTML = "Update complete";
 	setTimeout( draw_stats_updater_status, StatsUpdater.min_api_request_interval );
@@ -260,9 +284,9 @@ function on_stats_update_start() {
 	draw_stats_updater_status();
 }
 
-function on_team_roll_progress( current_progress ) {
+/*function on_team_roll_progress( current_progress ) {
 	document.getElementById("stats_updater_status").innerHTML = "Rolling teams</br>"+current_progress+"%</br>";
-}
+}*/
 
 
 /*
@@ -417,7 +441,7 @@ function draw_player_cell( player_struct, small=false ) {
 			new_player_item.appendChild(class_icon);
 			
 			if ( small ) {
-				break;
+				//break;
 			}
 		}
 	}
