@@ -4,6 +4,7 @@ var RandomTeamBuilder = {
 	
 	// callbacks
 	onProgressChange: undefined,
+	onDebugMessage: undefined,
 	
 	// settings
 	team_size: 6,
@@ -12,19 +13,19 @@ var RandomTeamBuilder = {
 	// @ToDo check optimal settings and ranges
 	OF_min_thresold: 0, // best found: 13
 	OF_max_thresold: 100, // best found: 13
-	balance_priority: 70, // 0 - prioritize SR, 100 - prioritize classes
+	balance_priority: 50, // 0 - prioritize SR, 100 - prioritize classes
 	max_combinations: 1000,
+	roll_debug: true,
 	// @ToDo add option: rolled team count should be power of 2, for better tournament bracket
 	
 	
 	// internal
-	balance_max_sr_diff: 250,
+	balance_max_sr_diff: 100,
 	
 	player_selection_mask: [],
 	target_class_count: {},
 	target_team_sr: 0,
-	
-	
+		
 	OF_min: 0,
 	best_roll: [],
 	
@@ -53,20 +54,45 @@ var RandomTeamBuilder = {
 				total_class_count[this.players[p].top_classes[c]] += 1 / (c+1);
 			}
 			
-			this.target_team_sr += this.players[p].sr;
+			this.target_team_sr += this.calcPlayerSR( this.players[p] );
 		}
 		this.target_team_sr = this.target_team_sr / this.players.length;
 		
+		var min_class_count = Number.MAX_VALUE;
 		for( c in class_names ) {
 			this.target_class_count[class_names[c]] = this.team_size * (total_class_count[class_names[c]] / this.players.length);
+			
+			// round to nearest 0.5
+			var rem = this.target_class_count[class_names[c]] % 0.5;
+			rem = ( rem < 0.25 ? -rem : (0.5-rem) );
+			this.target_class_count[class_names[c]] += rem;
+			
+			if ( this.target_class_count[class_names[c]] < min_class_count ) {
+				min_class_count = this.target_class_count[class_names[c]];
+			}
 		}
 		
-		// @ToDo: round target classes to integers;
-		// + detect reasonable OF minimum thresold (for 0.5 class diff and 30 sr?)
+		// + detect reasonable OF minimum thresold (for 0.5 class diff and 20 sr?)
+		// calc class uneveness for 0.5 class difference
+		//var reasonable_class_unevenness = Math.round( 100*Math.pow(0.5, 2) , 1 );
+		var reasonable_class_unevenness = this.calcClassUnevennessValue( min_class_count+0.5, min_class_count );
+		/*var reasonable_OF_min_thresold = Math.round( 
+			(reasonable_class_unevenness * this.balance_priority
+			+ (20/this.balance_max_sr_diff*100)*(100-this.balance_priority)
+			)
+			/100, 1 );*/
+		var reasonable_OF_min_thresold = Math.round( 3/4 * this.calcObjectiveFunctionValue( 20, reasonable_class_unevenness, 0 ) );
 		
 		// dbg
-		document.getElementById("stats_update_log").innerHTML += "Target SR = "+this.target_team_sr+"</br>";
-		document.getElementById("stats_update_log").innerHTML += "Target classes = "+JSON.stringify(this.target_class_count)+"</br>";
+		/*document.getElementById("stats_update_log").innerHTML += "Target SR = "+this.target_team_sr+"</br>";
+		document.getElementById("stats_update_log").innerHTML += "Target classes = "+JSON.stringify(this.target_class_count)+"</br>";*/
+		if (this.roll_debug) {
+			if(typeof this.onDebugMessage == "function") {
+				this.onDebugMessage.call( undefined, "Target SR = "+this.target_team_sr );
+				this.onDebugMessage.call( undefined, "Target classes = "+JSON.stringify(this.target_class_count) );
+				this.onDebugMessage.call( undefined, "Reasonable_OF_min_thresold = "+reasonable_OF_min_thresold );
+			}
+		}
 		
 		var start_time = performance.now();
 		
@@ -89,6 +115,8 @@ var RandomTeamBuilder = {
 			// so we need to stop when objective functions reaches some thresold
 			
 			// checking 100k combinations takes ~11 seconds
+			
+			// @ToDo : random mask iteration
 			
 			while ( this.findNextMask() ) {
 				
@@ -124,11 +152,18 @@ var RandomTeamBuilder = {
 			/*var msg = "best roll :: " + this.best_roll.reduce( function(accumulator, currentValue) { return accumulator+=currentValue; }, "" );
 			msg += " -> " + this.OF_min;
 			document.getElementById("stats_update_log").innerHTML += msg+"</br>";*/
+			if (this.roll_debug) {
+				if(typeof this.onDebugMessage == "function") {
+					this.onDebugMessage.call( undefined, "Team #"+(this.teams.length+1) );
+					this.onDebugMessage.call( undefined, "Best OF = "+this.OF_min );
+					this.onDebugMessage.call( undefined, "Combinations checked = "+combinations_checked );
+				}
+			}
 			
 			// check thresold
-			if ( this.best_roll > this.OF_max_thresold ) {
+			if ( this.OF_min > this.OF_max_thresold ) {
 				// all combinations are heavily unbalanced, stop rolling
-				break;
+				//break;
 			}
 			
 			// create team from best roll
@@ -148,7 +183,12 @@ var RandomTeamBuilder = {
 		}
 		
 		var execTime = performance.now() - start_time;
-		document.getElementById("stats_update_log").innerHTML += "Exec time "+execTime+" ms</br>";
+		//document.getElementById("stats_update_log").innerHTML += "Exec time "+execTime+" ms</br>";
+		if (this.roll_debug) {
+			if(typeof this.onDebugMessage == "function") {
+				this.onDebugMessage.call( undefined, "Exec time "+execTime+" ms" );
+			}
+		}
 	},
 	
 	// private methods
@@ -160,7 +200,6 @@ var RandomTeamBuilder = {
 			var bits_count = 0;
 			
 			for ( var index = this.player_selection_mask.length - 1; index >=0; index-- ) {
-				//var current_bit = this.player_selection_mask[ index ];
 				buf += this.player_selection_mask[ index ];
 				this.player_selection_mask[ index ] = buf % 2;
 				buf -= this.player_selection_mask[ index ];
@@ -174,9 +213,6 @@ var RandomTeamBuilder = {
 			}
 			
 			// check if mask has needed amount of bits
-			/*var bits_count = this.player_selection_mask.reduce( 
-				function(accumulator, currentValue) { return accumulator += currentValue; },
-				0 );*/
 			if ( bits_count == this.team_size ) {
 				return true;
 			}
@@ -189,7 +225,7 @@ var RandomTeamBuilder = {
 			if ( sum_head == this.team_size ) {
 				return false;
 			}
-		} 
+		}
 		return false;
 	},
 	
@@ -220,11 +256,12 @@ var RandomTeamBuilder = {
 		//var otp_conflicts = calc_otp_conflicts( new_composition_players, opposite_team );
 		var otp_conflicts = 0;
 		
-		var objective_func = Math.round( 
+		/*var objective_func = Math.round( 
 			(class_unevenness * this.balance_priority
 			+ (sr_diff/this.balance_max_sr_diff*100)*(100-this.balance_priority)
 			+ otp_conflicts )
-			/100, 1 );
+			/100, 1 );*/
+		var objective_func = this.calcObjectiveFunctionValue( sr_diff, class_unevenness, otp_conflicts );
 			
 		//dbg
 		/*var msg="";
@@ -235,6 +272,14 @@ var RandomTeamBuilder = {
 		document.getElementById("stats_update_log").innerHTML += msg+"</br>";*/
 			
 		return objective_func;
+	},
+	
+	calcObjectiveFunctionValue: function( sr_diff, class_unevenness, otp_conflicts ) {
+		return Math.round( 
+			(class_unevenness * this.balance_priority
+			+ (sr_diff/this.balance_max_sr_diff*100)*(100-this.balance_priority)
+			+ otp_conflicts )
+			/100, 1 );
 	},
 	
 	calcTeamSR: function( team ) {
@@ -284,11 +329,17 @@ var RandomTeamBuilder = {
 			//if (balance_exclude_classes.indexOf(c) != -1 ) continue;
 			var current_class_unevenness = 0;
 			if ( this.target_class_count[c] != 0 ) {
-				current_class_unevenness = Math.abs( 100*(current_class_count[c] - (this.target_class_count[c])) / (this.target_class_count[c]) );
+				//current_class_unevenness = Math.abs( 100*(current_class_count[c] - (this.target_class_count[c])) / (this.target_class_count[c]) );
+				//current_class_unevenness = Math.abs( 100*Math.pow((current_class_count[c] - this.target_class_count[c]), 2) );
+				current_class_unevenness = this.calcClassUnevennessValue( current_class_count[c], this.target_class_count[c] );
 			} 
 			total_class_unevenness += current_class_unevenness;
 		}
 		
 		return Math.round( total_class_unevenness, 1 );
+	},
+	
+	calcClassUnevennessValue: function ( current_class_count, target_class_count ) {
+		return Math.abs( 100*Math.pow((current_class_count - target_class_count), 2) );
 	},
 }
