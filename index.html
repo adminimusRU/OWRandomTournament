@@ -59,8 +59,8 @@ StatsUpdater.onError = on_stats_update_error;
 
 // team builder
 // RandomTeamBuilder inside worker thread
-var RtbWorker = new Worker('rtb_worker.js');
-RtbWorker.onmessage = on_rtb_worker_message;
+var RtbWorker;
+
 
 </script>
 
@@ -124,7 +124,7 @@ RtbWorker.onmessage = on_rtb_worker_message;
 			<br/>
 			<br/>
 			<div >
-				<input class="big-btn" type="button" id="balance_btn" onclick="roll_teams();" value="&#127922; Roll teams" title="Roll random teams from lobby"/>
+				<input class="big-btn" type="button" id="roll_btn" onclick="roll_teams();" value="&#127922; Roll teams" title="Roll random teams from lobby"/>
 				<br/>
 				<br/>
 				
