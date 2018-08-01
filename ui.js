@@ -35,9 +35,9 @@ function change_export_teams_format() {
 function clear_lobby_click() {
 	if( confirm("Permanently delete all players?") ) {
 		lobby.splice( 0, lobby.length );
+		save_players_list();
+		redraw_lobby();
 	}
-	save_players_list();
-	redraw_lobby();
 }
 
 function export_teams_dlg() {
@@ -148,6 +148,10 @@ function new_player_keyup(ev) {
 }
 
 function reset_roll() {
+	if( ! confirm("Delete all teams?") ) {
+		return;
+	}
+	
 	for( t in teams ) {
 		lobby = lobby.concat( teams[t].players.splice( 0, teams[t].players.length) );
 	}
@@ -164,23 +168,28 @@ function roll_teams() {
 		reset_roll();
 	}
 	
+	// dbg
+	/*document.getElementById("stats_update_log").innerHTML = "";
+	var max_combinations = Number( prompt("Max number of combinations", 5000) );
+	document.getElementById("stats_update_log").innerHTML += "max_combinations = "+max_combinations+"<br/>";*/
+	
+	RtbWorker = new Worker('rtb_worker.js');
+	RtbWorker.onmessage = on_rtb_worker_message;
+	
 	var rtb_settings = {
-		OF_min_thresold: 20,
+		OF_min_thresold: 0,
 		OF_max_thresold: 50,
 		balance_priority: 50,
-		max_combinations: 30000,
+		//max_combinations: max_combinations,
+		team_count_power2: false,
 	}
 		
 	RtbWorker.postMessage(["init", rtb_settings]);
-	
-	// dbg
-	document.getElementById("stats_update_log").innerHTML = "";
-	
 	RtbWorker.postMessage(["roll", lobby]);
 }
 
 function test() {
-	
+	RtbWorker.terminate();
 }
 
 function update_all_stats() {
