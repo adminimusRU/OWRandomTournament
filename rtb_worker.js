@@ -41,6 +41,8 @@ onmessage = function(e) {
 			players: RandomTeamBuilder.players,
 		}
 		postMessage(["finish", result_struct]);
+		
+		close();
 	}
 	
 	
