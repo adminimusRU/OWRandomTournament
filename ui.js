@@ -28,6 +28,40 @@ function add_player_click() {
 	StatsUpdater.addToQueue( player_being_added );
 }
 
+function apply_settings() {
+	// @ToDo: check if team size changed...
+	
+	for ( setting_name in Settings ) {
+		var setting_input = document.getElementById(setting_name);
+		var setting_value;
+		
+		switch( setting_input.type ) {
+			case "checkbox":
+				setting_value = setting_input.checked;
+				break;
+			case "number":
+			case "range":
+				setting_value = Number(setting_input.value);
+				break;
+			default:
+				setting_value = setting_input.value;
+		}
+		
+		Settings[setting_name] = setting_value;
+	}
+	
+	localStorage.setItem("settings", JSON.stringify(Settings));
+	
+	apply_stats_updater_settings();
+	
+	close_dialog();
+}
+
+function cancel_roll() {
+	RtbWorker.terminate();
+	close_dialog();
+}
+
 function change_export_teams_format() {
 	document.getElementById("dlg_textarea").value = export_teams();
 }
@@ -147,6 +181,19 @@ function new_player_keyup(ev) {
     }
 }
 
+function open_settings() {
+	init_popup_dlg();
+
+	fill_settings_dlg( Settings );
+	
+	document.getElementById("dlg_settings").style.display = "block";
+	document.getElementById("dlg_title").innerHTML = "Settings";
+	document.getElementById("popup_dlg").style.display = "block";
+	document.getElementById("dlg_reset").style.display = "inline";
+	document.getElementById("dlg_ok").onclick = function(event){apply_settings();};
+}
+
+
 function reset_roll() {
 	if( ! confirm("Delete all teams?") ) {
 		return;
@@ -160,6 +207,10 @@ function reset_roll() {
 	save_players_list();
 	redraw_lobby();
 	redraw_teams();
+}
+
+function reset_settings() {
+	fill_settings_dlg( get_default_settings() );
 }
 
 function roll_teams() {
@@ -176,20 +227,45 @@ function roll_teams() {
 	RtbWorker = new Worker('rtb_worker.js');
 	RtbWorker.onmessage = on_rtb_worker_message;
 	
+	// convert roll quality to combinations with logarithmic scale
+	var max_combinations = Math.round( Math.pow( 2, Math.log2(1000)+(Math.log2(300000)-Math.log2(1000))*Settings.roll_quality/100 ) );
+	
 	var rtb_settings = {
-		OF_min_thresold: 0,
-		OF_max_thresold: 50,
-		balance_priority: 50,
-		//max_combinations: max_combinations,
-		team_count_power2: false,
+		team_size: Settings.team_size,
+		team_count_power2: Settings.roll_team_count_power2,
+		
+		adjust_sr: Settings.roll_adjust_sr,
+		adjust_sr_by_class: {
+			tank: Settings.roll_adjust_tank,
+			dps: Settings.roll_adjust_dps,
+			support: Settings.roll_adjust_support,
+		},
+		
+		balance_priority: Settings.roll_balance_priority,
+		max_combinations: max_combinations,
+		OF_max_thresold: Settings.roll_min_quality,
+		//OF_min_thresold: 50,		
 	}
 		
 	RtbWorker.postMessage(["init", rtb_settings]);
 	RtbWorker.postMessage(["roll", lobby]);
+	
+	init_popup_dlg();
+	document.getElementById("dlg_roll_progress").style.display = "block";
+	document.getElementById("roll_progress_bar").value = 0;
+	document.getElementById("dlg_roll_progress_text").innerHTML = "0 %";
+	document.getElementById("dlg_title").innerHTML = "Rolling teams";
+	document.getElementById("dlg_ok").style.display = "none";
+	document.getElementById("dlg_close").style.display = "none";
+	document.getElementById("popup_dlg").style.display = "block";
 }
 
 function test() {
-	RtbWorker.terminate();
+	document.getElementById("stats_update_log").innerHTML += JSON.stringify(Settings)+"</br>";
+	var max_combinations = Math.round( Math.pow( 2, Math.log2(1000)+(Math.log2(300000)-Math.log2(1000))*Settings.roll_quality/100 ) );
+	document.getElementById("stats_update_log").innerHTML += "max_combinations = "+max_combinations+"</br>";
+	
+	document.getElementById("stats_update_log").innerHTML += JSON.stringify(StatsUpdater)+"</br>";
 }
 
 function update_all_stats() {
@@ -240,7 +316,7 @@ function on_rtb_worker_message(e) {
 		return;
 	}
 	
-	console.log('Main thread: message received, type '+e.data[0]);
+	//console.log('Main thread: message received, type '+e.data[0]);
 	
 	var event_type = e.data[0];
 	if ( event_type == "progress" ) {
@@ -248,7 +324,9 @@ function on_rtb_worker_message(e) {
 			return;
 		}
 		var progress_struct = e.data[1];
-		document.getElementById("stats_updater_status").innerHTML = "Rolling teams</br>"+progress_struct.current_progress+"%</br>";
+		//document.getElementById("stats_updater_status").innerHTML = "Rolling teams</br>"+progress_struct.current_progress+"%</br>";
+		document.getElementById("roll_progress_bar").value = progress_struct.current_progress;
+		document.getElementById("dlg_roll_progress_text").innerHTML = progress_struct.current_progress.toString() + " %";
 	} else if ( event_type == "finish" ) {
 		if (e.data.length < 2) {
 			return;
@@ -260,6 +338,10 @@ function on_rtb_worker_message(e) {
 		save_players_list();
 		redraw_lobby();
 		redraw_teams();
+		
+		document.getElementById("roll_progress_bar").value = 100;
+		document.getElementById("dlg_roll_progress_text").innerHTML = "Roll complete";
+		setTimeout( close_dialog, 1000 );
 	} else if ( event_type == "dbg" ) {
 		if (e.data.length < 2) {
 			return;
@@ -559,6 +641,7 @@ function reset_highlighted_players() {
 *		Settings functions
 */
 
+/*
 function apply_adjust_sr_change() {
 	var adjust_enabled = document.getElementById("balance_adjust_sr").checked;
 	var inputs = document.getElementById("balance_adjust_sr_sub").getElementsByTagName("INPUT");
@@ -579,12 +662,7 @@ function apply_team_size() {
 	localStorage.setItem("team_size", team_size);
 }
 
-function open_settings() {
-	init_popup_dlg();
-	document.getElementById("dlg_settings").style.display = "block";
-	document.getElementById("dlg_title").innerHTML = "Settings";
-	document.getElementById("popup_dlg").style.display = "block";
-}
+
 
 function save_settings_value( element ) {
 	var setting_value;
@@ -598,11 +676,19 @@ function save_settings_value( element ) {
 	if (StatsUpdater.hasOwnProperty(element.id)) {
 		StatsUpdater[element.id] = setting_value;
 	}
-}
+}*/
 
 /*
 *		Popup dialog
 */
+
+function roll_adjust_sr_change() {
+	var adjust_enabled = document.getElementById("roll_adjust_sr").checked;
+	var inputs = document.getElementById("roll_adjust_sr_sub").getElementsByTagName("INPUT");
+	for (var i=0; i<inputs.length; i++ ) {
+		inputs[i].disabled = ! adjust_enabled;
+	}
+}
 
 function close_dialog() {
 	document.getElementById("popup_dlg").style.display = "none";
@@ -669,8 +755,26 @@ function fill_player_stats_dlg() {
 	}
 }
 
+function fill_settings_dlg( settings_obj ) {
+	for ( setting_name in settings_obj ) {
+		var setting_value = settings_obj[setting_name];
+		var setting_input = document.getElementById(setting_name);
+		if (setting_input === null) { alert("help"+setting_name);}
+		switch( setting_input.type ) {
+			case "checkbox":
+				setting_input.checked = setting_value;
+				break;
+			default:
+				setting_input.value = setting_value;
+		}
+	}
+		
+	roll_adjust_sr_change();
+}
+
 function init_popup_dlg() {
 	document.getElementById("dlg_title").innerHTML = "";
+	document.getElementById("dlg_close").style.display = "inline";
 	document.getElementById("dlg_import_export_format").style.display = "none";
 	document.getElementById("dlg_format_value").onchange = function(event){;};
 	document.getElementById("dlg_format_value").options.namedItem("dlg_format_value_csv").style.display = "";
@@ -686,5 +790,8 @@ function init_popup_dlg() {
 	document.getElementById("dlg_top_heroes").style.display = "none";
 	document.getElementById("dlg_update_player_stats").style.display = "none";
 	document.getElementById("dlg_settings").style.display = "none";
+	document.getElementById("dlg_roll_progress").style.display = "none";
+	document.getElementById("dlg_reset").style.display = "none";
+	document.getElementById("dlg_ok").style.display = "inline";
 	document.getElementById("dlg_ok").onclick = function(event){close_dialog();};
 }
