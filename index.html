@@ -18,25 +18,21 @@
 </head>
 
 <script language="JavaScript" type="text/javascript">
-//var selected_player_team1 = "";
-
-//var team1 = [];
 var lobby = [];
-
 var teams = [];
 
 var player_being_added;
 var current_player_edit = "";
-
-var team_size = 6;
-var region = "eu";
-
 var lobby_filter_timer = 0;
+//var selected_player_team1 = "";
 
+var Settings = get_default_settings();
 
+/*var team_size = 6;
+var region = "eu";*/
 
 // player stats fetcher
-var players_for_update = [];
+/*var players_for_update = [];
 var total_players_for_update = 0;
 var min_api_request_interval = 6000; //milliseconds
 
@@ -47,7 +43,7 @@ var silent_update_errors = false; // show message when update failed
 var stats_updater_ready = true; // set to false when update is done, but still need to wait for request interval before next update
 var stats_update_max_retry = 2;
 var stats_update_current_retry = 2;
-var stats_update_dbg = false;
+var stats_update_dbg = false;*/
 
 
 // init updater
@@ -184,11 +180,11 @@ var RtbWorker;
 </div>
 
 <div id="popup_dlg" class="dlg" style="display:none">
-	<div class="dlg-background" onclick="close_dialog();"></div>
+	<div class="dlg-background"></div>
 	<div class="dlg-container">
 		<div class="dlg-content">
 			<span id="dlg_title" class="team-title">Title</span>
-			<input title="Close" type="button" class="team_btn dlg-close" onclick="close_dialog();" value="X"/>
+			<input id="dlg_close" title="Close" type="button" class="team_btn dlg-close" onclick="close_dialog();" value="X"/>
 			<br/>
 			<br/>
 			<div id="dlg_import_export_format" class="dlg_options">
@@ -288,19 +284,7 @@ var RtbWorker;
 									Team size &nbsp;
 								</div>
 								<div class="cell">
-									<input id="team_size" name="team_size" type="number" size=3 min=1 max=12 style="width: 3em;" value="" onchange="apply_team_size();"/> players
-								</div>
-							</div>
-							<div class="row">
-								<div class="cell">
-									Region &nbsp;
-								</div>
-								<div class="cell">
-									<select id="region" onchange="update_region();">
-										<option value="eu">EU</option>
-										<option value="us">US</option>
-										<option value="kr">KR</option>
-									</select>
+									<input id="team_size" name="team_size" type="number" size=3 min=1 max=12 style="width: 3em;" value=""/> players
 								</div>
 							</div>
 						</div>
@@ -311,40 +295,59 @@ var RtbWorker;
 				
 				<div class="group">
 					<div class="group-header">
-						Balance settings
+						Roll settings
 					</div>
 					<div class="group-content">
-						<input type="checkbox" id="balance_adjust_sr" onchange="balance_adjust_sr_change();">
-						<label for="balance_adjust_sr">Adjust player SR by main class</label>
+						<input type="checkbox" id="roll_adjust_sr" onchange="roll_adjust_sr_change();">
+						<label for="roll_adjust_sr">Adjust player SR by main class</label>
 						</br>
-						<div class="subgroup" id="balance_adjust_sr_sub">
-							<img src="class_icons/dps.png" style="height: 1em;"/>
-							<input disabled id="balance_adjust_sr_dps" class="percent" type="number" size=3 min=0 max=200 autocomplete="off" value="120" onchange="save_settings_value(this);"/>
-							% SR for dps mains </br>
+						<div class="subgroup" id="roll_adjust_sr_sub">
 							<img src="class_icons/tank.png" style="height: 1em;"/>
-							<input disabled id="balance_adjust_sr_tank" class="percent" type="number" size=3 min=0 max=200 autocomplete="off" value="100" onchange="save_settings_value(this);"/>
-							% SR for tank mains </br>
+							<input disabled id="roll_adjust_tank" class="percent" type="number" size=3 min=0 max=999 autocomplete="off" value="100"/>
+							% &nbsp;
+							
+							<img src="class_icons/dps.png" style="height: 1em;"/>
+							<input disabled id="roll_adjust_dps" class="percent" type="number" size=3 min=0 max=999 autocomplete="off" value="120"/>
+							% &nbsp;
+							
 							<img src="class_icons/support.png" style="height: 1em;"/>
-							<input disabled id="balance_adjust_sr_support" class="percent" type="number" size=3 min=0 max=200 autocomplete="off" value="80" onchange="save_settings_value(this);"/>
-							% SR for support mains </br>
+							<input disabled id="roll_adjust_support" class="percent" type="number" size=3 min=0 max=999 autocomplete="off" value="80"/>
+							%  </br>
 						</div>
 						</br>
 											
-						<span>Balance algorithm tuning</span></br>
-						<input id="balance_class_uneveness_value" type="range" size=3 min=0 max=100 autocomplete="off" value="70" style="width:90%" onchange="save_settings_value(this);" />
+						<span>Balance priority</span></br>
+						<input id="roll_balance_priority" type="range" size=3 min=0 max=100 autocomplete="off" value="70" style="width:90%"/>
 						</br>
-						<div style="position: relative; top: -0.5em;margin-left: 1em;margin-right: 1em;">
-							<span>equal SR</span>
-							<span style="position: absolute;right: 0;">equal classes</span>
+						<div class="range-sub-container">
+							<div class="range-sub range-sub-left">equal SR</div>
+							<div class="range-sub range-sub-right">equal classes</div>
 						</div>
+												
+						<span>Roll speed</span></br>
+						<input id="roll_quality" type="range" size=3 min=0 max=100 autocomplete="off" value="70" style="width:90%"/>
+						</br>
+						<div class="range-sub-container">
+							<div class="range-sub range-sub-left">fast, poor balance</div>
+							<div class="range-sub range-sub-right">slow, best balance</div>
+						</div>
+												
+						<span>Roll minimum quality thresold</span></br>
+						<input id="roll_min_quality" type="range" size=3 min=30 max=100 autocomplete="off" value="50" style="width:90%"/>
+						</br>
+						<div class="range-sub-container">
+							<div class="range-sub range-sub-left">all parcipiate, some teams poorly balanced</div>
+							<div class="range-sub range-sub-right">some players benched, all teams balanced</div>
+						</div>
+												
+						<input type="checkbox" id="roll_team_count_power2">
+						<label for="roll_team_count_power2">Team count should be power of 2 (for better bracket)</label>
 						</br>
 						
-						<input type="checkbox" id="balance_separate_otps" onchange="save_settings_value(this);">
-						<label for="balance_separate_otps">Do not place similar one-trick ponies into same team</label>
+						<input type="checkbox" id="roll_separate_otps">
+						<label for="roll_separate_otps">Do not place similar one-trick ponies into same team</label>
 						</br>
 						
-						<input type="checkbox" id="balance_enable_captains" onchange="enable_captains_change(); save_settings_value(this);">
-						<label for="balance_enable_captains">Enable team captains</label>
 					</div>
 				</div>
 				
@@ -355,38 +358,44 @@ var RtbWorker;
 						Stats updating settings
 					</div>
 					<div class="group-content">
-						<input type="checkbox" id="update_sr" onchange="save_settings_value(this);" checked>
+					
+						Region &nbsp;
+						<select id="region">
+							<option value="eu">EU</option>
+							<option value="us">US</option>
+							<option value="kr">KR</option>
+						</select>
+						</br>
+					
+						<input type="checkbox" id="update_sr" checked>
 						<label for="update_sr">Update player SR</label>
 						</br>
-						<input type="checkbox" id="update_class" onchange="save_settings_value(this);" checked>
+						<input type="checkbox" id="update_class" checked>
 						<label for="update_class">Update player class</label>
 						</br>
-						<input type="checkbox" id="update_edited_fields" onchange="save_settings_value(this);">
+						<input type="checkbox" id="update_edited_fields">
 						<label for="update_edited_fields">Force update manually edited fields (name, SR, class)</label>
-						</br>
-						<input type="checkbox" id="update_picked" onchange="save_settings_value(this);" checked>
-						<label for="update_picked">Update player stats when picked from lobby</label>
-						</br>
 					</div>
 				</div>
 			</div>
 			
+			<div id="dlg_roll_progress">
+				<progress id="roll_progress_bar" value="0" max="100" style="width: 80%;"></progress>
+				<br/>
+				<span id="dlg_roll_progress_text"></span>
+				<br/>
+				<br/>
+				<br/>
+				<input id="dlg_roll_cancel" class="big-btn" type="button" value="Cancel" onclick="cancel_roll();"/>
+			</div>
+			
 			<br/>
+			<input id="dlg_reset" class="big-btn" type="button" value="Restore defaults" onclick="reset_settings();"/>
+			<br/><br/>
 			<input id="dlg_ok" class="big-btn" type="button" value="OK"/>
 		</div>
 	</div>
 </div>
-
-<div title="Balance debug" style="display: none;">
-Balance debug settings <br/>
-<input type="checkbox" title="balance debug out" id="balance_dbg"  autocomplete="off">
-<label for="balance_dbg">Print all possible team compositions</label>
-<br/>
-<input type="checkbox" title="balance debug sort" id="balance_dbg_sort" autocomplete="off">
-<label for="balance_dbg_sort">Sort team compositions</label>
-</div>
-
-<div id="balance_dbg_test_result" style="display: none;"></div>
 
 <div id="stats_update_log"></div>
 
@@ -394,10 +403,20 @@ Balance debug settings <br/>
 //restore saved players to teams
 restore_saved_teams();
 
+// restore settings
+var saved_settings_json = localStorage.getItem("settings");
+if ( saved_settings_json != null ) {
+	var saved_settings = JSON.parse(saved_settings_json);
+	for ( var i in Settings ) {
+		if ( saved_settings[i] !== undefined ) {
+			Settings[i] = saved_settings[i];
+		}
+	}
+}
+apply_stats_updater_settings();
 
 
-// restore settings and team names
-var settings_list = [
+/*var settings_list = [
 	"team_size",
 	"region",
 	"balance_adjust_sr",
@@ -445,7 +464,7 @@ if (document.getElementById("region").value == "" ) {
 
 apply_team_size();
 apply_region();
-apply_adjust_sr_change();
+apply_adjust_sr_change();*/
 
 
 // adjust lobby margin to account scrollbar width
@@ -454,23 +473,5 @@ lobby_container.style.marginRight = "-"+get_scrollbar_width()+"px";
 lobby_container.style.paddingRight = ""+get_scrollbar_width()+"px";
 
 </script>
-
-<script>
-/*
-var ttt = [];
-var zzz = [];
-
-for( var i=0; i<6; i++ ) {
-	ttt.push(create_random_player( i ));
-	zzz.push( ttt[i] );
-}
-
-alert( ttt[3].display_name );
-zzz[3].display_name = "yolo";
-
-alert( ttt[3].display_name );
-*/
-</script>
-
 </body>
 </html>
