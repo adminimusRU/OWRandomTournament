@@ -14,6 +14,12 @@ var RandomTeamBuilder = {
 	// example: adjust_sr_by_class: {'dps':120, 'tank':100, 'support':80},
 	adjust_sr: false,
 	adjust_sr_by_class: {},
+	// 0 - prioritize SR, 100 - prioritize classes
+	balance_priority: 50,
+	// maximum number of combinations checked to find balanced team.
+	// reasonable range: 1000 - 300000
+	// recommended optimal: 50000
+	max_combinations: 50000, 
 	// desired team quality. Rolled combination will be picked immediately after reaching thresold
 	// reasonable range: 0 - 30
 	// recommended: 0 (best possible combination will be found)
@@ -22,14 +28,7 @@ var RandomTeamBuilder = {
 	// reasonable range: 30 - 100
 	// recommended: 50
 	OF_max_thresold: 50,
-	// 0 - prioritize SR, 100 - prioritize classes
-	balance_priority: 50, 
-	// maximum number of combinations checked to find balanced team.
-	// reasonable range: 1000 - 300000
-	// recommended optimal: 50000
-	max_combinations: 50000, 	
 	roll_debug: true,
-	
 	
 	// internal
 	balance_max_sr_diff: 100,
@@ -46,6 +45,20 @@ var RandomTeamBuilder = {
 	rollTeams: function() {
 		if ( this.players.length < this.team_size ) {
 			return;
+		}
+		
+		if (this.roll_debug) {
+			if(typeof this.onDebugMessage == "function") {
+				this.onDebugMessage.call( undefined, "team_size = "+this.team_size );
+				this.onDebugMessage.call( undefined, "team_count_power2 = "+this.team_count_power2 );
+				this.onDebugMessage.call( undefined, "adjust_sr = "+this.adjust_sr );
+				this.onDebugMessage.call( undefined, "adjust_sr_by_class = "+JSON.stringify(this.adjust_sr_by_class) );
+				this.onDebugMessage.call( undefined, "balance_priority = "+this.balance_priority );
+				this.onDebugMessage.call( undefined, "max_combinations = "+this.max_combinations );
+				this.onDebugMessage.call( undefined, "OF_min_thresold = "+this.OF_min_thresold );
+				this.onDebugMessage.call( undefined, "OF_max_thresold = "+this.OF_max_thresold );
+				
+			}
 		}
 		
 		// shuffle players, so every roll will be different
