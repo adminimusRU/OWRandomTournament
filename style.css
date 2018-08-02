@@ -332,6 +332,10 @@ div[id="dlg_settings"] {
 	text-align: left;
 }
 
+div[id="dlg_roll_progress"] {
+	width: 25em;
+}
+
 .filter {
 	border: 1px solid;
 	margin-bottom: 5px;
@@ -422,4 +426,26 @@ div[id="stats_update_log"] {
 .teams-container {
 	max-height: 45em;
 	overflow-y: auto;
+}
+
+.range-sub-container {
+	position: relative;
+	top: -0.5em;
+	margin-left: 1em;
+	margin-right: 1em;
+}
+
+.range-sub {
+	font-size: 80%;
+	max-width: 35%;
+	display: inline-block;
+}
+
+.range-sub-left {
+	/*float: left;*/
+}
+
+.range-sub-right {
+	float: right;
+	text-align: right;
 }
