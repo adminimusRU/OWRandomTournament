@@ -9,6 +9,13 @@ function array_shuffle(a) {
     return a;
 }
 
+function apply_stats_updater_settings() {
+	StatsUpdater.update_edited_fields = Settings.update_edited_fields;
+	StatsUpdater.update_sr = Settings.update_sr;
+	StatsUpdater.update_class = Settings.update_class;
+	StatsUpdater.region = Settings.region;
+}
+
 function b64DecodeUnicode(str) {
     return decodeURIComponent(atob(str).split('').map(function(c) {
         return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
@@ -31,7 +38,7 @@ function calc_team_sr( team ) {
 			team_sr += player_sr;
 		}
 		//team_sr = Math.round(team_sr / team.length);
-		team_sr = Math.round(team_sr / team_size);
+		team_sr = Math.round(team_sr / Settings.team_size);
 	}
 	return team_sr;
 }
@@ -98,6 +105,27 @@ function format_player_id( id ) {
 
 function format_player_name( id ) {
 	return id.slice( 0, id.search("-") );
+}
+
+function get_default_settings() {
+	return {
+		team_size: 6,
+		
+		roll_adjust_sr: false,
+		roll_adjust_dps: 120,
+		roll_adjust_tank: 100,
+		roll_adjust_support: 80,
+		roll_balance_priority: 50,
+		roll_quality: 70, // ~= 50k combinations
+		roll_min_quality: 50,
+		roll_separate_otps: true,
+		roll_team_count_power2: false,
+		
+		region: "eu",
+		update_class: true,
+		update_sr: true,
+		update_edited_fields: false,
+	};
 }
 
 function get_rank_name( sr ) {
