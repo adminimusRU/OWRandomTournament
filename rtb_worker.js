@@ -11,7 +11,7 @@ onmessage = function(e) {
 		return;
 	}
 	
-	console.log('Worker: message received, type '+e.data[0]);
+	//console.log('Worker: message received, type '+e.data[0]);
 	
 	var event_type = e.data[0];
 	if ( event_type == "init" ) {
