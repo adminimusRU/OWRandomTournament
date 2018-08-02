@@ -20,6 +20,7 @@ var StatsUpdater = {
 	update_edited_fields: true,
 	update_sr: true,
 	update_class: true,
+	region: "eu",
 	
 	
 	// callbacks
@@ -75,6 +76,7 @@ var StatsUpdater = {
 		player_struct = this.queue[0];
 		
 		OWAPI.id = player_struct.id;
+		OWAPI.region = this.region;
 		OWAPI.onSuccess = this.onOWAPISuccess.bind(StatsUpdater);
 		OWAPI.onFail = this.onOWAPIFail.bind(StatsUpdater);
 		OWAPI.getStats();
