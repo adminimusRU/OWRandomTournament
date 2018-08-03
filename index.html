@@ -314,9 +314,8 @@ var RtbWorker;
 							<input disabled id="roll_adjust_support" class="percent" type="number" size=3 min=0 max=999 autocomplete="off" value="80"/>
 							%  </br>
 						</div>
-						</br>
-											
-						<span>Balance priority</span></br>
+																	
+						<div class="range-title">Balance priority</div>
 						<input id="roll_balance_priority" type="range" size=3 min=0 max=100 autocomplete="off" value="70" style="width:90%"/>
 						</br>
 						<div class="range-sub-container">
@@ -324,7 +323,7 @@ var RtbWorker;
 							<div class="range-sub range-sub-right">equal classes</div>
 						</div>
 												
-						<span>Roll speed</span></br>
+						<div class="range-title">Roll quality</div>
 						<input id="roll_quality" type="range" size=3 min=0 max=100 autocomplete="off" value="70" style="width:90%"/>
 						</br>
 						<div class="range-sub-container">
@@ -332,16 +331,16 @@ var RtbWorker;
 							<div class="range-sub range-sub-right">slow, best balance</div>
 						</div>
 												
-						<span>Roll minimum quality thresold</span></br>
-						<input id="roll_min_quality" type="range" size=3 min=30 max=100 autocomplete="off" value="50" style="width:90%"/>
+						<div class="range-title">Roll coverage</div>
+						<input id="roll_coverage" type="range" size=3 min=0 max=100 autocomplete="off" value="50" style="width:90%"/>
 						</br>
 						<div class="range-sub-container">
-							<div class="range-sub range-sub-left">all parcipiate, some teams poorly balanced</div>
-							<div class="range-sub range-sub-right">some players benched, all teams balanced</div>
+							<div class="range-sub range-sub-left">some players benched, only balanced teams</div>
+							<div class="range-sub range-sub-right">all participate, some teams poorly balanced</div>
 						</div>
 												
 						<input type="checkbox" id="roll_team_count_power2">
-						<label for="roll_team_count_power2">Team count should be power of 2 (for better bracket)</label>
+						<label for="roll_team_count_power2">Team count should be 2<sup>n</sup> (for better bracket)</label>
 						</br>
 						
 						<input type="checkbox" id="roll_separate_otps">
@@ -377,22 +376,25 @@ var RtbWorker;
 						<label for="update_edited_fields">Force update manually edited fields (name, SR, class)</label>
 					</div>
 				</div>
+				<br/>
 			</div>
 			
 			<div id="dlg_roll_progress">
 				<progress id="roll_progress_bar" value="0" max="100" style="width: 80%;"></progress>
 				<br/>
-				<span id="dlg_roll_progress_text"></span>
 				<br/>
+				<div id="dlg_roll_progress_text"></div>
 				<br/>
 				<br/>
 				<input id="dlg_roll_cancel" class="big-btn" type="button" value="Cancel" onclick="cancel_roll();"/>
 			</div>
 			
-			<br/>
+			<div style="padding-bottom: 1em;">
 			<input id="dlg_reset" class="big-btn" type="button" value="Restore defaults" onclick="reset_settings();"/>
-			<br/><br/>
+			</div>
+			<div>
 			<input id="dlg_ok" class="big-btn" type="button" value="OK"/>
+			</div>
 		</div>
 	</div>
 </div>
