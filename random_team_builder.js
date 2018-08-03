@@ -79,26 +79,30 @@ var RandomTeamBuilder = {
 		}
 		
 		for( p in this.players) {
-			for( c=0; c<this.players[p].top_classes.length; c++ ) {
+			/*for( c=0; c<this.players[p].top_classes.length; c++ ) {
 				total_class_count[this.players[p].top_classes[c]] += 1 / (c+1);
+			}*/
+			if ( this.players[p].top_classes.length == 2 ) {
+				total_class_count[this.players[p].top_classes[0]] += 2/3;
+				total_class_count[this.players[p].top_classes[1]] += 1/3;
+			} else if ( this.players[p].top_classes.length == 1 ) {
+				total_class_count[this.players[p].top_classes[0]] += 1;
 			}
 			
 			this.target_team_sr += this.calcPlayerSR( this.players[p] );
 		}
-		this.target_team_sr = this.target_team_sr / this.players.length;
+		this.target_team_sr = Math.round( this.target_team_sr / this.players.length );
 		
-		var min_class_count = Number.MAX_VALUE;
 		for( c in class_names ) {
 			this.target_class_count[class_names[c]] = this.team_size * (total_class_count[class_names[c]] / this.players.length);
 			
-			// round to nearest 0.5
-			var rem = this.target_class_count[class_names[c]] % 0.5;
-			rem = ( rem < 0.25 ? -rem : (0.5-rem) );
-			this.target_class_count[class_names[c]] += rem;
+			// round 
+			this.target_class_count[class_names[c]]  = round_to(this.target_class_count[class_names[c]], 1);
 			
-			if ( this.target_class_count[class_names[c]] < min_class_count ) {
-				min_class_count = this.target_class_count[class_names[c]];
-			}
+			// round to nearest 0.5
+			/*var rem = this.target_class_count[class_names[c]] % 0.5;
+			rem = ( rem < 0.25 ? -rem : (0.5-rem) );
+			this.target_class_count[class_names[c]] += rem;*/
 		}
 		
 		// dbg
@@ -328,11 +332,13 @@ var RandomTeamBuilder = {
 	},
 	
 	calcObjectiveFunctionValue: function( sr_diff, class_unevenness, otp_conflicts ) {
-		return Math.round( 
+		//return Math.round( 
+		var OF = 
 			(class_unevenness * this.balance_priority
 			+ (sr_diff/this.balance_max_sr_diff*100)*(100-this.balance_priority)
 			+ otp_conflicts )
-			/100, 1 );
+			/100 ;
+		return round_to( OF, 1 );
 	},
 	
 	calcTeamSR: function( team ) {
@@ -368,8 +374,14 @@ var RandomTeamBuilder = {
 		}
 		
 		for( p in team) {
-			for( c=0; c<team[p].top_classes.length; c++ ) {
+			/*for( c=0; c<team[p].top_classes.length; c++ ) {
 				current_class_count[team[p].top_classes[c]] += 1 / (c+1);
+			}*/
+			if ( team[p].top_classes.length == 2 ) {
+				current_class_count[team[p].top_classes[0]] += 2/3;
+				current_class_count[team[p].top_classes[1]] += 1/3;
+			} else if ( team[p].top_classes.length == 1 ) {
+				current_class_count[team[p].top_classes[0]] += 1;
 			}
 		}
 		
@@ -382,7 +394,8 @@ var RandomTeamBuilder = {
 			total_class_unevenness += current_class_unevenness;
 		}
 		
-		return Math.round( total_class_unevenness, 1 );
+		//return Math.round( total_class_unevenness, 1 );
+		return round_to( total_class_unevenness, 1 );
 	},
 	
 	calcClassUnevennessValue: function ( current_class_count, target_class_count ) {
