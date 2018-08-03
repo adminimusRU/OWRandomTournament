@@ -433,6 +433,7 @@ div[id="stats_update_log"] {
 	top: -0.5em;
 	margin-left: 1em;
 	margin-right: 1em;
+	/*margin-bottom: -0.5em;*/
 }
 
 .range-sub {
@@ -448,4 +449,8 @@ div[id="stats_update_log"] {
 .range-sub-right {
 	float: right;
 	text-align: right;
+}
+
+.range-title {
+	padding-top: 0.5em;
 }
