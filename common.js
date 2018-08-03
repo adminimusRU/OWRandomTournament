@@ -117,7 +117,7 @@ function get_default_settings() {
 		roll_adjust_support: 80,
 		roll_balance_priority: 50,
 		roll_quality: 70, // ~= 50k combinations
-		roll_min_quality: 50,
+		roll_coverage: 57, // OF_max_thresold = 50
 		roll_separate_otps: true,
 		roll_team_count_power2: false,
 		
@@ -191,6 +191,10 @@ function print_date( date_value ) {
 	} else {
 		return date_value.toLocaleString();
 	}
+}
+
+function round_to( value, precision ) {
+	return Math.round(value * Math.pow(10, precision)) / Math.pow(10, precision);
 }
 
 function sort_team( team, sort_field = 'sr' ) {
