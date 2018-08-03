@@ -229,6 +229,11 @@ function roll_teams() {
 	
 	// convert roll quality to combinations with logarithmic scale
 	var max_combinations = Math.round( Math.pow( 2, Math.log2(1000)+(Math.log2(300000)-Math.log2(1000))*Settings.roll_quality/100 ) );
+		
+	var OF_max_thresold = round_to( (Math.pow( 2, Math.log2(1)+(Math.log2(1000)-Math.log2(1))*Settings.roll_coverage/100 ) - 1), 1);
+	if (Settings.roll_coverage == 100) {
+		OF_max_thresold = Number.MAX_VALUE;
+	}
 	
 	var rtb_settings = {
 		team_size: Settings.team_size,
@@ -243,7 +248,7 @@ function roll_teams() {
 		
 		balance_priority: Settings.roll_balance_priority,
 		max_combinations: max_combinations,
-		OF_max_thresold: Settings.roll_min_quality,
+		OF_max_thresold: OF_max_thresold,
 		//OF_min_thresold: 50,		
 	}
 		
@@ -266,6 +271,8 @@ function test() {
 	document.getElementById("stats_update_log").innerHTML += "max_combinations = "+max_combinations+"</br>";
 	
 	document.getElementById("stats_update_log").innerHTML += JSON.stringify(StatsUpdater)+"</br>";
+	
+	//alert( round_to(123.456789, 0) );
 }
 
 function update_all_stats() {
