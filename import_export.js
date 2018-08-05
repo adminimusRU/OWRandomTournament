@@ -1,10 +1,120 @@
-function export_teams() {
+function export_teams( format, include_players, include_sr, include_classes, table_columns ) {
 	var setup_str = "";
-	var format = document.getElementById("dlg_setup_format").value;
+	
 	if ( format == "text-list" ) {
-		for ( t in teams ) {
+		for ( var t in teams ) {
 			setup_str += teams[t].name + "\n";
+			if ( include_players ) {
+				for ( var p in teams[t].players ) {
+					var player_str = "";
+					if ( include_sr ) {
+						player_str += teams[t].players[p].sr + "\t";
+					}
+					player_str += teams[t].players[p].display_name;
+					if ( include_classes ) {
+						if ( teams[t].players[p].top_classes[0] != undefined ) {
+							player_str += "\t" + teams[t].players[p].top_classes[0];
+						}
+					}
+					setup_str += player_str + "\n";
+				}
+				setup_str += "\n";
+			}
 		}
+	} else if ( format == "html-table" ) {
+		var title_colspan = 1;
+		if ( include_players ) {
+			if ( include_sr ) title_colspan++;
+			if ( include_classes ) title_colspan++;
+		}
+		var _team_size = teams[0].players.length;
+		
+		setup_str += "<table>\n";
+		
+		for ( var row = 1; row <= Math.ceil(teams.length / table_columns); row++ ) {
+			var team_offset = (row-1)*table_columns;
+			// print titles
+			setup_str += "<tr>";
+			for ( var t = team_offset; t < team_offset+table_columns; t++ ) {
+				if ( t >= teams.length ) break;
+				setup_str += "<td colspan='"+title_colspan+"' style='text-align: center;font-style: italic;background-color: gray; color: white;'>";
+				setup_str += teams[t].name;
+				setup_str += "</td>";
+				// vertical spacer
+				setup_str += "<td></td>";
+			}
+			setup_str += "</tr>\n";
+			
+			// print players
+			if ( include_players ) {
+				for ( var p = 0; p < _team_size; p++ ) {
+					setup_str += "<tr>";
+					for ( var t = team_offset; t < team_offset+table_columns; t++ ) {
+						if ( t >= teams.length ) break;
+						
+						if ( include_sr ) {
+							setup_str += "<td style='text-align: right'>";
+							setup_str += teams[t].players[p].sr;
+							setup_str += "</td>";
+						}
+						setup_str += "<td style='text-align: left'>";
+						// @Todo escape
+						setup_str += teams[t].players[p].display_name;
+						setup_str += "</td>";
+						if ( include_classes ) {
+							setup_str += "<td style='text-align: left'>";
+							if ( teams[t].players[p].top_classes[0] != undefined ) {
+								var class_str = teams[t].players[p].top_classes[0];
+								if (class_str == "support") class_str = "sup";
+								setup_str += class_str;
+							}
+							setup_str += "</td>";
+						}
+						// vertical spacer
+						setup_str += "<td></td>";
+					}
+					setup_str += "</tr>\n";
+				}
+			}
+			
+			// horizontal spacer
+			setup_str += "<tr></tr>";
+		}
+		
+		/*for ( var t in teams ) {
+			setup_str += "<tr>";
+			setup_str += "<td colspan='"+title_colspan+"' style='text-align: center;font-style: italic;background-color: gray; color: white;'>";
+			setup_str += teams[t].name;
+			setup_str += "</td>";
+			setup_str += "</tr>\n";
+			
+			if ( include_players ) {
+				for ( var p in teams[t].players ) {
+					setup_str += "<tr>";
+					if ( include_sr ) {
+						setup_str += "<td>";
+						setup_str += teams[t].players[p].sr;
+						setup_str += "</td>";
+					}
+					setup_str += "<td>";
+					// @Todo escape
+					setup_str += teams[t].players[p].display_name;
+					setup_str += "</td>";
+					if ( include_classes ) {
+						setup_str += "<td>";
+						if ( teams[t].players[p].top_classes[0] != undefined ) {
+							setup_str += teams[t].players[p].top_classes[0];
+						}
+						setup_str += "</td>";
+					}
+					setup_str += "</tr>\n";
+				}	
+			}
+			
+			setup_str += "<tr><td colspan='"+title_colspan+"'></td></tr>\n";
+		}*/
+		
+		setup_str += "</table>\n";
 	}
 	
 	return setup_str.trim();
@@ -159,7 +269,6 @@ function restore_saved_teams() {
 	// draw teams
 	redraw_lobby();
 	redraw_teams();
-	// + draw rolled teams
 }
 
 function sanitize_player_struct( player_struct, saved_format ) {	
