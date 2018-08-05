@@ -454,3 +454,9 @@ div[id="stats_update_log"] {
 .range-title {
 	padding-top: 0.5em;
 }
+
+.html-export-container {
+	width: 40em;
+	height: 30em;
+	overflow: scroll;
+}
