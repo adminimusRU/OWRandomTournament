@@ -16,6 +16,8 @@ var RandomTeamBuilder = {
 	adjust_sr_by_class: {},
 	// 0 - prioritize SR, 100 - prioritize classes
 	balance_priority: 50,
+	// do not place similar one-trick-ponies together
+	separate_otps: true,
 	// maximum number of combinations checked to find balanced team.
 	// reasonable range: 1000 - 300000
 	// recommended optimal: 50000
@@ -54,6 +56,7 @@ var RandomTeamBuilder = {
 				this.onDebugMessage.call( undefined, "adjust_sr = "+this.adjust_sr );
 				this.onDebugMessage.call( undefined, "adjust_sr_by_class = "+JSON.stringify(this.adjust_sr_by_class) );
 				this.onDebugMessage.call( undefined, "balance_priority = "+this.balance_priority );
+				this.onDebugMessage.call( undefined, "separate_otps = "+this.separate_otps );
 				this.onDebugMessage.call( undefined, "max_combinations = "+this.max_combinations );
 				this.onDebugMessage.call( undefined, "OF_min_thresold = "+this.OF_min_thresold );
 				this.onDebugMessage.call( undefined, "OF_max_thresold = "+this.OF_max_thresold );
@@ -314,10 +317,11 @@ var RandomTeamBuilder = {
 	calcObjectiveFunction: function( picked_players ) {
 		var sr_diff = Math.abs( this.calcTeamSR(picked_players) - this.target_team_sr );
 		var class_unevenness = this.calcClassUnevenness( picked_players );
-		
-		// @ToDo
-		//var otp_conflicts = calc_otp_conflicts( new_composition_players, opposite_team );
 		var otp_conflicts = 0;
+		if (this.separate_otps) {
+			otp_conflicts = this.calcOTPConflicts( picked_players );
+		}
+		
 		var objective_func = this.calcObjectiveFunctionValue( sr_diff, class_unevenness, otp_conflicts );
 			
 		//dbg
@@ -400,6 +404,24 @@ var RandomTeamBuilder = {
 	
 	calcClassUnevennessValue: function ( current_class_count, target_class_count ) {
 		return Math.abs( 100*Math.pow((current_class_count - target_class_count), 2) );
+	},
+	
+	calcOTPConflicts: function( team ) {
+		var otp_conflicts_count = 0;
+		// array of one-trick ponies (hero names) in current team
+		var current_team_otps = []; 
+		for( p in team) {
+			if ( team[p].top_heroes.length == 1 ) {
+				var current_otp = team[p].top_heroes[0].hero;
+				if (current_team_otps.indexOf(current_otp) == -1) {
+					current_team_otps.push( current_otp );
+				} else {
+					otp_conflicts_count++;
+				}
+			}
+		}
+		
+		return otp_conflicts_count * 10000;	
 	},
 }
 
