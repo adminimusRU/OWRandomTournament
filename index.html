@@ -132,7 +132,7 @@ var RtbWorker;
 				<br/>
 				<br/>
 				
-				<input class="big-btn" type="button" onclick="reset_roll();" value="Reset" title="Move all players back to lobby"/>
+				<input class="big-btn" type="button" onclick="reset_roll_click();" value="Reset" title="Move all players back to lobby"/>
 				<br/>
 				<br/>
 								
@@ -197,22 +197,30 @@ var RtbWorker;
 			</div>
 			<div id="dlg_setup_share" class="dlg_options">
 				<label for="dlg_setup_format">Format: </label>
-				<select id="dlg_setup_format" onchange="save_settings_value(this);change_export_teams_format();">
-					<option value="text-list">plain text list</option>
+				<select id="dlg_setup_format" onchange="change_export_teams_format();">
+					<option value="text-list">text list</option>
+					<option value="html-table">HTML table</option>
 					<!--<option value="text-table">text table</option>
 					<option value="markdown-code-block" selected>Markdown code block (for Discord)</option>
 					<option value="html-table">HTML table</option>-->
 				</select>
 			</div>
-			<!--<div id="dlg_setup_share_options" class="dlg_options" onchange="save_settings_value(this);change_setup_format();">
+			<div id="dlg_setup_share_options" class="dlg_options" onchange="change_export_teams_format();">
+				<input type="checkbox" id="dlg_setup_share_players">
+				<label for="dlg_setup_share_players">Include players</label>
+				<br/>
 				<input type="checkbox" id="dlg_setup_share_sr">
 				<label for="dlg_setup_share_sr">Include SR</label>
 				<br/>
 				<input type="checkbox" id="dlg_setup_share_classes">
 				<label for="dlg_setup_share_classes">Include classes/roles</label>
+				<br/>
+				<label for="dlg_setup_share_columns">Table columns</label>
+				<input id="dlg_setup_share_columns" type="number" min=1 max=999 value=1>
 			</div>
-			-->
+			
 			<textarea id="dlg_textarea" rows="20" cols="80"></textarea>
+			<div id="dlg_html_export" class="html-export-container"></div>
 			
 			<div id="dlg_player_edit" class="dlg_options table">
 				<div class="row">
