@@ -120,123 +120,125 @@ function export_teams( format, include_players, include_sr, include_classes, tab
 	return setup_str.trim();
 }
 
-function import_lobby() {
-	var import_str = document.getElementById("dlg_textarea").value;
+function import_lobby( format, import_str ) {
+	//var import_str = document.getElementById("dlg_textarea").value;
 	var added_players = [];
+	var players_for_update = [];
 
-	if (import_str !== null && import_str != "") {
-		if ( document.getElementById("dlg_format_value").value == "json" ) {
-			try {
-				// try to parse json
-				var import_struct = JSON.parse(import_str);
+	if (import_str == null || import_str == "") {
+		return;
+	}
+	if ( format == "json" ) {
+		try {
+			// try to parse json
+			var import_struct = JSON.parse(import_str);
+			
+			// check format
+			if ( import_struct.format_version > 2 ) {
+				//throw "Unsupported format version";
+				throw new Error("Unsupported format version");
+			}
+			
+			for( var i=0; i<import_struct.players.length; i++) {
+				var imported_player = import_struct.players[i];
 				
-				// check format
-				if ( import_struct.format_version > 2 ) {
-					throw "Unsupported format version";
+				// check duplicates
+				if (find_player_by_id(imported_player.id) !== undefined ) {
+					continue;
 				}
 				
-				for( var i=0; i<import_struct.players.length; i++) {
-					var imported_player = import_struct.players[i];
-					
-					// check duplicates
-					if (find_player_by_id(imported_player.id) !== undefined ) {
-						continue;
-					}
-					
-					imported_player = sanitize_player_struct( imported_player, import_struct.format_version );
-					
-					/*if ( ! Array.isArray(imported_player.top_classes) ) {
-						import_struct.players[i].top_classes = [];
-					}
-					
-					if ( ! Array.isArray(imported_player.top_heroes) ) {
-						import_struct.players[i].top_heroes = [];
-					}*/
-					
-					
-					
-					//if ( import_struct.format_version == 1 ) {
-						// convert offence and defence classes to dps
-						
-						//imported_player = sanitize_player_struct( imported_player );
-						
-						/*
-						if( (import_struct.players[i].top_classes[0] == "offence") || (import_struct.players[i].top_classes[0] == "defence") ) {
-							import_struct.players[i].top_classes[0] = "dps";
-						}
-						if( (import_struct.players[i].top_classes[1] == "offence") || (import_struct.players[i].top_classes[1] == "defence") ) {
-							import_struct.players[i].top_classes[1] = "dps";
-						}
-						if( (import_struct.players[i].top_classes[0] == "dps") && (import_struct.players[i].top_classes[1] == "dps") ) {
-							import_struct.players[i].top_classes.pop();
-						}*/
-					//}
-					
-					lobby.splice(lobby.length, 0, imported_player);
-					added_players.push( imported_player );
-				}
+				imported_player = sanitize_player_struct( imported_player, import_struct.format_version );
 				
-				redraw_lobby();
-				save_players_list();
+				//lobby.splice(lobby.length, 0, imported_player);
+				added_players.push( imported_player );
 			}
-			catch(err) {
-				// try to parse as plain battletag list?
-				alert("Incorrect import format");
-				return;
-			}
-		} else if (document.getElementById("dlg_format_value").value == "battletags") {
+			
+			//redraw_lobby();
+			//save_players_list();
+		}
+		catch(err) {
+			// try to parse as plain battletag list?
+			alert("Incorrect import format: "+err.message);
+			return false;
+		}
+	} else if( format == "text") {
+		try {
 			var battletag_list = import_str.trim().split("\n");
 			for( i in battletag_list ) {
-				var player_id = format_player_id( battletag_list[i] );
+				// split string to fields (btag, SR, class, offclass)
+				var fields = battletag_list[i].split(/[ \t.,|]+/);
+				
+				var player_id = format_player_id(fields[0]);
+				//var player_id = format_player_id( battletag_list[i] );
 				// check duplicates
 				if (find_player_by_id(player_id) !== undefined ) {
 					continue;
 				}
-				var player_name = format_player_name( player_id );		
-				/*var new_player = {
-						id: player_id,
-						display_name: player_name, 
-						sr: 0,
-						level: 0,
-						top_classes: [],
-						top_heroes: [],
-					};*/
+				var player_name = format_player_name( player_id );
+				
 				var new_player = create_empty_player();
 				delete new_player.empty;
 				new_player.id = player_id;
 				new_player.display_name = player_name;
-				lobby.push( new_player );
-				//players_for_update.push( new_player );
+				
+				// additional fields
+				if ( fields.length >= 2 ) {
+					new_player.sr = Number( fields[1] );
+					if ( Number.isNaN(new_player.sr) ) {
+						throw new Error("Incorrect SR number "+fields[1]);
+					}
+				}
+				if ( fields.length >= 3 ) {
+					for ( var c = 2; c < fields.length; c++ ) {
+						if (class_names.indexOf(fields[c]) == -1) {
+							//throw "Incorrect class name "+fields[c];
+							throw new Error("Incorrect class name "+fields[c]);
+						}
+						new_player.top_classes.push( fields[c] );
+					}
+				}
+				
+				//lobby.push( new_player );
+				if ( fields.length == 1 ) {
+					players_for_update.push( new_player );
+				}
 				added_players.push( new_player );
 			}
-			
-			redraw_lobby();
-			save_players_list();
-			
-			// get stats for added players
-			if (added_players.length > 0) {
-				//total_players_for_update = players_for_update.length;
-				/*toggle_owapi_buttons( false );
-				document.getElementById("update_active_stats_btn").value = "↻ Updating stats...1"+" / "+total_players_for_update;
-				silent_update = false;
-				silent_update_errors = true;
-				stat_update_fails = 0;
-				document.getElementById("stats_update_log").innerHTML = "";
-				update_next_player_stats();*/
-				
-				/*for( i in added_players ) {
-					StatsUpdater.addToQueue( added_players[i] );
-				}*/
-				StatsUpdater.addToQueue( added_players );
-			}
+		} 
+		catch(err) {
+			alert("Incorrect import format: "+err.message);
+			return false;
 		}
 		
-		// highlight all new players and scroll to show last one
-		if (added_players.length > 0) {
-			setTimeout( function() {document.getElementById( added_players[added_players.length-1].id ).scrollIntoView(false);}, 100 );
-			setTimeout( function() {highlight_players( added_players );}, 500 );
+		/*for( var p in added_players ) {
+			lobby.push( added_players[p] );
+		}*/
+		
+		//redraw_lobby();
+		//save_players_list();
+		
+		// get stats for added players
+		if (players_for_update.length > 0) {
+			StatsUpdater.addToQueue( players_for_update );
 		}
+	} else {
+		alert("Unknown import format: "+format);
+		return false;
 	}
+	
+	for( var p in added_players ) {
+		lobby.push( added_players[p] );
+	}
+		
+	redraw_lobby();
+	save_players_list();
+	
+	// highlight all new players and scroll to show last one
+	if (added_players.length > 0) {
+		setTimeout( function() {document.getElementById( added_players[added_players.length-1].id ).scrollIntoView(false);}, 100 );
+		setTimeout( function() {highlight_players( added_players );}, 500 );
+	}
+	return true;
 }
 
 function restore_saved_teams() {
