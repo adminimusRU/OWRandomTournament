@@ -112,9 +112,9 @@ function get_default_settings() {
 		team_size: 6,
 		
 		roll_adjust_sr: false,
-		roll_adjust_dps: 120,
+		roll_adjust_dps: 110,
 		roll_adjust_tank: 100,
-		roll_adjust_support: 80,
+		roll_adjust_support: 90,
 		roll_balance_priority: 50,
 		roll_quality: 70, // ~= 50k combinations
 		roll_coverage: 57, // OF_max_thresold = 50
