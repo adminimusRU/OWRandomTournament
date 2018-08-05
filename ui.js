@@ -64,11 +64,11 @@ function cancel_roll() {
 
 function change_export_teams_format() {
 	// @ToDo save format and options
-	var format = document.getElementById("dlg_setup_format").value;
-	var include_players = document.getElementById("dlg_setup_share_players").checked;
-	var include_sr = document.getElementById("dlg_setup_share_sr").checked;
-	var include_classes = document.getElementById("dlg_setup_share_classes").checked;
-	var table_columns = Number(document.getElementById("dlg_setup_share_columns").value);
+	var format = document.getElementById("dlg_team_export_format_value").value;
+	var include_players = document.getElementById("dlg_team_export_players").checked;
+	var include_sr = document.getElementById("dlg_team_export_sr").checked;
+	var include_classes = document.getElementById("dlg_team_export_classes").checked;
+	var table_columns = Number(document.getElementById("dlg_team_export_columns").value);
 	
 	var export_str = export_teams( format, include_players, include_sr, include_classes, table_columns );
 	
@@ -109,8 +109,8 @@ function export_teams_dlg() {
 	init_popup_dlg();
 	document.getElementById("popup_dlg").style.display = "block";
 	document.getElementById("dlg_title").innerHTML = "Export rolled teams";
-	document.getElementById("dlg_setup_share").style.display = "block";
-	document.getElementById("dlg_setup_share_options").style.display = "block";
+	document.getElementById("dlg_team_export_format").style.display = "block";
+	document.getElementById("dlg_team_export_options").style.display = "block";
 	//document.getElementById("dlg_setup_value").value = "text-list";
 	//document.getElementById("dlg_setup_value").onchange = function(event){change_setup_format();};
 	document.getElementById("dlg_textarea").style.display = "inline";
@@ -191,16 +191,24 @@ function import_lobby_dlg() {
 	init_popup_dlg();
 	document.getElementById("popup_dlg").style.display = "block";
 	document.getElementById("dlg_title").innerHTML = "Enter import string";
-	document.getElementById("dlg_import_export_format").style.display = "block";
-	document.getElementById("dlg_operation").innerHTML = "Import";
-	document.getElementById("dlg_format_value").value = "battletags";
-	document.getElementById("dlg_format_value").options.namedItem("dlg_format_value_csv").style.display = "none";
+	document.getElementById("dlg_player_import_format").style.display = "block";
+	//document.getElementById("dlg_operation").innerHTML = "Import";
+	//document.getElementById("dlg_format_value").value = "battletags";
+	//document.getElementById("dlg_format_value").options.namedItem("dlg_format_value_csv").style.display = "none";
 	document.getElementById("dlg_textarea").value = "";
 	document.getElementById("dlg_textarea").style.display = "inline";
 	document.getElementById("dlg_textarea").select();
 	document.getElementById("dlg_textarea").focus();
 	
-	document.getElementById("dlg_ok").onclick = function(event){close_dialog();import_lobby();};
+	document.getElementById("dlg_ok").onclick = import_lobby_ok;
+}
+
+function import_lobby_ok() {
+	var format = document.getElementById("dlg_player_import_format_value").value;
+	var import_str = document.getElementById("dlg_textarea").value;
+	if ( import_lobby(format, import_str) ) {
+		close_dialog();
+	}
 }
 
 function new_player_keyup(ev) {
@@ -311,7 +319,8 @@ function test() {
 	
 	document.getElementById("stats_update_log").innerHTML += JSON.stringify(StatsUpdater)+"</br>";
 	
-	//alert( round_to(123.456789, 0) );
+	var txt = 'Player-1234 2650, dps|tank'.split(/[ \t.,|]+/);
+	alert( JSON.stringify(txt) );
 	
 	for( t in teams ) {
 		var otp_conflicts_count = 0;
@@ -625,13 +634,13 @@ function highlight_player( player_id ) {
 	setTimeout( reset_highlighted_players, 2000 );
 }
 
-function highlight_players( player_id_list ) {
-	for( i=0; i<player_id_list.length; i++ ) {
+function highlight_players( player_list ) {
+	for( i=0; i<player_list.length; i++ ) {
 		var player_id = "";
-		if ( typeof player_id_list[i] == "String" ) {
-			player_id = player_id_list[i];
+		if ( typeof player_list[i] == "String" ) {
+			player_id = player_list[i];
 		} else {
-			player_id = player_id_list[i].id;
+			player_id = player_list[i].id;
 		}
 		document.getElementById(player_id).classList.toggle("player-highlighted", true);
 	}
@@ -844,11 +853,15 @@ function fill_settings_dlg( settings_obj ) {
 function init_popup_dlg() {
 	document.getElementById("dlg_title").innerHTML = "";
 	document.getElementById("dlg_close").style.display = "inline";
-	document.getElementById("dlg_import_export_format").style.display = "none";
+	/*document.getElementById("dlg_import_export_format").style.display = "none";
 	document.getElementById("dlg_format_value").onchange = function(event){;};
 	document.getElementById("dlg_format_value").options.namedItem("dlg_format_value_csv").style.display = "";
 	document.getElementById("dlg_setup_share").style.display = "none";
-	document.getElementById("dlg_setup_share_options").style.display = "none";	
+	document.getElementById("dlg_setup_share_options").style.display = "none";*/
+	document.getElementById("dlg_player_import_format").style.display = "none";
+	document.getElementById("dlg_player_export_format").style.display = "none";
+	document.getElementById("dlg_team_export_format").style.display = "none";
+	document.getElementById("dlg_team_export_options").style.display = "none";
 	document.getElementById("dlg_textarea").style.display = "none";
 	document.getElementById("dlg_html_export").style.display = "none";
 	document.getElementById("dlg_player_edit").style.display = "none";
