@@ -187,17 +187,24 @@ var RtbWorker;
 			<input id="dlg_close" title="Close" type="button" class="team_btn dlg-close" onclick="close_dialog();" value="X"/>
 			<br/>
 			<br/>
-			<div id="dlg_import_export_format" class="dlg_options">
-				<label for="dlg_format_value"><span id="dlg_operation">Export</span> format: </label>
-				<select id="dlg_format_value">
+			<div id="dlg_player_import_format" class="dlg_options">
+				<label for="dlg_player_import_format_value">Import format: </label>
+				<select id="dlg_player_import_format_value">
 					<option value="json">JSON (full info)</option>
-					<option value="battletags">plain text (BattleTags only)</option>
-					<option value="csv" id="dlg_format_value_csv">CSV (for Excel)</option>
+					<option value="text">text (btag, [SR, class, offclass])</option>
 				</select>
 			</div>
-			<div id="dlg_setup_share" class="dlg_options">
-				<label for="dlg_setup_format">Format: </label>
-				<select id="dlg_setup_format" onchange="change_export_teams_format();">
+			<div id="dlg_player_export_format" class="dlg_options">
+				<label for="dlg_player_export_format_value">Export format: </label>
+				<select id="dlg_player_export_format_value">
+					<option value="json">JSON (full info)</option>
+					<option value="text">text (btags only)</option>
+					<option value="csv">CSV (for Excel)</option>
+				</select>
+			</div>
+			<div id="dlg_team_export_format" class="dlg_options">
+				<label for="dlg_team_export_format_value">Format: </label>
+				<select id="dlg_team_export_format_value" onchange="change_export_teams_format();">
 					<option value="text-list">text list</option>
 					<option value="html-table">HTML table</option>
 					<!--<option value="text-table">text table</option>
@@ -205,18 +212,18 @@ var RtbWorker;
 					<option value="html-table">HTML table</option>-->
 				</select>
 			</div>
-			<div id="dlg_setup_share_options" class="dlg_options" onchange="change_export_teams_format();">
-				<input type="checkbox" id="dlg_setup_share_players">
-				<label for="dlg_setup_share_players">Include players</label>
+			<div id="dlg_team_export_options" class="dlg_options" onchange="change_export_teams_format();">
+				<input type="checkbox" id="dlg_team_export_players">
+				<label for="dlg_team_export_players">Include players</label>
 				<br/>
-				<input type="checkbox" id="dlg_setup_share_sr">
-				<label for="dlg_setup_share_sr">Include SR</label>
+				<input type="checkbox" id="dlg_team_export_sr">
+				<label for="dlg_team_export_sr">Include SR</label>
 				<br/>
-				<input type="checkbox" id="dlg_setup_share_classes">
-				<label for="dlg_setup_share_classes">Include classes/roles</label>
+				<input type="checkbox" id="dlg_team_export_classes">
+				<label for="dlg_team_export_classes">Include classes/roles</label>
 				<br/>
-				<label for="dlg_setup_share_columns">Table columns</label>
-				<input id="dlg_setup_share_columns" type="number" min=1 max=999 value=1>
+				<label for="dlg_team_export_columns">Table columns</label>
+				<input id="dlg_team_export_columns" type="number" min=1 max=999 value=1>
 			</div>
 			
 			<textarea id="dlg_textarea" rows="20" cols="80"></textarea>
