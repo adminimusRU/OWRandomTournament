@@ -46,7 +46,7 @@ var stats_update_current_retry = 2;
 var stats_update_dbg = false;*/
 
 
-// init updater
+// init stats updater
 StatsUpdater.onPlayerUpdated = on_player_stats_updated;
 StatsUpdater.onComplete = on_stats_update_complete;
 StatsUpdater.onStart = on_stats_update_start;
@@ -54,7 +54,7 @@ StatsUpdater.onProgressChange = on_stats_update_progress;
 StatsUpdater.onError = on_stats_update_error;
 
 // team builder
-// RandomTeamBuilder inside worker thread
+// RandomTeamBuilder object inside worker thread
 var RtbWorker;
 
 
@@ -83,8 +83,8 @@ var RtbWorker;
 			
 			<div class="team-toolbar">
 			<input title="Clear lobby" type="button" class="team_btn" onclick="clear_lobby_click();" value=" X "/>
-			<input title="Import lobby" id="import_lobby_btn" type="button" class="team_btn" onclick="import_lobby_dlg();" value="Import"/>
-			<input title="Export lobby" type="button" class="team_btn" onclick="export_lobby();" value="Export"/>
+			<input title="Import lobby" id="import_lobby_btn" type="button" class="team_btn" onclick="open_export_lobby_dlg();" value="Import"/>
+			<input title="Export lobby" type="button" class="team_btn" onclick="open_export_lobby_dlg();" value="Export"/>
 			<input title="Sort lobby by SR" type="button" class="team_btn" onclick="sort_team(lobby, 'sr');redraw_teams();" value="&uarr;&darr;123"/>
 			<input title="Sort lobby by name" type="button" class="team_btn" onclick="sort_team(lobby, 'display_name');redraw_teams();" value="&uarr;&darr;Az"/>
 			</div>
@@ -128,7 +128,7 @@ var RtbWorker;
 				<br/>
 				<br/>
 				
-				<input class="big-btn" type="button" onclick="export_teams_dlg();" value="Export teams"/>
+				<input class="big-btn" type="button" onclick="open_team_export_teams_dlg();" value="Export teams"/>
 				<br/>
 				<br/>
 				
@@ -179,12 +179,12 @@ var RtbWorker;
 	</div>
 </div>
 
-<div id="popup_dlg" class="dlg" style="display:none">
+<div id="popup_dlg_import_lobby" class="dlg" style="display:none">
 	<div class="dlg-background"></div>
 	<div class="dlg-container">
 		<div class="dlg-content">
-			<span id="dlg_title" class="team-title">Title</span>
-			<input id="dlg_close" title="Close" type="button" class="team_btn dlg-close" onclick="close_dialog();" value="X"/>
+			<span class="team-title">Import players</span>
+			<input title="Close" type="button" class="team_btn dlg-close" onclick="close_dialog('popup_dlg_import_lobby');" value="X"/>
 			<br/>
 			<br/>
 			<div id="dlg_player_import_format" class="dlg_options">
@@ -194,6 +194,26 @@ var RtbWorker;
 					<option value="text">text (btag, [SR, class, offclass])</option>
 				</select>
 			</div>
+						
+			<textarea id="dlg_textarea_import_lobby" rows="20" cols="80"></textarea>
+			
+			<div>
+			<input id="dlg_ok" class="big-btn" type="button" value="OK" onclick="import_lobby_ok();"/>
+			</div>
+		</div>
+	</div>
+</div>	
+			
+
+<div id="popup_dlg_export_lobby" class="dlg" style="display:none">
+	<div class="dlg-background"></div>
+	<div class="dlg-container">
+		<div class="dlg-content">
+			<span class="team-title">Export players</span>
+			<input title="Close" type="button" class="team_btn dlg-close" onclick="close_dialog('popup_dlg_export_lobby');" value="X"/>
+			<br/>
+			<br/>
+			
 			<div id="dlg_player_export_format" class="dlg_options">
 				<label for="dlg_player_export_format_value">Export format: </label>
 				<select id="dlg_player_export_format_value">
@@ -202,14 +222,31 @@ var RtbWorker;
 					<option value="csv">CSV (for Excel)</option>
 				</select>
 			</div>
+					
+			<textarea id="dlg_textarea_export_lobby" rows="20" cols="80"></textarea>
+			
+			<div>
+				<input id="dlg_ok" class="big-btn" type="button" value="OK" onclick="export_lobby_ok();"/>
+			</div>
+		</div>
+	</div>
+</div>			
+			
+
+<div id="popup_dlg_export_teams" class="dlg" style="display:none">
+	<div class="dlg-background"></div>
+	<div class="dlg-container">
+		<div class="dlg-content">
+			<span class="team-title">Export teams</span>
+			<input title="Close" type="button" class="team_btn dlg-close" onclick="close_dialog('popup_dlg_export_teams');" value="X"/>
+			<br/>
+			<br/>
+			
 			<div id="dlg_team_export_format" class="dlg_options">
 				<label for="dlg_team_export_format_value">Format: </label>
 				<select id="dlg_team_export_format_value" onchange="change_export_teams_format();">
 					<option value="text-list">text list</option>
 					<option value="html-table">HTML table</option>
-					<!--<option value="text-table">text table</option>
-					<option value="markdown-code-block" selected>Markdown code block (for Discord)</option>
-					<option value="html-table">HTML table</option>-->
 				</select>
 			</div>
 			<div id="dlg_team_export_options" class="dlg_options" onchange="change_export_teams_format();">
@@ -226,8 +263,25 @@ var RtbWorker;
 				<input id="dlg_team_export_columns" type="number" min=1 max=999 value=1>
 			</div>
 			
-			<textarea id="dlg_textarea" rows="20" cols="80"></textarea>
-			<div id="dlg_html_export" class="html-export-container"></div>
+			<textarea id="dlg_textarea_export_teams" rows="20" cols="80"></textarea>
+			<div id="dlg_html_export_teams" class="html-export-container"></div>
+			
+			<div>
+				<input id="dlg_ok" class="big-btn" type="button" value="OK" onclick="close_dialog('popup_dlg_export_teams');"/>
+			</div>
+		</div>
+	</div>
+</div>			
+			
+			
+<div id="popup_dlg_edit_player" class="dlg" style="display:none">
+	<div class="dlg-background"></div>
+	<div class="dlg-container">
+		<div class="dlg-content">
+			<span id="dlg_title_edit_player" class="team-title">Player name</span>
+			<input id="dlg_close" title="Close" type="button" class="team_btn dlg-close" onclick="close_dialog('popup_dlg_edit_player');" value="X"/>
+			<br/>
+			<br/>			
 			
 			<div id="dlg_player_edit" class="dlg_options table">
 				<div class="row">
@@ -286,6 +340,22 @@ var RtbWorker;
 				<br/>
 			</div>
 			<input id="dlg_update_player_stats" class="big-btn" type="button" value="&#8635; Update stats" onclick="update_current_player_stats();"/>
+
+			<div>
+				<input id="dlg_ok" class="big-btn" type="button" value="OK" onclick="edit_player_ok();"/>
+			</div>
+		</div>
+	</div>
+</div>
+
+<div id="popup_dlg_settings" class="dlg" style="display:none">
+	<div class="dlg-background"></div>
+	<div class="dlg-container">
+		<div class="dlg-content">
+			<span class="team-title">Settings</span>
+			<input  title="Close" type="button" class="team_btn dlg-close" onclick="close_dialog('popup_dlg_settings');" value="X"/>
+			<br/>
+			<br/>	
 			
 			<div id="dlg_settings">
 				<div class="group">
@@ -394,6 +464,26 @@ var RtbWorker;
 				<br/>
 			</div>
 			
+			<div style="padding-bottom: 1em;">
+				<input id="dlg_reset" class="big-btn" type="button" value="Restore defaults" onclick="reset_settings();"/>
+			</div>
+			<div>
+				<input id="dlg_ok" class="big-btn" type="button" value="OK" onclick="apply_settings();"/>
+			</div>
+		</div>
+	</div>
+</div>		
+
+
+<div id="popup_dlg_roll_progress" class="dlg" style="display:none">
+	<div class="dlg-background"></div>
+	<div class="dlg-container">
+		<div class="dlg-content">
+			<span class="team-title">Rolling teams</span>
+			
+			<br/>
+			<br/>
+			
 			<div id="dlg_roll_progress">
 				<progress id="roll_progress_bar" value="0" max="100" style="width: 80%;"></progress>
 				<br/>
@@ -404,12 +494,6 @@ var RtbWorker;
 				<input id="dlg_roll_cancel" class="big-btn" type="button" value="Cancel" onclick="cancel_roll();"/>
 			</div>
 			
-			<div style="padding-bottom: 1em;">
-			<input id="dlg_reset" class="big-btn" type="button" value="Restore defaults" onclick="reset_settings();"/>
-			</div>
-			<div>
-			<input id="dlg_ok" class="big-btn" type="button" value="OK"/>
-			</div>
 		</div>
 	</div>
 </div>
