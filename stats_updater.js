@@ -32,6 +32,9 @@ var StatsUpdater = {
 	
 	addToQueue: function( player_s ) {
 		if ( Array.isArray(player_s) ) {
+			if (player_s.length == 0 ) {
+				return;
+			}
 			for (i in player_s) {
 				// check duplicates
 				if ( this.queue.indexOf( player_s[i] ) !== -1 ) {
@@ -54,7 +57,7 @@ var StatsUpdater = {
 			this.state = StatsUpdaterState.updating;
 			
 			this.updateNextPlayer();
-			if(typeof this.onStateChange == "function") {
+			if(typeof this.onStart == "function") {
 				this.onStart.call( undefined );
 			}
 		} else if ( this.state == StatsUpdaterState.updating ) {
@@ -66,7 +69,7 @@ var StatsUpdater = {
 			this.currentIndex = 1;
 			this.state = StatsUpdaterState.updating;
 			setTimeout( this.updateNextPlayer.bind(this), this.min_api_request_interval );
-			if(typeof this.onStateChange == "function") {
+			if(typeof this.onStart == "function") {
 				this.onStart.call( undefined );
 			}
 		}
