@@ -225,9 +225,11 @@ function roll_teams() {
 	RtbWorker.onmessage = on_rtb_worker_message;
 	
 	// convert roll quality to combinations with logarithmic scale
-	var max_combinations = Math.round( Math.pow( 2, Math.log2(1000)+(Math.log2(300000)-Math.log2(1000))*Settings.roll_quality/100 ) );
+	//var max_combinations = Math.round( Math.pow( 2, Math.log2(1000)+(Math.log2(300000)-Math.log2(1000))*Settings.roll_quality/100 ) );
+	var max_combinations = convert_range_log_scale( Settings.roll_quality, 1000, 300000 );
 		
-	var OF_max_thresold = round_to( (Math.pow( 2, Math.log2(1)+(Math.log2(1000)-Math.log2(1))*Settings.roll_coverage/100 ) - 1), 1);
+	//var OF_max_thresold = round_to( (Math.pow( 2, Math.log2(1)+(Math.log2(1000)-Math.log2(1))*Settings.roll_coverage/100 ) - 1), 1);
+	var OF_max_thresold = convert_range_log_scale( Settings.roll_coverage, 1, 1000, 1 ) - 1;
 	if (Settings.roll_coverage == 100) {
 		OF_max_thresold = Number.MAX_VALUE;
 	}
@@ -267,36 +269,29 @@ function roll_teams() {
 }
 
 function test() {
-	document.getElementById("stats_update_log").innerHTML += JSON.stringify(Settings)+"</br>";
+	/*document.getElementById("stats_update_log").innerHTML += JSON.stringify(Settings)+"</br>";
 	var max_combinations = Math.round( Math.pow( 2, Math.log2(1000)+(Math.log2(300000)-Math.log2(1000))*Settings.roll_quality/100 ) );
 	document.getElementById("stats_update_log").innerHTML += "max_combinations = "+max_combinations+"</br>";
 	
-	document.getElementById("stats_update_log").innerHTML += JSON.stringify(StatsUpdater)+"</br>";
+	document.getElementById("stats_update_log").innerHTML += JSON.stringify(StatsUpdater)+"</br>";*/
 	
-	var txt = 'Player-1234 2650, dps|tank'.split(/[ \t.,|]+/);
-	alert( JSON.stringify(txt) );
-	
-	for( t in teams ) {
-		var otp_conflicts_count = 0;
-		// array of one-trick ponies (hero names) in current team
-		var current_team_otps = []; 
-		for( p in teams[t].players) {
-			if ( teams[t].players[p].top_heroes.length == 1 ) {
-				var current_otp = teams[t].players[p].top_heroes[0].hero;
-				if (current_team_otps.indexOf(current_otp) == -1) {
-					current_team_otps.push( current_otp );
-				} else {
-					otp_conflicts_count++;
-				}
-			}
-		}
-		if ( otp_conflicts_count > 0 ) {
-			document.getElementById("stats_update_log").innerHTML += "OTP conflict in team "+teams[t].name+"</br>";
-		}
-	}
+	document.getElementById("stats_update_log").innerHTML += JSON.stringify(lobby, ' ')+"</br>";
 }
 
 function update_all_stats() {
+	open_dialog("popup_dlg_stats_update_init");
+	on_stats_update_limit_change();
+	/*StatsUpdater.addToQueue( lobby );
+	for( t in teams ) {
+		StatsUpdater.addToQueue( teams[t].players );
+	}*/
+}
+
+function update_stats_ok() {
+	close_dialog("popup_dlg_stats_update_init");
+	// @ToDo pass date limit to updater
+	var raw_value = Number(document.getElementById("stats_update_limit").value);
+	StatsUpdater.stats_max_age = convert_range_log_scale( raw_value, 1, 3000 ) - 1;
 	StatsUpdater.addToQueue( lobby );
 	for( t in teams ) {
 		StatsUpdater.addToQueue( teams[t].players );
@@ -320,9 +315,12 @@ function change_export_teams_format() {
 	if ( format == "html-table" ) {
 		var html_container = document.getElementById("dlg_html_export_teams");
 		html_container.style.display = "";
+		document.getElementById("dlg_html_export_teams_hint").style.display = "";
 		document.getElementById("dlg_textarea_export_teams").style.display = "none";
 		html_container.innerHTML = export_str;
-		if (document.body.createTextRange) {
+		
+		// select html content
+		/*if (document.body.createTextRange) {
 			const range = document.body.createTextRange();
 			range.moveToElementText(html_container);
 			range.select();
@@ -332,14 +330,31 @@ function change_export_teams_format() {
 			range.selectNodeContents(html_container);
 			selection.removeAllRanges();
 			selection.addRange(range);
-		}
+		}*/
+		select_html( html_container );
 	} else {
 		document.getElementById("dlg_html_export_teams").style.display = "none";
+		document.getElementById("dlg_html_export_teams_hint").style.display = "none";
 		document.getElementById("dlg_textarea_export_teams").style.display = "";
 		document.getElementById("dlg_textarea_export_teams").value = export_str;
 		document.getElementById("dlg_textarea_export_teams").select();
 		document.getElementById("dlg_textarea_export_teams").focus();
 	}
+}
+
+function dlg_export_teams_copy_html() {
+	select_html( document.getElementById("dlg_html_export_teams") );
+	document.execCommand("copy");
+}
+
+function on_stats_update_limit_change() {
+	// convert from log scale
+	var raw_value = Number(document.getElementById("stats_update_limit").value);
+	//var max_stats_age_days = Math.round( Math.pow( 2, Math.log2(1)+(Math.log2(3000)-Math.log2(1))*raw_value/100 )-1 );
+	var max_stats_age_days = convert_range_log_scale( raw_value, 1, 3000 ) - 1;
+	document.getElementById("dlg_stats_update_days").innerHTML = max_stats_age_days;
+	var max_stats_age_date = new Date(Date.now() - (max_stats_age_days*24*3600*1000));
+	document.getElementById("dlg_stats_update_date").innerHTML = max_stats_age_date.toLocaleDateString();
 }
 
 function new_player_keyup(ev) {
@@ -351,11 +366,20 @@ function new_player_keyup(ev) {
     }
 }
 
+function roll_adjust_sr_change() {
+	var adjust_enabled = document.getElementById("roll_adjust_sr").checked;
+	var inputs = document.getElementById("roll_adjust_sr_sub").getElementsByTagName("INPUT");
+	for (var i=0; i<inputs.length; i++ ) {
+		inputs[i].disabled = ! adjust_enabled;
+	}
+}
+
 /*
 *		Other events
 */
 
 function on_player_stats_updated( player_id ) {
+	// @ToDo ask to add anyway if player has no stats
 	if ( player_being_added !== undefined ) {
 		if ( player_id == player_being_added.id ) {
 			// add new player to lobby
@@ -455,6 +479,8 @@ function on_stats_update_start() {
 	document.getElementById("roll_btn").disabled = true;
 }
 
+
+
 /*function on_team_roll_progress( current_progress ) {
 	document.getElementById("stats_updater_status").innerHTML = "Rolling teams</br>"+current_progress+"%</br>";
 }*/
@@ -463,6 +489,10 @@ function on_stats_update_start() {
 /*
 *		Common UI functions
 */
+
+function convert_range_log_scale( raw_value, out_min, out_max, precision=0, input_range=100 ) {
+	return round_to( Math.pow( 2, Math.log2(out_min)+(Math.log2(out_max)-Math.log2(out_min))*raw_value/input_range ), precision );
+}
 
 //function draw_player( player_struct, team_id ) {
 function draw_player( player_struct, small=false ) {
@@ -728,6 +758,20 @@ function reset_roll() {
 	redraw_teams();
 }
 
+function select_html( html_container ) {
+	if (document.body.createTextRange) {
+		const range = document.body.createTextRange();
+		range.moveToElementText(html_container);
+		range.select();
+	} else if (window.getSelection) {
+		const selection = window.getSelection();
+		const range = document.createRange();
+		range.selectNodeContents(html_container);
+		selection.removeAllRanges();
+		selection.addRange(range);
+	}
+}
+
 /*
 *		Settings functions
 */
@@ -889,10 +933,3 @@ function open_dialog( dialog_id ) {
 	document.getElementById( dialog_id ).style.display = "block";
 }
 
-function roll_adjust_sr_change() {
-	var adjust_enabled = document.getElementById("roll_adjust_sr").checked;
-	var inputs = document.getElementById("roll_adjust_sr_sub").getElementsByTagName("INPUT");
-	for (var i=0; i<inputs.length; i++ ) {
-		inputs[i].disabled = ! adjust_enabled;
-	}
-}
