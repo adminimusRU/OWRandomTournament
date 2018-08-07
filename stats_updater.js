@@ -21,7 +21,7 @@ var StatsUpdater = {
 	update_sr: true,
 	update_class: true,
 	region: "eu",
-	
+	stats_max_age: 0, // days. Only players with stats older than specified will be updated
 	
 	// callbacks
 	onPlayerUpdated: undefined,
@@ -31,6 +31,7 @@ var StatsUpdater = {
 	onError: undefined,
 	
 	addToQueue: function( player_s ) {
+		var max_stats_age_date = new Date(Date.now() - (this.stats_max_age*24*3600*1000));
 		if ( Array.isArray(player_s) ) {
 			if (player_s.length == 0 ) {
 				return;
@@ -40,16 +41,29 @@ var StatsUpdater = {
 				if ( this.queue.indexOf( player_s[i] ) !== -1 ) {
 					continue;
 				}
+				// check stats age
+				if ( player_s[i].last_updated > max_stats_age_date ) {
+					continue;
+				}
 				this.queue.push( player_s[i] );
+				this.totalQueueLength ++;
 			}
-			this.totalQueueLength += player_s.length;
+			//this.totalQueueLength += player_s.length;
 		} else {
 			// check duplicates
 			if ( this.queue.indexOf( player_s ) !== -1 ) {
 				return;
 			}
+			// check stats age
+			if ( player_s.last_updated > max_stats_age_date ) {
+				return;
+			}
 			this.queue.push( player_s );
 			this.totalQueueLength ++;
+		}
+		if ( this.queue.length == 0 ) {
+			// nothing really added to queue
+			return;
 		}
 		
 		if ( this.state == StatsUpdaterState.idle ) {
