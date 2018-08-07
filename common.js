@@ -83,6 +83,13 @@ function create_random_player( id ) {
 		};
 }
 
+function escapeHtml(html){
+	var text_node = document.createTextNode(html);
+	var p = document.createElement('p');
+	p.appendChild(text_node);
+	return p.innerHTML;
+}
+
 function find_player_by_id(player_id) {
 	for( var i=0; i<lobby.length; i++) {
 		if ( player_id == lobby[i].id) {
