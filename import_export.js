@@ -38,7 +38,7 @@ function export_teams( format, include_players, include_sr, include_classes, tab
 			for ( var t = team_offset; t < team_offset+table_columns; t++ ) {
 				if ( t >= teams.length ) break;
 				setup_str += "<td colspan='"+title_colspan+"' style='text-align: center;font-style: italic;background-color: gray; color: white;'>";
-				setup_str += teams[t].name;
+				setup_str += escapeHtml( teams[t].name );
 				setup_str += "</td>";
 				// vertical spacer
 				setup_str += "<td></td>";
@@ -59,7 +59,7 @@ function export_teams( format, include_players, include_sr, include_classes, tab
 						}
 						setup_str += "<td style='text-align: left'>";
 						// @Todo escape
-						setup_str += teams[t].players[p].display_name;
+						setup_str += escapeHtml( teams[t].players[p].display_name );
 						setup_str += "</td>";
 						if ( include_classes ) {
 							setup_str += "<td style='text-align: left'>";
@@ -81,39 +81,6 @@ function export_teams( format, include_players, include_sr, include_classes, tab
 			setup_str += "<tr></tr>";
 		}
 		
-		/*for ( var t in teams ) {
-			setup_str += "<tr>";
-			setup_str += "<td colspan='"+title_colspan+"' style='text-align: center;font-style: italic;background-color: gray; color: white;'>";
-			setup_str += teams[t].name;
-			setup_str += "</td>";
-			setup_str += "</tr>\n";
-			
-			if ( include_players ) {
-				for ( var p in teams[t].players ) {
-					setup_str += "<tr>";
-					if ( include_sr ) {
-						setup_str += "<td>";
-						setup_str += teams[t].players[p].sr;
-						setup_str += "</td>";
-					}
-					setup_str += "<td>";
-					// @Todo escape
-					setup_str += teams[t].players[p].display_name;
-					setup_str += "</td>";
-					if ( include_classes ) {
-						setup_str += "<td>";
-						if ( teams[t].players[p].top_classes[0] != undefined ) {
-							setup_str += teams[t].players[p].top_classes[0];
-						}
-						setup_str += "</td>";
-					}
-					setup_str += "</tr>\n";
-				}	
-			}
-			
-			setup_str += "<tr><td colspan='"+title_colspan+"'></td></tr>\n";
-		}*/
-		
 		setup_str += "</table>\n";
 	}
 	
@@ -134,7 +101,7 @@ function import_lobby( format, import_str ) {
 			var import_struct = JSON.parse(import_str);
 			
 			// check format
-			if ( import_struct.format_version > 2 ) {
+			if ( import_struct.format_version > 3 ) {
 				//throw "Unsupported format version";
 				throw new Error("Unsupported format version");
 			}
@@ -168,6 +135,7 @@ function import_lobby( format, import_str ) {
 				// split string to fields (btag, SR, class, offclass)
 				var fields = battletag_list[i].split(/[ \t.,|]+/);
 				
+				// @ToDo check battletag format ?				
 				var player_id = format_player_id(fields[0]);
 				//var player_id = format_player_id( battletag_list[i] );
 				// check duplicates
@@ -186,6 +154,9 @@ function import_lobby( format, import_str ) {
 					new_player.sr = Number( fields[1] );
 					if ( Number.isNaN(new_player.sr) ) {
 						throw new Error("Incorrect SR number "+fields[1]);
+					}
+					if ( new_player.sr < 0 || new_player.sr > 5000 ) {
+						throw new Error("Incorrect SR value "+fields[1]);
 					}
 				}
 				if ( fields.length >= 3 ) {
