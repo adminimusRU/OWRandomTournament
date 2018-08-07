@@ -457,6 +457,7 @@ div[id="stats_update_log"] {
 
 .html-export-container {
 	width: 40em;
-	height: 30em;
+	height: 20em;
 	overflow: scroll;
+	border: 1px solid black;
 }
