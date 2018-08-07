@@ -265,6 +265,12 @@ var RtbWorker;
 			
 			<textarea id="dlg_textarea_export_teams" rows="20" cols="80"></textarea>
 			<div id="dlg_html_export_teams" class="html-export-container"></div>
+			<div id="dlg_html_export_teams_hint" style="text-align: left;">
+				<br/>
+				<a href="#" onclick="dlg_export_teams_copy_html();">Click here</a> to copy teams table to clipboard. Paste to Excel or Google Sheets.
+				<br/>
+				<br/>
+			</div>
 			
 			<div>
 				<input id="dlg_ok" class="big-btn" type="button" value="OK" onclick="close_dialog('popup_dlg_export_teams');"/>
@@ -494,9 +500,43 @@ var RtbWorker;
 				<input id="dlg_roll_cancel" class="big-btn" type="button" value="Cancel" onclick="cancel_roll();"/>
 			</div>
 			
+			
 		</div>
 	</div>
 </div>
+
+
+<div id="popup_dlg_stats_update_init" class="dlg" style="display:none">
+	<div class="dlg-background"></div>
+	<div class="dlg-container">
+		<div class="dlg-content">
+			<span class="team-title">Update stats</span>
+			<input  title="Close" type="button" class="team_btn dlg-close" onclick="close_dialog('popup_dlg_stats_update_init');" value="X"/>
+			<br/>
+			<br/>
+			
+			<div style="width:25em; text-align: left;">
+				Update stats older than <span style="color:blue;" id="dlg_stats_update_days">0</span> days
+				</br>
+				
+				<input id="stats_update_limit" type="range" size=3 min=0 max=100 autocomplete="off" value="43" style="width:90%" oninput="on_stats_update_limit_change();"/>
+				</br>
+				</br>
+				
+				Stats older than <span id="dlg_stats_update_date">0</span> will be updated.
+							
+			</div>
+			</br>
+			</br>
+			
+			<div>
+				<input id="dlg_ok" class="big-btn" type="button" value="OK" onclick="update_stats_ok();"/>
+			</div>
+			
+		</div>
+	</div>
+</div>
+
 
 <div id="stats_update_log"></div>
 
