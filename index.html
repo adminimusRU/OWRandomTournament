@@ -52,6 +52,8 @@ StatsUpdater.onComplete = on_stats_update_complete;
 StatsUpdater.onStart = on_stats_update_start;
 StatsUpdater.onProgressChange = on_stats_update_progress;
 StatsUpdater.onError = on_stats_update_error;
+StatsUpdater.onWarning = on_stats_update_warning;
+
 
 // team builder
 // RandomTeamBuilder object inside worker thread
@@ -82,9 +84,9 @@ var RtbWorker;
 			</div>
 			
 			<div class="team-toolbar">
-			<input title="Clear lobby" type="button" class="team_btn" onclick="clear_lobby_click();" value=" X "/>
-			<input title="Import lobby" id="import_lobby_btn" type="button" class="team_btn" onclick="open_export_lobby_dlg();" value="Import"/>
-			<input title="Export lobby" type="button" class="team_btn" onclick="open_export_lobby_dlg();" value="Export"/>
+			<input title="Clear lobby" type="button" class="team_btn" onclick="clear_lobby();" value=" X "/>
+			<input title="Import lobby" id="import_lobby_btn" type="button" class="team_btn" onclick="import_lobby_dlg_open();" value="Import"/>
+			<input title="Export lobby" type="button" class="team_btn" onclick="export_lobby_dlg_open();" value="Export"/>
 			<input title="Sort lobby by SR" type="button" class="team_btn" onclick="sort_team(lobby, 'sr');redraw_teams();" value="&uarr;&darr;123"/>
 			<input title="Sort lobby by name" type="button" class="team_btn" onclick="sort_team(lobby, 'display_name');redraw_teams();" value="&uarr;&darr;Az"/>
 			</div>
@@ -128,7 +130,7 @@ var RtbWorker;
 				<br/>
 				<br/>
 				
-				<input class="big-btn" type="button" onclick="open_team_export_teams_dlg();" value="Export teams"/>
+				<input class="big-btn" type="button" onclick="export_teams_dlg_open();" value="Export teams"/>
 				<br/>
 				<br/>
 				
@@ -140,7 +142,7 @@ var RtbWorker;
 				<br/>
 				<br/>
 								
-				<input class="big-btn" type="button" id="settings_btn" onclick="open_settings();" value="&#9881; Settings" title="Open settings dialog"/>
+				<input class="big-btn" type="button" id="settings_btn" onclick="settings_dlg_open();" value="&#9881; Settings" title="Open settings dialog"/>
 				<br/>
 				<br/>
 				<br/>
@@ -244,12 +246,12 @@ var RtbWorker;
 			
 			<div id="dlg_team_export_format" class="dlg_options">
 				<label for="dlg_team_export_format_value">Format: </label>
-				<select id="dlg_team_export_format_value" onchange="change_export_teams_format();">
+				<select id="dlg_team_export_format_value" onchange="export_teams_dlg_change_format();">
 					<option value="text-list">text list</option>
 					<option value="html-table">HTML table</option>
 				</select>
 			</div>
-			<div id="dlg_team_export_options" class="dlg_options" onchange="change_export_teams_format();">
+			<div id="dlg_team_export_options" class="dlg_options" onchange="export_teams_dlg_change_format();">
 				<input type="checkbox" id="dlg_team_export_players">
 				<label for="dlg_team_export_players">Include players</label>
 				<br/>
@@ -267,7 +269,7 @@ var RtbWorker;
 			<div id="dlg_html_export_teams" class="html-export-container"></div>
 			<div id="dlg_html_export_teams_hint" style="text-align: left;">
 				<br/>
-				<a href="#" onclick="dlg_export_teams_copy_html();">Click here</a> to copy teams table to clipboard. Paste to Excel or Google Sheets.
+				<a href="#" onclick="export_teams_dlg_copy_html();">Click here</a> to copy teams table to clipboard. Paste to Excel or Google Sheets.
 				<br/>
 				<br/>
 			</div>
@@ -366,7 +368,7 @@ var RtbWorker;
 			<div id="dlg_settings">
 				<div class="group">
 					<div class="group-header">
-						Main settings
+						Main
 					</div>
 					<div class="group-content">
 						<div class="table">
@@ -386,7 +388,7 @@ var RtbWorker;
 				
 				<div class="group">
 					<div class="group-header">
-						Roll settings
+						Roll
 					</div>
 					<div class="group-content">
 						<input type="checkbox" id="roll_adjust_sr" onchange="roll_adjust_sr_change();">
@@ -445,7 +447,7 @@ var RtbWorker;
 				
 				<div class="group">
 					<div class="group-header">
-						Stats updating settings
+						Stats
 					</div>
 					<div class="group-content">
 					
