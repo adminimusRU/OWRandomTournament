@@ -29,6 +29,7 @@ var StatsUpdater = {
 	onStart: undefined,
 	onProgressChange: undefined,
 	onError: undefined,
+	onWarning: undefined,
 	
 	addToQueue: function( player_s ) {
 		var max_stats_age_date = new Date(Date.now() - (this.stats_max_age*24*3600*1000));
@@ -133,8 +134,8 @@ var StatsUpdater = {
 			} else {
 				// log error
 				var msg = "Player has 0 SR, not completed placements in current season";
-				if(typeof this.onError == "function") {
-					this.onError.call( undefined, OWAPI.id, msg );
+				if(typeof this.onWarning == "function") {
+					this.onWarning.call( undefined, OWAPI.id, msg );
 				}
 				//document.getElementById("stats_update_log").innerHTML += OWAPI.id+": "+msg+"</br>";
 			}
