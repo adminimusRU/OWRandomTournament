@@ -62,12 +62,81 @@ function cancel_roll() {
 	close_dialog( "popup_dlg_roll_progress" );
 }
 
-function clear_lobby_click() {
+function clear_lobby() {
 	if( confirm("Permanently delete all players?") ) {
 		lobby.splice( 0, lobby.length );
 		save_players_list();
 		redraw_lobby();
 	}
+}
+
+function close_dialog( dialog_id ) {
+	//document.getElementById("popup_dlg").style.display = "none";
+	document.getElementById( dialog_id ).style.display = "none";
+}
+
+function export_teams_dlg_copy_html() {
+	select_html( document.getElementById("dlg_html_export_teams") );
+	document.execCommand("copy");
+}
+
+function export_teams_dlg_change_format() {
+	// @ToDo save format and options
+	var format = document.getElementById("dlg_team_export_format_value").value;
+	var include_players = document.getElementById("dlg_team_export_players").checked;
+	var include_sr = document.getElementById("dlg_team_export_sr").checked;
+	var include_classes = document.getElementById("dlg_team_export_classes").checked;
+	var table_columns = Number(document.getElementById("dlg_team_export_columns").value);
+	
+	var export_str = export_teams( format, include_players, include_sr, include_classes, table_columns );
+	
+	if ( format == "html-table" ) {
+		var html_container = document.getElementById("dlg_html_export_teams");
+		html_container.style.display = "";
+		document.getElementById("dlg_html_export_teams_hint").style.display = "";
+		document.getElementById("dlg_textarea_export_teams").style.display = "none";
+		html_container.innerHTML = export_str;
+		
+		// select html content
+		/*if (document.body.createTextRange) {
+			const range = document.body.createTextRange();
+			range.moveToElementText(html_container);
+			range.select();
+		} else if (window.getSelection) {
+			const selection = window.getSelection();
+			const range = document.createRange();
+			range.selectNodeContents(html_container);
+			selection.removeAllRanges();
+			selection.addRange(range);
+		}*/
+		select_html( html_container );
+	} else {
+		document.getElementById("dlg_html_export_teams").style.display = "none";
+		document.getElementById("dlg_html_export_teams_hint").style.display = "none";
+		document.getElementById("dlg_textarea_export_teams").style.display = "";
+		document.getElementById("dlg_textarea_export_teams").value = export_str;
+		document.getElementById("dlg_textarea_export_teams").select();
+		document.getElementById("dlg_textarea_export_teams").focus();
+	}
+}
+
+function export_teams_dlg_open() {
+	/*init_popup_dlg();
+	document.getElementById("popup_dlg").style.display = "block";
+	document.getElementById("dlg_title").innerHTML = "Export rolled teams";
+	document.getElementById("dlg_team_export_format").style.display = "block";
+	document.getElementById("dlg_team_export_options").style.display = "block";
+	//document.getElementById("dlg_setup_value").value = "text-list";
+	//document.getElementById("dlg_setup_value").onchange = function(event){change_setup_format();};
+	document.getElementById("dlg_textarea").style.display = "inline";
+	document.getElementById("dlg_ok").onclick = function(event){close_dialog();};*/
+	
+	open_dialog("popup_dlg_export_teams");
+	
+	export_teams_dlg_change_format();
+	
+	//document.getElementById("dlg_textarea").select();
+	//document.getElementById("dlg_textarea").focus();
 }
 
 function generate_random_players() {
@@ -135,15 +204,7 @@ function generate_random_teams() {
 	redraw_teams();
 }
 
-function import_lobby_ok() {
-	var format = document.getElementById("dlg_player_import_format_value").value;
-	var import_str = document.getElementById("dlg_textarea_import_lobby").value;
-	if ( import_lobby(format, import_str) ) {
-		close_dialog("popup_dlg_import_lobby");
-	}
-}
-
-function open_export_lobby_dlg() {
+function import_lobby_dlg_open() {
 	open_dialog("popup_dlg_import_lobby");
 	document.getElementById("dlg_textarea_import_lobby").value = "";
 	document.getElementById("dlg_textarea_import_lobby").focus();
@@ -163,36 +224,12 @@ function open_export_lobby_dlg() {
 	//document.getElementById("dlg_ok").onclick = import_lobby_ok;*/
 }
 
-function open_settings() {
-	//init_popup_dlg();
-
-	fill_settings_dlg( Settings );
-	
-	/*document.getElementById("dlg_settings").style.display = "block";
-	document.getElementById("dlg_title").innerHTML = "Settings";
-	document.getElementById("popup_dlg").style.display = "block";
-	document.getElementById("dlg_reset").style.display = "inline";
-	document.getElementById("dlg_ok").onclick = function(event){apply_settings();};*/
-	open_dialog( "popup_dlg_settings" );
-}
-
-function open_team_export_teams_dlg() {
-	/*init_popup_dlg();
-	document.getElementById("popup_dlg").style.display = "block";
-	document.getElementById("dlg_title").innerHTML = "Export rolled teams";
-	document.getElementById("dlg_team_export_format").style.display = "block";
-	document.getElementById("dlg_team_export_options").style.display = "block";
-	//document.getElementById("dlg_setup_value").value = "text-list";
-	//document.getElementById("dlg_setup_value").onchange = function(event){change_setup_format();};
-	document.getElementById("dlg_textarea").style.display = "inline";
-	document.getElementById("dlg_ok").onclick = function(event){close_dialog();};*/
-	
-	open_dialog("popup_dlg_export_teams");
-	
-	change_export_teams_format();
-	
-	//document.getElementById("dlg_textarea").select();
-	//document.getElementById("dlg_textarea").focus();
+function import_lobby_ok() {
+	var format = document.getElementById("dlg_player_import_format_value").value;
+	var import_str = document.getElementById("dlg_textarea_import_lobby").value;
+	if ( import_lobby(format, import_str) ) {
+		close_dialog("popup_dlg_import_lobby");
+	}
 }
 
 function reset_roll_click() {
@@ -268,6 +305,19 @@ function roll_teams() {
 	open_dialog( "popup_dlg_roll_progress" );
 }
 
+function settings_dlg_open() {
+	//init_popup_dlg();
+
+	fill_settings_dlg( Settings );
+	
+	/*document.getElementById("dlg_settings").style.display = "block";
+	document.getElementById("dlg_title").innerHTML = "Settings";
+	document.getElementById("popup_dlg").style.display = "block";
+	document.getElementById("dlg_reset").style.display = "inline";
+	document.getElementById("dlg_ok").onclick = function(event){apply_settings();};*/
+	open_dialog( "popup_dlg_settings" );
+}
+
 function test() {
 	/*document.getElementById("stats_update_log").innerHTML += JSON.stringify(Settings)+"</br>";
 	var max_combinations = Math.round( Math.pow( 2, Math.log2(1000)+(Math.log2(300000)-Math.log2(1000))*Settings.roll_quality/100 ) );
@@ -301,51 +351,6 @@ function update_stats_ok() {
 /*
 *		UI events
 */
-
-function change_export_teams_format() {
-	// @ToDo save format and options
-	var format = document.getElementById("dlg_team_export_format_value").value;
-	var include_players = document.getElementById("dlg_team_export_players").checked;
-	var include_sr = document.getElementById("dlg_team_export_sr").checked;
-	var include_classes = document.getElementById("dlg_team_export_classes").checked;
-	var table_columns = Number(document.getElementById("dlg_team_export_columns").value);
-	
-	var export_str = export_teams( format, include_players, include_sr, include_classes, table_columns );
-	
-	if ( format == "html-table" ) {
-		var html_container = document.getElementById("dlg_html_export_teams");
-		html_container.style.display = "";
-		document.getElementById("dlg_html_export_teams_hint").style.display = "";
-		document.getElementById("dlg_textarea_export_teams").style.display = "none";
-		html_container.innerHTML = export_str;
-		
-		// select html content
-		/*if (document.body.createTextRange) {
-			const range = document.body.createTextRange();
-			range.moveToElementText(html_container);
-			range.select();
-		} else if (window.getSelection) {
-			const selection = window.getSelection();
-			const range = document.createRange();
-			range.selectNodeContents(html_container);
-			selection.removeAllRanges();
-			selection.addRange(range);
-		}*/
-		select_html( html_container );
-	} else {
-		document.getElementById("dlg_html_export_teams").style.display = "none";
-		document.getElementById("dlg_html_export_teams_hint").style.display = "none";
-		document.getElementById("dlg_textarea_export_teams").style.display = "";
-		document.getElementById("dlg_textarea_export_teams").value = export_str;
-		document.getElementById("dlg_textarea_export_teams").select();
-		document.getElementById("dlg_textarea_export_teams").focus();
-	}
-}
-
-function dlg_export_teams_copy_html() {
-	select_html( document.getElementById("dlg_html_export_teams") );
-	document.execCommand("copy");
-}
 
 function on_stats_update_limit_change() {
 	// convert from log scale
@@ -462,12 +467,30 @@ function on_stats_update_error( player_id, error_msg ) {
 	document.getElementById("stats_update_log").innerHTML += player_id+": "+error_msg+"</br>";
 	if ( player_being_added !== undefined ) {
 		if ( player_being_added.id == player_id ) {
+			if( confirm("Can't get player stats: "+error_msg+"\nAdd anyway?") ) {
+				var new_player = create_empty_player();
+				new_player.id = player_id;
+				new_player.display_name = format_player_name( player_id );
+				delete new_player.empty;
+				
+				lobby.push( new_player );
+				save_players_list();
+				redraw_lobby();
+				highlight_player( player_id );
+				document.getElementById("new_player_id").value = "";				
+				// @ToDo maybe open edit dialog for manual input...	
+			}
+			
 			document.getElementById("add_btn").disabled = false;
 			
 			// release created object for garbage collector
 			player_being_added = undefined;
 		}
 	}
+}
+
+function on_stats_update_warning( player_id, error_msg ) {
+	document.getElementById("stats_update_log").innerHTML += player_id+": "+error_msg+"</br>";
 }
 
 function on_stats_update_progress() {
@@ -661,6 +684,84 @@ function draw_stats_updater_status() {
 	document.getElementById("stats_updater_status").innerHTML = updater_status_txt;
 }
 
+function fill_player_stats_dlg() {
+	if (current_player_edit == "") {
+		return;
+	}
+	
+	var player_struct = find_player_by_id(current_player_edit);
+	
+	document.getElementById("dlg_player_id").href = "https://playoverwatch.com/en-us/career/pc/"+region+"/"+player_struct.id;
+	document.getElementById("dlg_player_id").innerHTML = player_struct.id;
+	
+	document.getElementById("dlg_player_display_name").value = player_struct.display_name;
+	if( player_struct.ne === true )  {
+		document.getElementById("dlg_player_name_edited").style.visibility = "visible";
+	} else {
+		document.getElementById("dlg_player_name_edited").style.visibility = "";
+	}
+	
+	document.getElementById("dlg_player_sr").value = player_struct.sr;
+	if( player_struct.se === true )  {
+		document.getElementById("dlg_player_sr_edited").style.visibility = "visible";
+	} else {
+		document.getElementById("dlg_player_sr_edited").style.visibility = "";
+	}
+	document.getElementById("dlg_player_level").value = player_struct.level;
+	
+	if ( Array.isArray(player_struct.top_classes) ) {
+		if ( player_struct.top_classes.length > 0 ) {
+			document.getElementById("dlg_main_class").value = player_struct.top_classes[0];
+		}
+		
+		if ( player_struct.top_classes.length > 1 ) {
+			document.getElementById("dlg_secondary_class").value = player_struct.top_classes[1];
+		} else {
+			document.getElementById("dlg_secondary_class").value = "";
+		}
+	}
+	
+	document.getElementById("dlg_top_heroes_icons").innerHTML = "";
+	if ( Array.isArray(player_struct.top_heroes) ) {
+		for( i=0; i<player_struct.top_heroes.length; i++ ) {
+			var hero_id = player_struct.top_heroes[i].hero;
+			if( hero_id == "soldier76") {
+				hero_id = "soldier-76";
+			}
+			var img_node = document.createElement("img");
+			img_node.className = "hero-icon";
+			img_node.src = "https://blzgdapipro-a.akamaihd.net/hero/"+hero_id+"/hero-select-portrait.png";
+			img_node.title = hero_id + "\nPlayed: " + player_struct.top_heroes[i].playtime+" h";
+			document.getElementById("dlg_top_heroes_icons").appendChild(img_node);
+		}
+	}
+	
+	if( player_struct.ce === true )  {
+		document.getElementById("dlg_player_class1_edited").style.visibility = "visible";
+		document.getElementById("dlg_player_class2_edited").style.visibility = "visible";
+	} else {
+		document.getElementById("dlg_player_class1_edited").style.visibility = "";
+		document.getElementById("dlg_player_class2_edited").style.visibility = "";
+	}
+}
+
+function fill_settings_dlg( settings_obj ) {
+	for ( setting_name in settings_obj ) {
+		var setting_value = settings_obj[setting_name];
+		var setting_input = document.getElementById(setting_name);
+		if (setting_input === null) { alert("help"+setting_name);}
+		switch( setting_input.type ) {
+			case "checkbox":
+				setting_input.checked = setting_value;
+				break;
+			default:
+				setting_input.value = setting_value;
+		}
+	}
+		
+	roll_adjust_sr_change();
+}
+
 function highlight_player( player_id ) {
 	document.getElementById(player_id).classList.toggle("player-highlighted", true);
 	setTimeout( reset_highlighted_players, 2000 );
@@ -678,6 +779,10 @@ function highlight_players( player_list ) {
 	}
 	
 	setTimeout( reset_highlighted_players, 2000 );
+}
+
+function open_dialog( dialog_id ) {
+	document.getElementById( dialog_id ).style.display = "block";
 }
 
 function redraw_lobby() {
@@ -817,88 +922,11 @@ function save_settings_value( element ) {
 *		Popup dialog
 */
 
-function close_dialog( dialog_id ) {
-	//document.getElementById("popup_dlg").style.display = "none";
-	document.getElementById( dialog_id ).style.display = "none";
-}
 
-function fill_player_stats_dlg() {
-	if (current_player_edit == "") {
-		return;
-	}
-	
-	var player_struct = find_player_by_id(current_player_edit);
-	
-	document.getElementById("dlg_player_id").href = "https://playoverwatch.com/en-us/career/pc/"+region+"/"+player_struct.id;
-	document.getElementById("dlg_player_id").innerHTML = player_struct.id;
-	
-	document.getElementById("dlg_player_display_name").value = player_struct.display_name;
-	if( player_struct.ne === true )  {
-		document.getElementById("dlg_player_name_edited").style.visibility = "visible";
-	} else {
-		document.getElementById("dlg_player_name_edited").style.visibility = "";
-	}
-	
-	document.getElementById("dlg_player_sr").value = player_struct.sr;
-	if( player_struct.se === true )  {
-		document.getElementById("dlg_player_sr_edited").style.visibility = "visible";
-	} else {
-		document.getElementById("dlg_player_sr_edited").style.visibility = "";
-	}
-	document.getElementById("dlg_player_level").value = player_struct.level;
-	
-	if ( Array.isArray(player_struct.top_classes) ) {
-		if ( player_struct.top_classes.length > 0 ) {
-			document.getElementById("dlg_main_class").value = player_struct.top_classes[0];
-		}
-		
-		if ( player_struct.top_classes.length > 1 ) {
-			document.getElementById("dlg_secondary_class").value = player_struct.top_classes[1];
-		} else {
-			document.getElementById("dlg_secondary_class").value = "";
-		}
-	}
-	
-	document.getElementById("dlg_top_heroes_icons").innerHTML = "";
-	if ( Array.isArray(player_struct.top_heroes) ) {
-		for( i=0; i<player_struct.top_heroes.length; i++ ) {
-			var hero_id = player_struct.top_heroes[i].hero;
-			if( hero_id == "soldier76") {
-				hero_id = "soldier-76";
-			}
-			var img_node = document.createElement("img");
-			img_node.className = "hero-icon";
-			img_node.src = "https://blzgdapipro-a.akamaihd.net/hero/"+hero_id+"/hero-select-portrait.png";
-			img_node.title = hero_id + "\nPlayed: " + player_struct.top_heroes[i].playtime+" h";
-			document.getElementById("dlg_top_heroes_icons").appendChild(img_node);
-		}
-	}
-	
-	if( player_struct.ce === true )  {
-		document.getElementById("dlg_player_class1_edited").style.visibility = "visible";
-		document.getElementById("dlg_player_class2_edited").style.visibility = "visible";
-	} else {
-		document.getElementById("dlg_player_class1_edited").style.visibility = "";
-		document.getElementById("dlg_player_class2_edited").style.visibility = "";
-	}
-}
 
-function fill_settings_dlg( settings_obj ) {
-	for ( setting_name in settings_obj ) {
-		var setting_value = settings_obj[setting_name];
-		var setting_input = document.getElementById(setting_name);
-		if (setting_input === null) { alert("help"+setting_name);}
-		switch( setting_input.type ) {
-			case "checkbox":
-				setting_input.checked = setting_value;
-				break;
-			default:
-				setting_input.value = setting_value;
-		}
-	}
-		
-	roll_adjust_sr_change();
-}
+
+
+
 
 /*function init_popup_dlg() {
 	document.getElementById("dlg_title").innerHTML = "";
@@ -929,7 +957,5 @@ function fill_settings_dlg( settings_obj ) {
 	document.getElementById("dlg_ok").onclick = function(event){close_dialog();};
 }*/
 
-function open_dialog( dialog_id ) {
-	document.getElementById( dialog_id ).style.display = "block";
-}
+
 
