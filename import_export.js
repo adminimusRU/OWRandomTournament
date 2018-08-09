@@ -158,6 +158,7 @@ function import_lobby( format, import_str ) {
 					if ( new_player.sr < 0 || new_player.sr > 5000 ) {
 						throw new Error("Incorrect SR value "+fields[1]);
 					}
+					new_player.last_updated = new Date;
 				}
 				if ( fields.length >= 3 ) {
 					for ( var c = 2; c < fields.length; c++ ) {
