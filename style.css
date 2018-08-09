@@ -497,3 +497,24 @@ input[id="roll_coverage"]::-moz-range-track {
 input[id="roll_coverage"]::-webkit-slider-runnable-track {
   background: linear-gradient(to right, #6be585, #92ac74 60%, #dd3e54);
 }
+
+
+.loader {
+	border: 0.3em solid #f3f3f3;
+    border-top: 0.3em solid #3498db;
+	border-bottom: 0.3em solid #3498db;
+    border-radius: 50%;
+    width: 1em;
+    height: 1em;
+    animation: spin 1s linear infinite;
+}
+
+.inline-loader {
+	display: inline-block;
+	vertical-align: text-bottom;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
