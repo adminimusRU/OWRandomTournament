@@ -22,7 +22,7 @@ var lobby = [];
 var teams = [];
 
 var player_being_added;
-var current_player_edit = "";
+var player_being_edited;
 var lobby_filter_timer = 0;
 //var selected_player_team1 = "";
 
@@ -287,7 +287,7 @@ var RtbWorker;
 	<div class="dlg-container">
 		<div class="dlg-content">
 			<span id="dlg_title_edit_player" class="team-title">Player name</span>
-			<input id="dlg_close" title="Close" type="button" class="team_btn dlg-close" onclick="close_dialog('popup_dlg_edit_player');" value="X"/>
+			<input id="dlg_close" title="Close" type="button" class="team_btn dlg-close" onclick="close_dialog('popup_dlg_edit_player'); player_being_edited=undefined;" value="X"/>
 			<br/>
 			<br/>			
 			
@@ -345,9 +345,26 @@ var RtbWorker;
 				<span>Top heroes:</span>
 				<br/>
 				<div id="dlg_top_heroes_icons" class="hero-icon-list"></div>
-				<br/>
 			</div>
-			<input id="dlg_update_player_stats" class="big-btn" type="button" value="&#8635; Update stats" onclick="update_current_player_stats();"/>
+			
+			<div style="text-align: left;">
+				<br/>
+				Stats last updated <span id="dlg_edit_player_last_updated"></span>
+				<br/>
+				<input id="dlg_update_player_stats" class="big-btn" type="button" value="&#8635; Update stats" onclick="update_current_player_stats();"/>
+				<br/>
+				<!--<div style="margin-top: 1em;">
+										
+				</div>-->
+			</div>
+			<br/>
+			
+			<div style="height: 2em; vertical-align: middle; text-align: center;">
+				<div id="dlg_update_player_stats_loader" class="loader inline-loader" style="display: none;"></div>
+				<div id="dlg_edit_player_update_result" style="display: none;"></div>
+			</div>
+			
+			<br/>
 
 			<div>
 				<input id="dlg_ok" class="big-btn" type="button" value="OK" onclick="edit_player_ok();"/>
