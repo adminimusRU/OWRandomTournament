@@ -42,17 +42,17 @@ var OWAPI = {
 				if ( this.status == 200) {
 					try {
 						var stats_obj = JSON.parse(this.responseText);
-						if ( stats_obj[this.region] === null ) {	
+						if ( stats_obj[OWAPI.region] === null ) {	
 							OWAPI.can_retry = false;
-							throw new Error("Player has no stats in region "+this.region.toUpperCase());
+							throw new Error("Player has no stats in region "+OWAPI.region.toUpperCase());
 						}
-						if ( stats_obj[this.region].stats.competitive !== null ) {
-							OWAPI.sr = Number(stats_obj[this.region].stats.competitive.overall_stats.comprank);
+						if ( stats_obj[OWAPI.region].stats.competitive !== null ) {
+							OWAPI.sr = Number(stats_obj[OWAPI.region].stats.competitive.overall_stats.comprank);
 							
-							OWAPI.level = stats_obj[this.region].stats.competitive.overall_stats.prestige*100 + stats_obj[this.region].stats.competitive.overall_stats.level,
-							OWAPI.time_played = Number(stats_obj[this.region].stats.competitive.game_stats.time_played);
+							OWAPI.level = stats_obj[OWAPI.region].stats.competitive.overall_stats.prestige*100 + stats_obj[OWAPI.region].stats.competitive.overall_stats.level,
+							OWAPI.time_played = Number(stats_obj[OWAPI.region].stats.competitive.game_stats.time_played);
 							
-							var hero_stats = OWAPI.parseHeroStats( stats_obj[this.region].heroes );
+							var hero_stats = OWAPI.parseHeroStats( stats_obj[OWAPI.region].heroes );
 							OWAPI.top_classes = OWAPI.calculateTopClasses( hero_stats );
 							OWAPI.top_heroes = OWAPI.calculateTopHeroes( hero_stats );
 						} 
