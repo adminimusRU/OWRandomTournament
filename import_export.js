@@ -270,13 +270,17 @@ function sanitize_player_struct( player_struct, saved_format ) {
 		}
 	}
 	
-	if ( saved_format == 2 ) {
+	if ( saved_format <= 2 ) {
 		player_struct.last_updated = new Date(0);
 	}
 	
 	if ( saved_format >= 3 ) {
 		// restore dates from strings
-		player_struct.last_updated = new Date(player_struct.last_updated);
+		if ( player_struct.last_updated !== undefined ) {
+			player_struct.last_updated = new Date(player_struct.last_updated);
+		} else {
+			player_struct.last_updated = new Date(0);
+		}
 	}
 	
 	
