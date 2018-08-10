@@ -31,6 +31,7 @@ var StatsUpdater = {
 	onError: undefined,
 	onWarning: undefined,
 	
+	// @ToDo priority queue
 	addToQueue: function( player_s ) {
 		var max_stats_age_date = new Date(Date.now() - (this.stats_max_age*24*3600*1000));
 		if ( Array.isArray(player_s) ) {
@@ -90,7 +91,34 @@ var StatsUpdater = {
 		}
 	},
 	
+	stop: function( terminate=false ) {
+		if ( terminate ) {
+			OWAPI.onSuccess = undefined;
+			OWAPI.onFail = undefined;
+			this.queue.splice( 0 );
+			this.state = StatsUpdaterState.waiting;
+			setTimeout( this.resetState.bind(this), this.min_api_request_interval );
+			if(typeof this.onComplete == "function") {
+				this.onComplete.call();
+			}
+		} else {
+			if (this.queue.length > 1 ) {
+				this.queue.splice( 1 );
+			}
+		}
+	},
+	
+	// private functions
+	
 	updateNextPlayer: function() {
+		if (this.queue.length == 0 ) {
+			if(typeof this.onComplete == "function") {
+				this.onComplete.call();
+			}
+			this.state = StatsUpdaterState.waiting;
+			setTimeout( this.resetState.bind(this), this.min_api_request_interval );
+			return;
+		}
 		player_struct = this.queue[0];
 		
 		OWAPI.id = player_struct.id;
@@ -110,6 +138,7 @@ var StatsUpdater = {
 		if ( this.state == StatsUpdaterState.waiting ) {
 			this.totalQueueLength = 0;
 			this.update_fails = 0;
+			this.currentIndex = 0;
 			this.state = StatsUpdaterState.idle;
 		}
 	},
@@ -120,7 +149,7 @@ var StatsUpdater = {
 		player.level = OWAPI.level;
 	
 		// check if name was manually edited
-			if ( (player.ne !== true) || this.update_edited_fields ) {
+		if ( (player.ne !== true) || this.update_edited_fields ) {
 			player.display_name = OWAPI.display_name;
 		}
 
