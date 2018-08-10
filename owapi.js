@@ -57,13 +57,13 @@ var OWAPI = {
 							OWAPI.top_heroes = OWAPI.calculateTopHeroes( hero_stats );
 						} 
 						
-						OWAPI.onSuccess.call();				
+						if (typeof OWAPI.onSuccess == "function") {
+							OWAPI.onSuccess.call();
+						}
 					}
 					catch (err) {
 						if(typeof OWAPI.onFail == "function") {
 							OWAPI.onFail.call( OWAPI, err.message );
-						} else {
-							alert(err.message);
 						}
 					}
 						
