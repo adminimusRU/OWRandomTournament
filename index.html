@@ -138,30 +138,46 @@ var RtbWorker;
 				<br/>
 				<br/>
 								
-				<input id="update_all_stats_btn" class="big-btn" type="button" onclick="update_all_stats();" value="&#8635; Update stats" title="Update stats for all players" />
 				<br/>
-				<br/>
+				
 								
 				<input class="big-btn" type="button" id="settings_btn" onclick="settings_dlg_open();" value="&#9881; Settings" title="Open settings dialog"/>
 				<br/>
 				<br/>
+				
+				<br/>
+				
+				
+				<input id="update_all_stats_btn" class="big-btn" type="button" onclick="update_all_stats();" value="&#8635; Update stats" title="Update stats for all players" />
+				<input id="update_stats_stop_btn" class="big-btn" type="button" onclick="stop_stats_update();" value="Stop" style="display:none" />
+				<div>
+					<div id="stats_update_processing" style="text-align: center;">
+						<progress id="stats_update_progress" value="0" max="100" style="width: 100%; visibility:hidden;">
+						</progress>
+					</div>
+					<div id="stats_updater_status" style="min-height: 2em;">
+						<!--Updating stats <br/> 123/456 randomlongbtag-->
+					</div>
+					
+					<br/>
+					<div id="stats_update_errors" style="color: red; visibility: hidden;">
+						<span id="stats_update_errors_count">N</span> errors occurred.<br/>
+						<a href="#" onclick="open_stats_update_log();">Click here to open log</a>
+					</div>
+				</div>
+				<br/>
+								
+				
+				<input class="medium-btn" type="button" onclick="generate_random_players();" value="+ random players" />
+								
+				<input class="medium-btn" type="button" onclick="generate_random_teams();" value="+ random teams" />
 				<br/>
 				<br/>
 				
-				<input class="big-btn" type="button" onclick="generate_random_players();" value="Generate random players" />
-				<br/>
-				<br/>
-				
-				<input class="big-btn" type="button" onclick="generate_random_teams();" value="Generate random teams" />
-				<br/>
-				<br/>
-				
-				<input class="big-btn" type="button" onclick="test();" value="test" title=""/>
+				<input class="medium-btn" type="button" onclick="test();" value="test" title=""/>
 			</div>
 			<br/>
 			
-			<div id="stats_updater_status">
-			</div>
 		</div>
 		
 		<div class="cell" style="width: 1em">
@@ -518,8 +534,6 @@ var RtbWorker;
 				<br/>
 				<input id="dlg_roll_cancel" class="big-btn" type="button" value="Cancel" onclick="cancel_roll();"/>
 			</div>
-			
-			
 		</div>
 	</div>
 </div>
@@ -557,7 +571,27 @@ var RtbWorker;
 </div>
 
 
-<div id="stats_update_log"></div>
+<div id="popup_dlg_stats_log" class="dlg" style="display:none">
+	<div class="dlg-background"></div>
+	<div class="dlg-container">
+		<div class="dlg-content">
+			<span class="team-title">Stats updater log</span>
+			<input title="Close" type="button" class="team_btn dlg-close" onclick="close_dialog('popup_dlg_stats_log');" value="X"/>
+			<br/>
+			<br/>
+									
+			<textarea readonly id="stats_update_log" rows="20" cols="80" autocomplete="off"></textarea>
+			
+			<div style="padding-bottom: 1em;">
+				<input id="dlg_reset" class="big-btn" type="button" value="Clear log" onclick="clear_stats_update_log();close_dialog('popup_dlg_stats_log');"/>
+			</div>
+			
+		</div>
+	</div>
+</div>
+
+
+<!--<div id="stats_update_log"></div>-->
 
 <script>
 //restore saved players to teams
