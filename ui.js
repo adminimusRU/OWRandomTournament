@@ -97,6 +97,11 @@ function clear_edited_mark( field_name ) {
 	save_players_list();
 }
 
+function clear_stats_update_log() {
+	document.getElementById("stats_update_log").value = "";
+	document.getElementById("stats_update_errors").style.visibility = "hidden";
+}
+
 function close_dialog( dialog_id ) {
 	//document.getElementById("popup_dlg").style.display = "none";
 	document.getElementById( dialog_id ).style.display = "none";
@@ -311,6 +316,10 @@ function import_lobby_ok() {
 	}
 }
 
+function open_stats_update_log() {
+	open_dialog("popup_dlg_stats_log");
+}
+
 function player_contextmenu(ev) {
 	ev.preventDefault();
 	
@@ -408,6 +417,10 @@ function settings_dlg_open() {
 	open_dialog( "popup_dlg_settings" );
 }
 
+function stop_stats_update() {
+	StatsUpdater.stop( true );
+}
+
 function test() {
 	/*document.getElementById("stats_update_log").innerHTML += JSON.stringify(Settings)+"</br>";
 	var max_combinations = Math.round( Math.pow( 2, Math.log2(1000)+(Math.log2(300000)-Math.log2(1000))*Settings.roll_quality/100 ) );
@@ -415,7 +428,7 @@ function test() {
 	
 	document.getElementById("stats_update_log").innerHTML += JSON.stringify(StatsUpdater)+"</br>";*/
 	
-	document.getElementById("stats_update_log").innerHTML += JSON.stringify(lobby, ' ')+"</br>";
+	//document.getElementById("stats_update_log").innerHTML += JSON.stringify(lobby, ' ')+"</br>";
 }
 
 function update_all_stats() {
@@ -570,10 +583,19 @@ function on_stats_update_complete() {
 	document.getElementById("stats_updater_status").innerHTML = "Update complete";
 	setTimeout( draw_stats_updater_status, StatsUpdater.min_api_request_interval );
 	document.getElementById("roll_btn").disabled = false;
+	
+	document.getElementById("update_all_stats_btn").style.display = "";
+	document.getElementById("update_stats_stop_btn").style.display = "none";
+	document.getElementById("stats_update_progress").style.visibility = "hidden";
 }
 
 function on_stats_update_error( player_id, error_msg ) {
-	document.getElementById("stats_update_log").innerHTML += player_id+": "+error_msg+"</br>";
+	//document.getElementById("stats_update_log").innerHTML += player_id+": "+error_msg+"</br>";
+	/*document.getElementById("stats_update_log").value += player_id+": "+error_msg+"\n";
+	document.getElementById("stats_update_errors").style.visibility = "visible";
+	document.getElementById("stats_update_errors_count").innerHTML = document.getElementById("stats_update_log").value.split("\n").length;*/
+	log_stats_update_error( player_id+": "+error_msg );
+	
 	if ( player_being_added !== undefined ) {
 		if ( player_being_added.id == player_id ) {
 			if( confirm("Can't get player stats: "+error_msg+"\nAdd anyway?") ) {
@@ -613,7 +635,11 @@ function on_stats_update_error( player_id, error_msg ) {
 }
 
 function on_stats_update_warning( player_id, error_msg ) {
-	document.getElementById("stats_update_log").innerHTML += player_id+": "+error_msg+"</br>";
+	//document.getElementById("stats_update_log").innerHTML += player_id+": "+error_msg+"</br>";
+	/*document.getElementById("stats_update_log").value += player_id+": "+error_msg+"\n";
+	document.getElementById("stats_update_errors").style.visibility = "visible";
+	document.getElementById("stats_update_errors_count").innerHTML = document.getElementById("stats_update_log").value.split("\n").length;*/
+	log_stats_update_error( player_id+": "+error_msg );
 	
 	if ( player_being_edited !== undefined  ) {
 		if ( player_id == player_being_edited.id ) {
@@ -629,6 +655,11 @@ function on_stats_update_progress() {
 function on_stats_update_start() {
 	draw_stats_updater_status();
 	document.getElementById("roll_btn").disabled = true;
+	
+	document.getElementById("update_all_stats_btn").style.display = "none";
+	document.getElementById("update_stats_stop_btn").style.display = "";
+
+	document.getElementById("stats_update_progress").style.visibility = "visible";
 }
 
 
@@ -806,11 +837,13 @@ function draw_player_cell( player_struct, small=false ) {
 function draw_stats_updater_status() {
 	var updater_status_txt = "";
 	if ( StatsUpdater.state == StatsUpdaterState.updating ) {
-		updater_status_txt += "Updating stats "+ StatsUpdater.currentIndex + " / " + StatsUpdater.totalQueueLength;
-		updater_status_txt += "<br/>";
-		updater_status_txt += "Getting stats for "+StatsUpdater.current_id;
+		updater_status_txt += "Updating stats <br/>"+ StatsUpdater.currentIndex + " / " + StatsUpdater.totalQueueLength;
+		updater_status_txt += " "+StatsUpdater.current_id;
 	}
 	document.getElementById("stats_updater_status").innerHTML = updater_status_txt;
+	
+	document.getElementById("stats_update_progress").value = StatsUpdater.currentIndex;
+	document.getElementById("stats_update_progress").max = StatsUpdater.totalQueueLength;
 }
 
 function fill_player_stats_dlg() {
@@ -917,6 +950,15 @@ function highlight_players( player_list ) {
 	}
 	
 	setTimeout( reset_highlighted_players, 2000 );
+}
+
+function log_stats_update_error( msg ) {
+	var log_text = document.getElementById("stats_update_log").value;
+	log_text = (log_text + "\n" + msg).trim();
+	document.getElementById("stats_update_log").value = log_text;
+	
+	document.getElementById("stats_update_errors").style.visibility = "visible";
+	document.getElementById("stats_update_errors_count").innerHTML = log_text.split("\n").length;
 }
 
 function open_dialog( dialog_id ) {
