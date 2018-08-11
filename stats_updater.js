@@ -21,7 +21,7 @@ var StatsUpdater = {
 	update_sr: true,
 	update_class: true,
 	region: "eu",
-	stats_max_age: 0, // days. Only players with stats older than specified will be updated
+	//stats_max_age: 0, // moved to addToQueue parameter
 	
 	// callbacks
 	onPlayerUpdated: undefined,
@@ -31,13 +31,17 @@ var StatsUpdater = {
 	onError: undefined,
 	onWarning: undefined,
 	
-	// @ToDo priority queue
-	addToQueue: function( player_s ) {
-		var max_stats_age_date = new Date(Date.now() - (this.stats_max_age*24*3600*1000));
+	// add players to update queue and start update process
+	// player_s - single player struct or array
+	// stats_max_age - number of days. Only players with stats older than specified will be updated
+	// high_priority - insert at queue head, otherwise at the end
+	addToQueue: function( player_s, stats_max_age=0, high_priority=false ) {
+		var max_stats_age_date = new Date(Date.now() - (stats_max_age*24*3600*1000));
 		if ( Array.isArray(player_s) ) {
 			if (player_s.length == 0 ) {
 				return;
 			}
+			var insert_at = 1;
 			for (i in player_s) {
 				// check duplicates
 				if ( this.queue.indexOf( player_s[i] ) !== -1 ) {
@@ -47,21 +51,43 @@ var StatsUpdater = {
 				if ( player_s[i].last_updated > max_stats_age_date ) {
 					continue;
 				}
-				this.queue.push( player_s[i] );
+				if (high_priority) {
+					this.queue.splice( insert_at, 0, player_s[i] );
+					insert_at++;
+				} else {
+					this.queue.push( player_s[i] );
+				}
 				this.totalQueueLength ++;
 			}
 			//this.totalQueueLength += player_s.length;
 		} else {
 			// check duplicates
-			if ( this.queue.indexOf( player_s ) !== -1 ) {
+			var index_found = this.queue.indexOf( player_s );
+			if ( (index_found !== -1) && (!high_priority) ) {
+				// duplicate, do nothing
 				return;
 			}
 			// check stats age
 			if ( player_s.last_updated > max_stats_age_date ) {
 				return;
 			}
-			this.queue.push( player_s );
-			this.totalQueueLength ++;
+			
+			if (high_priority && (index_found !== -1) ) {
+				if (index_found <= 1) {
+					// already at top, do nothing
+					return;
+				}
+				// move to top
+				this.queue.splice( index_found, 1 );
+				this.queue.splice( 1, 0, player_s );
+			} else if (high_priority) {
+				// insert at index 1
+				this.queue.splice( 1, 0, player_s );
+				this.totalQueueLength ++;
+			} else {
+				this.queue.push( player_s );
+				this.totalQueueLength ++;
+			}
 		}
 		if ( this.queue.length == 0 ) {
 			// nothing really added to queue
@@ -77,10 +103,13 @@ var StatsUpdater = {
 				this.onStart.call( undefined );
 			}
 		} else if ( this.state == StatsUpdaterState.updating ) {
-			this.totalQueueLength++;
+			//this.totalQueueLength++;
 			this.state = StatsUpdaterState.updating;
+			if(typeof this.onProgressChange == "function") {
+				this.onProgressChange.call( undefined );
+			}
 		} else if ( this.state == StatsUpdaterState.waiting ) {
-			this.totalQueueLength = 1;
+			//this.totalQueueLength = 1;
 			this.update_fails = 0;
 			this.currentIndex = 1;
 			this.state = StatsUpdaterState.updating;
@@ -216,6 +245,10 @@ var StatsUpdater = {
 			this.queue.shift();
 			this.current_retry = 0;
 			
+			if(typeof this.onError == "function") {
+				this.onError.call( undefined, OWAPI.id, msg );
+			}
+			
 			if ( this.queue.length > 0 ) {
 				this.currentIndex++;
 				setTimeout( this.updateNextPlayer.bind(this), this.min_api_request_interval );
@@ -229,10 +262,6 @@ var StatsUpdater = {
 				setTimeout( this.resetState.bind(this), this.min_api_request_interval );
 			}
 			
-		}
-		
-		if(typeof this.onError == "function") {
-			this.onError.call( undefined, OWAPI.id, msg );
 		}
 	},
 }
