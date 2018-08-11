@@ -25,7 +25,7 @@ function add_player_click() {
 	player_being_added = create_empty_player();
 	player_being_added.id = player_id;
 	
-	StatsUpdater.addToQueue( player_being_added );
+	StatsUpdater.addToQueue( player_being_added, 0, true );
 }
 
 function apply_settings() {
@@ -429,6 +429,14 @@ function test() {
 	document.getElementById("stats_update_log").innerHTML += JSON.stringify(StatsUpdater)+"</br>";*/
 	
 	//document.getElementById("stats_update_log").innerHTML += JSON.stringify(lobby, ' ')+"</br>";
+	
+	/*var msg = "---<br/>";
+	for( var i in StatsUpdater.queue ) {
+		msg += String(i) + " :: " + StatsUpdater.queue[i].id + "</br>";
+	}
+	document.getElementById("debug_log").innerHTML += msg+"</br>";*/
+	document.getElementById("debug_log").innerHTML += player_being_added.id+"</br>";
+	
 }
 
 function update_all_stats() {
@@ -441,7 +449,7 @@ function update_all_stats() {
 }
 
 function update_current_player_stats() {
-	StatsUpdater.addToQueue( player_being_edited );
+	StatsUpdater.addToQueue( player_being_edited, 0, true );
 	document.getElementById("dlg_update_player_stats_loader").style.display = "";
 	document.getElementById("dlg_edit_player_update_result").style.display = "none";
 	document.getElementById("dlg_edit_player_update_result").innerHTML = "";
@@ -450,14 +458,16 @@ function update_current_player_stats() {
 
 function update_stats_ok() {
 	close_dialog("popup_dlg_stats_update_init");
+	clear_stats_update_log();
 	
 	// pass date limit to updater
 	var raw_value = Number(document.getElementById("stats_update_limit").value);
-	StatsUpdater.stats_max_age = convert_range_log_scale( raw_value, 1, 3000 ) - 1;
+	//StatsUpdater.stats_max_age = convert_range_log_scale( raw_value, 1, 3000 ) - 1;
+	var stats_max_age = convert_range_log_scale( raw_value, 1, 3000 ) - 1;
 	
-	StatsUpdater.addToQueue( lobby );
+	StatsUpdater.addToQueue( lobby, stats_max_age );
 	for( t in teams ) {
-		StatsUpdater.addToQueue( teams[t].players );
+		StatsUpdater.addToQueue( teams[t].players, stats_max_age);
 	}
 }
 
@@ -497,6 +507,9 @@ function roll_adjust_sr_change() {
 */
 
 function on_player_stats_updated( player_id ) {
+	// dbg
+	//document.getElementById("debug_log").innerHTML += "Got stats for "+player_id+"</br>";
+	
 	if ( player_being_added !== undefined ) {
 		if ( player_id == player_being_added.id ) {
 			// add new player to lobby
@@ -507,6 +520,8 @@ function on_player_stats_updated( player_id ) {
 			highlight_player( player_id );
 			document.getElementById("new_player_id").value = "";
 			document.getElementById("add_btn").disabled = false;
+			
+			player_being_added = undefined;
 		}
 	} else {
 		if ( player_being_edited !== undefined  ) {
@@ -575,7 +590,7 @@ function on_rtb_worker_message(e) {
 		}
 		
 		var dbg_msg = e.data[1];
-		document.getElementById("stats_update_log").innerHTML += dbg_msg+"</br>";
+		document.getElementById("debug_log").innerHTML += dbg_msg+"</br>";
 	}
 }
 
@@ -598,7 +613,7 @@ function on_stats_update_error( player_id, error_msg ) {
 	
 	if ( player_being_added !== undefined ) {
 		if ( player_being_added.id == player_id ) {
-			if( confirm("Can't get player stats: "+error_msg+"\nAdd anyway?") ) {
+			if( confirm("Can't get player stats: "+error_msg+"\nAdd manually?") ) {
 				var new_player = create_empty_player();
 				new_player.id = player_id;
 				new_player.display_name = format_player_name( player_id );
@@ -653,13 +668,14 @@ function on_stats_update_progress() {
 }
 
 function on_stats_update_start() {
-	draw_stats_updater_status();
 	document.getElementById("roll_btn").disabled = true;
 	
 	document.getElementById("update_all_stats_btn").style.display = "none";
 	document.getElementById("update_stats_stop_btn").style.display = "";
 
 	document.getElementById("stats_update_progress").style.visibility = "visible";
+	clear_stats_update_log();
+	draw_stats_updater_status();
 }
 
 
