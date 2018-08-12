@@ -1,3 +1,36 @@
+function export_lobby( format ) {
+	var export_str = "";
+	if ( format == "json" ) {
+		var export_struct = {
+			format_version: 3,
+			players: lobby
+			};
+		export_str = JSON.stringify(export_struct);
+	} else if ( format == "text" ) {
+		for( i in lobby) {
+			var player_id = lobby[i].id.trim().replace("-", "#");
+			export_str += player_id + "\n";
+		}
+	} else if ( format == "csv" ) {
+		export_str += "BattleTag,Name,SR,Level,Main class,Secondary class,Main hero,Last updated\n";
+		for( i in lobby) {
+			var player_id = lobby[i].id.trim().replace("-", "#");
+			var main_class = "";
+			if( lobby[i].top_classes[0] !== undefined ) main_class = lobby[i].top_classes[0];
+			var secondary_class = "";
+			if( lobby[i].top_classes[1] !== undefined ) secondary_class = lobby[i].top_classes[1];
+			var main_hero = "";
+			if( lobby[i].top_heroes[0] !== undefined ) main_hero = lobby[i].top_heroes[0].hero;
+			var last_updated = lobby[i].last_updated.toISOString();
+			
+			export_str += player_id+","+lobby[i].display_name+","+lobby[i].sr
+						+","+lobby[i].level+","+main_class+","+secondary_class+","+main_hero+","+last_updated+"\n";
+		}
+	}
+	
+	return export_str.trim();
+}
+
 function export_teams( format, include_players, include_sr, include_classes, table_columns ) {
 	var setup_str = "";
 	
@@ -54,19 +87,25 @@ function export_teams( format, include_players, include_sr, include_classes, tab
 						
 						if ( include_sr ) {
 							setup_str += "<td style='text-align: right'>";
-							setup_str += teams[t].players[p].sr;
+							if ( p < teams[t].players.length ) {
+								setup_str += teams[t].players[p].sr;
+							}
+							
 							setup_str += "</td>";
 						}
 						setup_str += "<td style='text-align: left'>";
-						// @Todo escape
-						setup_str += escapeHtml( teams[t].players[p].display_name );
+						if ( p < teams[t].players.length ) {
+							setup_str += escapeHtml( teams[t].players[p].display_name );
+						}
 						setup_str += "</td>";
 						if ( include_classes ) {
 							setup_str += "<td style='text-align: left'>";
-							if ( teams[t].players[p].top_classes[0] != undefined ) {
-								var class_str = teams[t].players[p].top_classes[0];
-								if (class_str == "support") class_str = "sup";
-								setup_str += class_str;
+							if ( p < teams[t].players.length ) {
+								if ( teams[t].players[p].top_classes[0] != undefined ) {
+									var class_str = teams[t].players[p].top_classes[0];
+									if (class_str == "support") class_str = "sup";
+									setup_str += class_str;
+								}
 							}
 							setup_str += "</td>";
 						}
