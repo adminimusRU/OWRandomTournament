@@ -36,4 +36,5 @@ var hero_classes = {
 	zarya:		"tank",
 	roadhog:	"tank",
 	reinhardt:	"tank",
+	wrecking_ball:"tank",
 };
