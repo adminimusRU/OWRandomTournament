@@ -1171,6 +1171,9 @@ function fill_player_stats_dlg() {
 			if( hero_id == "soldier76") {
 				hero_id = "soldier-76";
 			}
+			if( hero_id == "wrecking_ball") {
+				hero_id = "wrecking-ball";
+			}
 			var img_node = document.createElement("img");
 			img_node.className = "hero-icon";
 			img_node.src = "https://blzgdapipro-a.akamaihd.net/hero/"+hero_id+"/hero-select-portrait.png";
