@@ -135,6 +135,16 @@ function get_default_settings() {
 	};
 }
 
+function get_player_index( player_id, team ) {
+	for( var i=0; i<team.length; i++) {
+		if ( player_id == team[i].id) {
+			return i;
+		}
+	}
+	
+	return -1;
+}
+
 function get_rank_name( sr ) {
 	if (sr == 0) {
 		return "unranked"
