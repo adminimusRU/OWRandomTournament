@@ -59,6 +59,7 @@ function create_empty_player() {
 function create_empty_team() {
 	return {
 			name: "",
+			captain_index: -1,
 			players: []
 		};
 }
@@ -143,6 +144,15 @@ function get_player_index( player_id, team ) {
 	}
 	
 	return -1;
+}
+
+function get_player_team( player_id ) {
+	for( var i=0; i<team.length; i++) {
+		if ( player_id == team[i].id) {
+			return team;
+		}
+	}
+	return undefined;
 }
 
 function get_rank_name( sr ) {
