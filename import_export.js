@@ -5,7 +5,7 @@ function export_lobby( format ) {
 			format_version: 3,
 			players: lobby
 			};
-		export_str = JSON.stringify(export_struct);
+		export_str = JSON.stringify(export_struct, null, ' ');
 	} else if ( format == "text" ) {
 		for( i in lobby) {
 			var player_id = lobby[i].id.trim().replace("-", "#");
@@ -31,7 +31,7 @@ function export_lobby( format ) {
 	return export_str.trim();
 }
 
-function export_teams( format, include_players, include_sr, include_classes, table_columns ) {
+function export_teams( format, include_players, include_sr, include_classes, include_captains, table_columns ) {
 	var setup_str = "";
 	
 	if ( format == "text-list" ) {
@@ -44,6 +44,11 @@ function export_teams( format, include_players, include_sr, include_classes, tab
 						player_str += teams[t].players[p].sr + "\t";
 					}
 					player_str += teams[t].players[p].display_name;
+					if ( include_captains ) {
+						if ( teams[t].captain_index == p ) {
+							player_str += " \u265B";
+						}
+					}
 					if ( include_classes ) {
 						if ( teams[t].players[p].top_classes[0] != undefined ) {
 							player_str += "\t" + teams[t].players[p].top_classes[0];
@@ -96,6 +101,11 @@ function export_teams( format, include_players, include_sr, include_classes, tab
 						setup_str += "<td style='text-align: left'>";
 						if ( p < teams[t].players.length ) {
 							setup_str += escapeHtml( teams[t].players[p].display_name );
+							if ( include_captains ) {
+								if ( teams[t].captain_index == p ) {
+									setup_str += " \u265B";
+								}
+							}
 						}
 						setup_str += "</td>";
 						if ( include_classes ) {
@@ -272,6 +282,10 @@ function restore_saved_teams() {
 		for ( var t in saved_team_setup ) {
 			var new_team = create_empty_team();
 			new_team.name = saved_team_setup[t].name;
+			new_team.captain_index = saved_team_setup[t].captain_index;
+			if ( new_team.captain_index === undefined ) {
+				new_team.captain_index = -1;
+			}
 			for ( var i in saved_team_setup[t].players ) {
 				new_team.players.push( sanitize_player_struct(saved_team_setup[t].players[i], saved_format) );
 			}
