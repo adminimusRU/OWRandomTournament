@@ -518,3 +518,9 @@ input[id="roll_coverage"]::-webkit-slider-runnable-track {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
 }
+
+.captain-mark {
+	color: green;
+	filter: opacity(60%);
+	font-size: 80%;
+}
