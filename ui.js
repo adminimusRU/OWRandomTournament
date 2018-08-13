@@ -185,9 +185,10 @@ function export_teams_dlg_change_format() {
 	var include_players = document.getElementById("dlg_team_export_players").checked;
 	var include_sr = document.getElementById("dlg_team_export_sr").checked;
 	var include_classes = document.getElementById("dlg_team_export_classes").checked;
+	var include_captains = document.getElementById("dlg_team_export_captains").checked;
 	var table_columns = Number(document.getElementById("dlg_team_export_columns").value);
 	
-	var export_str = export_teams( format, include_players, include_sr, include_classes, table_columns );
+	var export_str = export_teams( format, include_players, include_sr, include_classes, include_captains, table_columns );
 	
 	if ( format == "html-table" ) {
 		var html_container = document.getElementById("dlg_html_export_teams");
@@ -533,6 +534,7 @@ function player_dblClick(ev) {
 
 	// detect selected team
 	var selected_team;
+	var selected_team_struct;
 	var parent_id = ev.currentTarget.parentElement.parentElement.id;
 	if (parent_id == "lobby") {
 		selected_team = lobby;
@@ -541,6 +543,7 @@ function player_dblClick(ev) {
 			for( var i=0; i<teams[t].players.length; i++) {
 				if ( selected_id == teams[t].players[i].id) {
 					selected_team = teams[t].players;
+					selected_team_struct = teams[t];
 					//dragged_index = i;
 					//dragged_player = teams[t].players[i];
 				}
@@ -551,6 +554,13 @@ function player_dblClick(ev) {
 	// find index in team for player
 	var selected_index = get_player_index( selected_id, selected_team );
 	var selected_player = selected_team[selected_index];
+	
+	// update captain_index
+	if ( selected_team_struct !== undefined ) {
+		if ( selected_team_struct.captain_index == selected_index ) {
+			selected_team_struct.captain_index = -1;
+		}
+	}
 	
 	// detect target team
 	var new_team;
@@ -592,7 +602,7 @@ function player_drag(ev) {
 }
 
 function player_drop(ev) {
-    ev.preventDefault();
+	ev.preventDefault();
 	ev.stopPropagation();
 	
     var dragged_id = ev.dataTransfer.getData("text");
@@ -602,7 +612,7 @@ function player_drop(ev) {
 	}
 	
 	//dbg
-	document.getElementById("debug_log").innerHTML += "drop to "+target_id+"</br>";
+	//document.getElementById("debug_log").innerHTML += "drop to "+target_id+"</br>";
 	
 	var drag_action = "swap";
 	
@@ -613,36 +623,14 @@ function player_drop(ev) {
 	
 	// find team and index in team for both players 
 	var dragged_team;
+	var dragged_team_struct;
 	var dragged_index;
 	var dragged_player;
 	var target_team;
+	var target_team_struct;
 	var target_index;
 	var target_player;
 	
-	/*for( var i=0; i<team1.length; i++) {
-		if ( dragged_id == team1[i].id) {
-			dragged_team = team1;
-			dragged_index = i;
-			dragged_player = team1[i];
-		}
-		if ( target_id == team1[i].id) {
-			target_team = team1;
-			target_index = i;
-			target_player = team1[i];
-		}
-	}
-	for( var i=0; i<team2.length; i++) {
-		if ( dragged_id == team2[i].id) {
-			dragged_team = team2;
-			dragged_index = i;
-			dragged_player = team2[i];
-		}
-		if ( target_id == team2[i].id) {
-			target_team = team2;
-			target_index = i;
-			target_player = team2[i];
-		}
-	}*/
 	for( var i=0; i<lobby.length; i++) {
 		if ( dragged_id == lobby[i].id) {
 			dragged_team = lobby;
@@ -659,16 +647,41 @@ function player_drop(ev) {
 		for( var i=0; i<teams[t].players.length; i++) {
 			if ( dragged_id == teams[t].players[i].id) {
 				dragged_team = teams[t].players;
+				dragged_team_struct = teams[t];
 				dragged_index = i;
 				dragged_player = teams[t].players[i];
 			}
 			if ( target_id == teams[t].players[i].id) {
 				target_team = teams[t].players;
+				target_team_struct = teams[t];
 				target_index = i;
 				target_player = teams[t].players[i];
 			}
 		}
 	}
+	
+	// update captain_index
+	if ( dragged_team_struct !== undefined ) {
+		// captain moved out of team
+		if ( (dragged_team_struct.captain_index == dragged_index) && ( dragged_team !== target_team ) ) {
+			dragged_team_struct.captain_index = -1;
+		}
+		
+		// captain swapped with another player within team
+		if ( dragged_team === target_team ) {
+			if (dragged_team_struct.captain_index == dragged_index) {
+				dragged_team_struct.captain_index = target_index;
+			} else if (dragged_team_struct.captain_index == target_index) {
+				dragged_team_struct.captain_index = dragged_index;
+			}
+		}
+	}
+	if ( target_team_struct !== undefined ) {
+		if ( (target_team_struct.captain_index == target_index) && ( dragged_team !== target_team ) ) {
+			target_team_struct.captain_index = -1;
+		}
+	}
+	
 	
 	// dropped on empty slot
 	if (target_id == "") {
@@ -684,13 +697,6 @@ function player_drop(ev) {
 				target_index = target_team.length;
 			}
 		}
-		/*else if (parent_id == "team1") {
-			target_team = team1;
-			target_index = team1.length;
-		} else {
-			target_team = team2;
-			target_index = team2.length;
-		}*/
 		
 		if ( dragged_team == target_team ) {
 			// just move to end within team
@@ -720,12 +726,6 @@ function player_drop(ev) {
 		// replace target with dragged player
 		target_team[target_index] = dragged_player;
 	}
-	
-	/*if ((target_team != lobby) && (dragged_team == lobby)) {
-		update_picked_player( dragged_id );
-	}*/
-	
-	//update_captains();
 	
 	save_players_list();
 	redraw_lobby();
@@ -949,17 +949,17 @@ function convert_range_log_scale( raw_value, out_min, out_max, precision=0, inpu
 }
 
 //function draw_player( player_struct, team_id ) {
-function draw_player( player_struct, small=false ) {
+function draw_player( player_struct, small=false, is_captain=false ) {
 	var new_player_item_row = document.createElement("div");
 	new_player_item_row.className = "row";
 	
-	var new_player_cell = draw_player_cell( player_struct, small );
+	var new_player_cell = draw_player_cell( player_struct, small, is_captain );
 	new_player_item_row.appendChild(new_player_cell);
 	
 	return new_player_item_row;
 }
 
-function draw_player_cell( player_struct, small=false ) {
+function draw_player_cell( player_struct, small=false, is_captain=false ) {
 	var text_node;
 	var br_node;
 	
@@ -987,6 +987,9 @@ function draw_player_cell( player_struct, small=false ) {
 		}
 	}
 	new_player_item.title += "\nLast updated: " + print_date(player_struct.last_updated);
+	if ( is_captain ) {
+		new_player_item.title += "\nTeam captain";
+	}
 	
 	//new_player_item.onclick = function(){player_item_onclick(this, team_id);};
 	if( ! player_struct.empty) {
@@ -1081,6 +1084,16 @@ function draw_player_cell( player_struct, small=false ) {
 	text_node = document.createTextNode( display_name );
 	name_display.appendChild(text_node);
 	player_name.appendChild(name_display);
+	
+	// captain mark
+	if ( is_captain ) {
+		var captain_icon = document.createElement("span");
+		captain_icon.className = "captain-mark";
+		captain_icon.title = "team captain";
+		text_node = document.createTextNode( " \u265B" );
+		captain_icon.appendChild(text_node);
+		player_name.appendChild(captain_icon);
+	}
 	
 	new_player_item.appendChild(player_name);
 	
@@ -1253,7 +1266,7 @@ function redraw_lobby() {
 		var player_widget = draw_player( lobby[i] );
 		team_container.appendChild(player_widget);
 	}
-	for( i=lobby.length; i<team_size; i++) {
+	for( i=lobby.length; i<Settings.team_size; i++) {
 		var player_widget = draw_player( create_empty_player() );
 		team_container.appendChild(player_widget);
 	}
@@ -1271,8 +1284,17 @@ function redraw_lobby() {
 
 function redraw_player( player_struct ) {
 	var is_small = (lobby.indexOf(player_struct) == -1);
+	
+	var is_captain = false;
+	var player_team = get_player_team( player_struct.id );
+	if (player_team !== undefined ) {
+		if ( player_team.players[player_team.captain_index] == player_struct ) {
+			is_captain = true;
+		}
+	}
+	
 	var player_item_row = document.getElementById( player_struct.id ).parentElement;
-	var player_cell = draw_player_cell( player_struct, is_small );
+	var player_cell = draw_player_cell( player_struct, is_small, is_captain );
 	player_item_row.innerHTML = "";
 	player_item_row.appendChild(player_cell);
 }
@@ -1299,9 +1321,11 @@ function redraw_teams() {
 		current_team_table.appendChild(team_title_row);
 		
 		for( var p=0; p<teams[t].players.length; p++) {
-			var player_widget = draw_player( teams[t].players[p], true );
+			var is_captain = (p == teams[t].captain_index);
+			var player_widget = draw_player( teams[t].players[p], true, is_captain );
 			current_team_table.appendChild(player_widget);
 		}
+		// empty slots
 		for( p=teams[t].players.length; p<Settings.team_size; p++) {
 			var player_widget = draw_player( create_empty_player(), true );
 			current_team_table.appendChild(player_widget);
