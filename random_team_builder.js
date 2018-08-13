@@ -196,6 +196,7 @@ var RandomTeamBuilder = {
 			new_team.players = this.pickPlayersByMask( this.best_roll, true );
 			sort_team( new_team.players );
 			new_team.name = "Team "+new_team.players[0].display_name;
+			new_team.captain_index = 0;
 			this.teams.push( new_team );
 			
 			if(typeof this.onProgressChange == "function") {
