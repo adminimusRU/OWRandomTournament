@@ -80,6 +80,7 @@ function create_random_player( id ) {
 			empty: false,
 			top_classes: top_classes,
 			top_heroes: top_heroes,
+			last_updated: new Date(0),
 			fake_id: true
 		};
 }
