@@ -109,6 +109,17 @@ function close_dialog( dialog_id ) {
 	document.getElementById( dialog_id ).style.display = "none";
 }
 
+function delete_team( team_index ) {
+	if ( ! confirm("Delete team?") ) {
+		return;
+	}
+	lobby = lobby.concat( teams[team_index].players.splice( 0, teams[team_index].players.length) );
+	teams.splice( team_index, 1 );
+	save_players_list();
+	redraw_lobby();
+	redraw_teams();
+}
+
 function edit_player_ok() {
 	if (player_being_edited == undefined) {
 		return;
@@ -159,6 +170,26 @@ function edit_player_ok() {
 	redraw_player( player_struct );
 	
 	player_being_edited = undefined;
+}
+
+function edit_team(team_index) {
+	team_being_edited = teams[team_index];
+	fill_edit_team_dlg();
+	open_dialog("popup_dlg_edit_team");
+}
+
+function edit_team_ok() {
+	if (team_being_edited == undefined) {
+		return;
+	}
+	
+	team_being_edited.name = document.getElementById("dlg_edit_team_name").value;
+	team_being_edited.captain_index = Number(document.getElementById("dlg_edit_team_captain").value);
+	
+	team_being_edited = undefined;
+	close_dialog("popup_dlg_edit_team");
+	save_players_list();
+	redraw_teams();
 }
 
 function export_lobby_dlg_open() {
@@ -740,6 +771,19 @@ function roll_adjust_sr_change() {
 	}
 }
 
+function team_contextmenu(ev) {
+	ev.preventDefault();
+	
+	var team_node = ev.currentTarget;
+	while (team_node.parentElement.id != "teams_container" ) {
+		team_node = team_node.parentElement;
+	}
+	
+	var team_index = Array.prototype.indexOf.call( document.getElementById("teams_container").children , team_node);
+		
+	edit_team(team_index);
+}
+
 /*
 *		Other events
 */
@@ -1137,6 +1181,38 @@ function draw_stats_updater_status() {
 	document.getElementById("stats_update_progress").max = StatsUpdater.totalQueueLength;
 }
 
+function fill_edit_team_dlg() {
+	if (team_being_edited === undefined) {
+		return;
+	}
+	
+	document.getElementById("dlg_edit_team_title").innerHTML = escapeHtml( team_being_edited.name );
+	document.getElementById("dlg_edit_team_name").value = team_being_edited.name;
+	
+	// @ToDo rewrite this trash
+	document.getElementById("dlg_edit_team_captain").innerHTML = "";
+	
+	var select_option = document.createElement("option");
+	select_option.value = -1;
+	var text_node = document.createTextNode("-");
+	select_option.appendChild(text_node);
+	document.getElementById("dlg_edit_team_captain").appendChild(select_option);
+	
+	for ( var p in team_being_edited.players ) {
+		
+		var select_option = document.createElement("option");
+		select_option.value = p;
+		if ( p == team_being_edited.captain_index ) {
+			select_option.selected = true;
+		}
+		var text_node = document.createTextNode(team_being_edited.players[p].display_name);
+		select_option.appendChild(text_node);
+				
+		document.getElementById("dlg_edit_team_captain").appendChild(select_option);
+	}
+	
+}
+
 function fill_player_stats_dlg() {
 	if (player_being_edited === undefined) {
 		return;
@@ -1303,6 +1379,62 @@ function redraw_teams() {
 	var teams_container = document.getElementById("teams_container");
 	teams_container.innerHTML = "";
 	for( var t=0; t<teams.length; t++) {
+		var current_team_toolbar_container = document.createElement("div");
+		current_team_toolbar_container.className = "team-toolbar-container";
+		
+		// toolbar
+		var current_team_toolbar = document.createElement("div");
+		current_team_toolbar.className = "team-toolbar";
+		current_team_toolbar.classList.add("small-toolbar");
+		
+		var toolbar_btn = document.createElement("input");
+		toolbar_btn.type = "button";
+		toolbar_btn.className = "team_btn";
+		toolbar_btn.value = " X ";
+		toolbar_btn.title = "Delete team";
+		toolbar_btn.onclick = delete_team.bind(this,t);
+		current_team_toolbar.appendChild(toolbar_btn);
+		
+		var toolbar_btn = document.createElement("button");
+		toolbar_btn.className = "team_btn";
+		//toolbar_btn.value = "\u2191\u2193 Az";
+		var text_node = document.createTextNode("\u2191\u2193");
+		toolbar_btn.appendChild(text_node);
+		var img = document.createElement("img");
+		img.src = "class_icons/dps.png";
+		img.style.height = "0.9em";
+		toolbar_btn.appendChild(img);
+		toolbar_btn.title = "Sort players by class";
+		toolbar_btn.onclick = sort_team.bind(this, t, 'class');
+		current_team_toolbar.appendChild(toolbar_btn);
+		
+		var toolbar_btn = document.createElement("input");
+		toolbar_btn.type = "button";
+		toolbar_btn.className = "team_btn";
+		toolbar_btn.value = "\u2191\u2193 Az";
+		toolbar_btn.title = "Sort players by name";
+		toolbar_btn.onclick = sort_team.bind(this, t, 'display_name');
+		current_team_toolbar.appendChild(toolbar_btn);
+		
+		var toolbar_btn = document.createElement("input");
+		toolbar_btn.type = "button";
+		toolbar_btn.className = "team_btn";
+		toolbar_btn.value = "\u2191\u2193 123";
+		toolbar_btn.title = "Sort players by SR";
+		toolbar_btn.onclick = sort_team.bind(this, t, 'sr');
+		current_team_toolbar.appendChild(toolbar_btn);
+		
+		var toolbar_btn = document.createElement("input");
+		toolbar_btn.type = "button";
+		toolbar_btn.className = "team_btn";
+		toolbar_btn.value = "\u270e";
+		toolbar_btn.title = "Edit team";
+		toolbar_btn.onclick = edit_team.bind(this, t);
+		current_team_toolbar.appendChild(toolbar_btn);
+		
+		current_team_toolbar_container.appendChild(current_team_toolbar);
+		
+		// team as table
 		var current_team_container = document.createElement("div");
 		current_team_container.className = "small-team";
 		var current_team_table = document.createElement("div");
@@ -1318,6 +1450,7 @@ function redraw_teams() {
 		text_node = document.createTextNode(calc_team_sr(teams[t]) + " avg. SR");
 		team_title_cell.appendChild(text_node);
 		team_title_row.appendChild(team_title_cell);
+		team_title_row.oncontextmenu = function(event){team_contextmenu(event);};
 		current_team_table.appendChild(team_title_row);
 		
 		for( var p=0; p<teams[t].players.length; p++) {
@@ -1332,7 +1465,9 @@ function redraw_teams() {
 		}
 		
 		current_team_container.appendChild(current_team_table);
-		teams_container.appendChild(current_team_container);
+		//teams_container.appendChild(current_team_container);
+		current_team_toolbar_container.appendChild(current_team_container);
+		teams_container.appendChild(current_team_toolbar_container);
 	}
 	
 	//save_players_list();
