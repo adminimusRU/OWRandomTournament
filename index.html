@@ -23,6 +23,7 @@ var teams = [];
 
 var player_being_added;
 var player_being_edited;
+var team_being_edited;
 var lobby_filter_timer = 0;
 //var selected_player_team1 = "";
 
@@ -87,8 +88,12 @@ var RtbWorker;
 			<input title="Clear lobby" type="button" class="team_btn" onclick="clear_lobby();" value=" X "/>
 			<input title="Import lobby" id="import_lobby_btn" type="button" class="team_btn" onclick="import_lobby_dlg_open();" value="Import"/>
 			<input title="Export lobby" type="button" class="team_btn" onclick="export_lobby_dlg_open();" value="Export"/>
-			<input title="Sort lobby by SR" type="button" class="team_btn" onclick="sort_team(lobby, 'sr');redraw_lobby();" value="&uarr;&darr;123"/>
-			<input title="Sort lobby by name" type="button" class="team_btn" onclick="sort_team(lobby, 'display_name');redraw_lobby();" value="&uarr;&darr;Az"/>
+			<button title="Sort lobby by class" class="team_btn" onclick="sort_players(lobby, 'class');redraw_lobby();">
+				&uarr;&darr;
+				<img src="class_icons/dps.png" style="height: 0.9em;">
+			</button>
+			<input title="Sort lobby by name" type="button" class="team_btn" onclick="sort_players(lobby, 'display_name');redraw_lobby();" value="&uarr;&darr;Az"/>
+			<input title="Sort lobby by SR" type="button" class="team_btn" onclick="sort_players(lobby, 'sr');redraw_lobby();" value="&uarr;&darr;123"/>
 			</div>
 					
 			<span id="lobby_count">0</span> players<br/>
@@ -308,7 +313,7 @@ var RtbWorker;
 			<span id="dlg_title_edit_player" class="team-title">Player name</span>
 			<input id="dlg_close" title="Close" type="button" class="team_btn dlg-close" onclick="close_dialog('popup_dlg_edit_player'); player_being_edited=undefined;" value="X"/>
 			<br/>
-			<br/>			
+			<br/>
 			
 			<div id="dlg_player_edit" class="dlg_options table">
 				<div class="row">
@@ -594,6 +599,42 @@ var RtbWorker;
 </div>
 
 
+<div id="popup_dlg_edit_team" class="dlg" style="display:none">
+	<div class="dlg-background"></div>
+	<div class="dlg-container">
+		<div class="dlg-content" style="min-width: 20em">
+			<span id="dlg_edit_team_title" class="team-title">Team name</span>
+			<input id="dlg_close" title="Close" type="button" class="team_btn dlg-close" onclick="close_dialog('popup_dlg_edit_team'); team_being_edited=undefined;" value="X"/>
+			<br/>
+			<br/>
+			
+			<div class="dlg_options table">
+				<div class="row">
+					<div class="cell">Team name:</div>
+					<div class="cell">
+						<input id="dlg_edit_team_name" type="text" maxlength="200" style="width: 100%;">
+					</div>
+				</div>
+				<div class="row">
+					<div class="cell">Captain:</div>
+					<div class="cell">
+						<select id="dlg_edit_team_captain" style="width: 100%;">
+							<!--<option value="-1">-</option>-->
+						</select>
+					</div>
+				</div>
+			</div>
+			
+			<br/>
+
+			<div>
+				<input id="dlg_ok" class="big-btn" type="button" value="OK" onclick="edit_team_ok();"/>
+			</div>
+		</div>
+	</div>
+</div>
+			
+			
 <div id="debug_log"></div>
 
 <script>
