@@ -1,7 +1,7 @@
 var class_names = [
+	"tank",
 	"dps",
-	"support",
-	"tank"
+	"support"
 ];
 
 var hero_classes = {
