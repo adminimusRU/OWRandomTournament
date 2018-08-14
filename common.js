@@ -224,16 +224,42 @@ function round_to( value, precision ) {
 	return Math.round(value * Math.pow(10, precision)) / Math.pow(10, precision);
 }
 
-function sort_team( team, sort_field = 'sr' ) {
-	team.sort( function(player1, player2){
-			if( typeof player1[sort_field] === 'string') {
-				var val1 = player1[sort_field].toLowerCase();
-				var val2 = player2[sort_field].toLowerCase();
-				return ( val1<val2 ? -1 : (val1>val2?1:0) );
-			} else {
-				return player2[sort_field] - player1[sort_field];
-			}
-		} );
+function sort_players( team, sort_field = 'sr' ) {
+	if ( sort_field == 'class' ) {
+		team.sort( function(player1, player2){
+				var val1 = -1;
+				if (player1.top_classes.length > 0) {
+					val1 = class_names.indexOf( player1.top_classes[0] );
+				}
+				var val2 = -1;
+				if (player2.top_classes.length > 0) {
+					val2 = class_names.indexOf( player2.top_classes[0] );
+				}
+				return val1 - val2;
+			} );
+	} else {
+		team.sort( function(player1, player2){
+				if( typeof player1[sort_field] === 'string') {
+					var val1 = player1[sort_field].toLowerCase();
+					var val2 = player2[sort_field].toLowerCase();
+					return ( val1<val2 ? -1 : (val1>val2?1:0) );
+				} else { 
+					return player2[sort_field] - player1[sort_field];
+				} 
+			} );
+	}
+}
+
+function sort_team( team_index, sort_field = 'sr' ) {
+	if (  teams[team_index].captain_index !== -1 ) {
+		var captain = teams[team_index].players[teams[team_index].captain_index];
+	}
+	sort_players( teams[team_index].players, sort_field );
+	if (  teams[team_index].captain_index !== -1 ) {
+		teams[team_index].captain_index = teams[team_index].players.indexOf( captain );
+	}
+	save_players_list();
+	redraw_teams();
 }
 
 function str_padding( source_str, length, padding_char=" " ) {
