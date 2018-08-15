@@ -84,6 +84,7 @@ input.team-title:hover {
 	display: inline-block;
 	/*margin-right: 1em;
 	margin-bottom: 0.5em;*/
+	margin-top: 0.2em;
 }
 
 .small-team-table {
@@ -179,6 +180,7 @@ span.sr-edited {
 	float: right;
 	font-size: 70%;
 	margin-left: 0.2em;
+	height: 2em;
 	/*padding-top: 1px;
     padding-bottom: 1px;*/
 }
@@ -426,7 +428,16 @@ div[id="stats_update_log"] {
 	cursor: grab;
 	color: white;
 	padding-left: 0.5em;
-	font-style: italic;
+	/*font-style: italic;*/
+}
+
+.team-title-name {
+	font-size: 110%;
+}
+
+.team-title-sr {
+	font-size: 90%;
+	text-align: right;
 }
 
 .teams-container {
@@ -539,4 +550,12 @@ input[id="roll_coverage"]::-webkit-slider-runnable-track {
 
 .small-toolbar {
 	display: block;
+}
+
+a.action-href {
+	color: blue;
+}
+
+a.action-href:visited {
+	color: blue;
 }
