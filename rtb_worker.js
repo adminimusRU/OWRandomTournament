@@ -20,8 +20,9 @@ onmessage = function(e) {
 		}
 		var settings_struct = e.data[1];
 		for (var setting_name in settings_struct ) {
-			// @ToDo check if property exists
-			RandomTeamBuilder[setting_name] = settings_struct[setting_name];
+			if ( RandomTeamBuilder.hasOwnProperty(setting_name) ) {
+				RandomTeamBuilder[setting_name] = settings_struct[setting_name];
+			}
 		}
 	} else if ( event_type == "roll" ) {
 		if (e.data.length < 2) {
