@@ -31,7 +31,13 @@ function add_player_click() {
 }
 
 function apply_settings() {
-	// @ToDo: check if team size changed...
+	// check if team size changed
+	if ( (Settings["team_size"] != Number(document.getElementById("team_size".value))) && (teams.length > 0) ) {
+		if ( ! confirm("Team size setting changed. All teams will be deleted!") ) {
+			return;
+		}
+		reset_roll();
+	}
 	
 	for ( setting_name in Settings ) {
 		var setting_input = document.getElementById(setting_name);
@@ -53,9 +59,7 @@ function apply_settings() {
 	}
 	
 	localStorage.setItem("settings", JSON.stringify(Settings));
-	
 	apply_stats_updater_settings();
-	
 	close_dialog( "popup_dlg_settings" );
 }
 
@@ -427,6 +431,7 @@ function roll_teams() {
 		
 		max_combinations: max_combinations,
 		OF_max_thresold: OF_max_thresold,
+		roll_debug: roll_debug,
 		//OF_min_thresold: 50,		
 	}
 		
@@ -458,26 +463,35 @@ function settings_dlg_open() {
 	open_dialog( "popup_dlg_settings" );
 }
 
+function sort_lobby( sort_field = 'sr' ) {
+	sort_players(lobby, sort_field);
+	save_players_list();
+	redraw_lobby();
+}
+
+function sort_team( team_index, sort_field = 'sr' ) {
+	if ( teams[team_index].captain_index !== -1 ) {
+		var captain = teams[team_index].players[teams[team_index].captain_index];
+	}
+	sort_players( teams[team_index].players, sort_field );
+	if ( teams[team_index].captain_index !== -1 ) {
+		teams[team_index].captain_index = teams[team_index].players.indexOf( captain );
+	}
+	save_players_list();
+	redraw_teams();
+}
+
 function stop_stats_update() {
 	StatsUpdater.stop( true );
 }
 
 function test() {
-	/*document.getElementById("stats_update_log").innerHTML += JSON.stringify(Settings)+"</br>";
-	var max_combinations = Math.round( Math.pow( 2, Math.log2(1000)+(Math.log2(300000)-Math.log2(1000))*Settings.roll_quality/100 ) );
-	document.getElementById("stats_update_log").innerHTML += "max_combinations = "+max_combinations+"</br>";
-	
-	document.getElementById("stats_update_log").innerHTML += JSON.stringify(StatsUpdater)+"</br>";*/
-	
-	//document.getElementById("stats_update_log").innerHTML += JSON.stringify(lobby, ' ')+"</br>";
-	
-	/*var msg = "---<br/>";
-	for( var i in StatsUpdater.queue ) {
-		msg += String(i) + " :: " + StatsUpdater.queue[i].id + "</br>";
-	}
-	document.getElementById("debug_log").innerHTML += msg+"</br>";*/
-	document.getElementById("debug_log").innerHTML += player_being_added.id+"</br>";
-	
+	//document.getElementById("debug_log").innerHTML += lobby[0].id+"</br>";
+	//document.getElementById("debug_log").innerHTML += JSON.stringify(lobby)+"</br>";
+	//alert(Settings.hasOwnProperty("roll_team_count_power2"));
+	//alert(Settings.hasOwnProperty("adadas"));
+	document.getElementById("debug_log").innerHTML += "roll debug enabled</br>";
+	roll_debug = true;
 }
 
 function update_all_stats() {
@@ -1189,7 +1203,6 @@ function fill_edit_team_dlg() {
 	document.getElementById("dlg_edit_team_title").innerHTML = escapeHtml( team_being_edited.name );
 	document.getElementById("dlg_edit_team_name").value = team_being_edited.name;
 	
-	// @ToDo rewrite this trash
 	document.getElementById("dlg_edit_team_captain").innerHTML = "";
 	
 	var select_option = document.createElement("option");
@@ -1199,7 +1212,6 @@ function fill_edit_team_dlg() {
 	document.getElementById("dlg_edit_team_captain").appendChild(select_option);
 	
 	for ( var p in team_being_edited.players ) {
-		
 		var select_option = document.createElement("option");
 		select_option.value = p;
 		if ( p == team_being_edited.captain_index ) {
@@ -1428,6 +1440,7 @@ function redraw_teams() {
 		toolbar_btn.type = "button";
 		toolbar_btn.className = "team_btn";
 		toolbar_btn.value = "\u270e";
+		//toolbar_btn.style.fontSize = "65%";
 		toolbar_btn.title = "Edit team";
 		toolbar_btn.onclick = edit_team.bind(this, t);
 		current_team_toolbar.appendChild(toolbar_btn);
@@ -1444,11 +1457,19 @@ function redraw_teams() {
 		team_title_row.className = "row";
 		var team_title_cell = document.createElement("div");
 		team_title_cell.className = "cell team-title-small";
+		var div_node = document.createElement("div");
+		div_node.className = "team-title-name";
 		var text_node = document.createTextNode(teams[t].name);
-		team_title_cell.appendChild(text_node);
-		team_title_cell.appendChild(document.createElement("br"));
+		div_node.appendChild(text_node);
+		//team_title_cell.appendChild(text_node);
+		team_title_cell.appendChild(div_node);
+		//team_title_cell.appendChild(document.createElement("br"));
+		div_node = document.createElement("div");
+		div_node.className = "team-title-sr";
 		text_node = document.createTextNode(calc_team_sr(teams[t]) + " avg. SR");
-		team_title_cell.appendChild(text_node);
+		//team_title_cell.appendChild(text_node);
+		div_node.appendChild(text_node);
+		team_title_cell.appendChild(div_node);
 		team_title_row.appendChild(team_title_cell);
 		team_title_row.oncontextmenu = function(event){team_contextmenu(event);};
 		current_team_table.appendChild(team_title_row);
