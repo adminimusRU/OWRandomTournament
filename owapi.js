@@ -24,6 +24,10 @@ var OWAPI = {
 	top_hero_max_ratio: 4.0, // ratio of hero playtime to detect top heroes
 	region: "eu", // us, kr
 	
+	// internal
+	is_processed: false, // to prevent multiple callback on single request
+	
+	// public methods
 	
 	getStats: function() {
 		// reset
@@ -35,6 +39,8 @@ var OWAPI = {
 		
 		this.id = format_player_id( this.id );
 		this.display_name = format_player_name( this.id );
+		
+		this.is_processed = false;
 	
 		var xhttp = new XMLHttpRequest();
 		xhttp.onload = function() {
@@ -58,12 +64,18 @@ var OWAPI = {
 						} 
 						
 						if (typeof OWAPI.onSuccess == "function") {
-							OWAPI.onSuccess.call();
+							if ( ! OWAPI.is_processed ) {
+								OWAPI.onSuccess.call();
+							}
+							OWAPI.is_processed = true;
 						}
 					}
 					catch (err) {
 						if(typeof OWAPI.onFail == "function") {
-							OWAPI.onFail.call( OWAPI, err.message );
+							if ( ! OWAPI.is_processed ) {
+								OWAPI.onFail.call( OWAPI, err.message );
+							}
+							OWAPI.is_processed = true;
 						}
 					}
 						
@@ -83,7 +95,10 @@ var OWAPI = {
 									OWAPI.can_retry = true;
 					}
 					if(typeof OWAPI.onFail == "function") {
-						OWAPI.onFail.call( OWAPI, msg );
+						if ( ! OWAPI.is_processed ) {
+							OWAPI.onFail.call( OWAPI, msg );
+						}
+						OWAPI.is_processed = true;
 					}
 				}
 			}
@@ -92,14 +107,20 @@ var OWAPI = {
 			var msg = "OWAPI timeout";
 			OWAPI.can_retry = true;
 			if(typeof OWAPI.onFail == "function") {
-				OWAPI.onFail.call( OWAPI, msg );
+				if ( ! OWAPI.is_processed ) {
+					OWAPI.onFail.call( OWAPI, msg );
+				}
+				OWAPI.is_processed = true;
 			}
 		};
 		
 		xhttp.onerror = function() {
 			var msg = "OWAPI error - "+this.statusText;
 			if(typeof OWAPI.onFail == "function") {
-				OWAPI.onFail.call( OWAPI, msg );
+				if ( ! OWAPI.is_processed ) {
+					OWAPI.onFail.call( OWAPI, msg );
+				} 
+				OWAPI.is_processed = true;
 			}
 		};
 		
@@ -107,6 +128,8 @@ var OWAPI = {
 		xhttp.timeout = OWAPI.owapi_timeout;
 		xhttp.send();
 	},
+	
+	// private methods
 	
 	// returns array of objects (hero, playtime) sorted by playtime
 	parseHeroStats: function( heroes_node ) {
