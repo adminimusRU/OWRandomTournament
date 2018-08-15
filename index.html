@@ -59,6 +59,7 @@ StatsUpdater.onWarning = on_stats_update_warning;
 // team builder
 // RandomTeamBuilder object inside worker thread
 var RtbWorker;
+var roll_debug = false;
 
 
 </script>
@@ -88,17 +89,18 @@ var RtbWorker;
 			<input title="Clear lobby" type="button" class="team_btn" onclick="clear_lobby();" value=" X "/>
 			<input title="Import lobby" id="import_lobby_btn" type="button" class="team_btn" onclick="import_lobby_dlg_open();" value="Import"/>
 			<input title="Export lobby" type="button" class="team_btn" onclick="export_lobby_dlg_open();" value="Export"/>
-			<button title="Sort lobby by class" class="team_btn" onclick="sort_players(lobby, 'class');redraw_lobby();">
+			<button title="Sort lobby by class" class="team_btn" onclick="sort_lobby('class');">
 				&uarr;&darr;
 				<img src="class_icons/dps.png" style="height: 0.9em;">
 			</button>
-			<input title="Sort lobby by name" type="button" class="team_btn" onclick="sort_players(lobby, 'display_name');redraw_lobby();" value="&uarr;&darr;Az"/>
-			<input title="Sort lobby by SR" type="button" class="team_btn" onclick="sort_players(lobby, 'sr');redraw_lobby();" value="&uarr;&darr;123"/>
+			<input title="Sort lobby by name" type="button" class="team_btn" onclick="sort_lobby('display_name');" value="&uarr;&darr;Az"/>
+			<input title="Sort lobby by SR" type="button" class="team_btn" onclick="sort_lobby('sr');" value="&uarr;&darr;123"/>
 			</div>
+			<br/>
 					
 			<span id="lobby_count">0</span> players<br/>
 			
-			<div style="display: flex;">
+			<div style="display: flex; align-items: baseline">
 				<label for="lobby_filter">Filter: &nbsp;</label>
 				<input id="lobby_filter" class="filter" type="text" size=35 autocomplete="off" placeholder="player name or battletag" value="" oninput="on_lobby_filter_change();"/> 
 				<span onclick="lobby_filter_clear();" style="cursor: default;" title="Clear filter" alt="Clear filter"> &#9003; </span>
@@ -167,19 +169,21 @@ var RtbWorker;
 					<br/>
 					<div id="stats_update_errors" style="color: red; visibility: hidden;">
 						<span id="stats_update_errors_count">N</span> errors occurred.<br/>
-						<a href="#" onclick="open_stats_update_log();">Click here to open log</a>
+						<a class="action-href" href="#" onclick="open_stats_update_log();">Click here to open log</a>
 					</div>
 				</div>
 				<br/>
 								
-				
-				<input class="medium-btn" type="button" onclick="generate_random_players();" value="+ random players" />
-								
-				<input class="medium-btn" type="button" onclick="generate_random_teams();" value="+ random teams" />
-				<br/>
-				<br/>
-				
-				<input class="medium-btn" type="button" onclick="test();" value="test" title=""/>
+				<div style="display: none;">
+					<!-- test buttons -->
+					<input class="medium-btn" type="button" onclick="generate_random_players();" value="+ random players" />
+									
+					<input class="medium-btn" type="button" onclick="generate_random_teams();" value="+ random teams" />
+					<br/>
+					<br/>
+					
+					<input class="medium-btn" type="button" onclick="test();" value="test" title=""/>
+				</div>
 			</div>
 			<br/>
 			
@@ -219,6 +223,11 @@ var RtbWorker;
 			</div>
 						
 			<textarea id="dlg_textarea_import_lobby" rows="20" cols="80"></textarea>
+			
+			<div style="text-align: left;">
+			For text format, fields can be separated with space, tab or following symbols: . , ; | <br/>
+			SR, class and offclass are optional.
+			</div>
 			
 			<div>
 			<input id="dlg_ok" class="big-btn" type="button" value="OK" onclick="import_lobby_ok();"/>
@@ -293,7 +302,7 @@ var RtbWorker;
 			<div id="dlg_html_export_teams" class="html-export-container"></div>
 			<div id="dlg_html_export_teams_hint" style="text-align: left;">
 				<br/>
-				<a href="#" onclick="export_teams_dlg_copy_html();">Click here</a> to copy teams table to clipboard. Paste to Excel or Google Sheets.
+				<a class="action-href" href="#" onclick="export_teams_dlg_copy_html();">Click here</a> to copy teams table to clipboard. Paste to Excel or Google Sheets.
 				<br/>
 				<br/>
 			</div>
@@ -646,7 +655,7 @@ var saved_settings_json = localStorage.getItem("settings");
 if ( saved_settings_json != null ) {
 	var saved_settings = JSON.parse(saved_settings_json);
 	for ( var i in Settings ) {
-		if ( saved_settings[i] !== undefined ) {
+		if ( (saved_settings[i] !== undefined) && Settings.hasOwnProperty(i) ) {
 			Settings[i] = saved_settings[i];
 		}
 	}
