@@ -182,7 +182,7 @@ function import_lobby( format, import_str ) {
 			var battletag_list = import_str.trim().split("\n");
 			for( i in battletag_list ) {
 				// split string to fields (btag, SR, class, offclass)
-				var fields = battletag_list[i].split(/[ \t.,|]+/);
+				var fields = battletag_list[i].split(/[ \t.,;|]+/);
 				
 				// @ToDo check battletag format ?				
 				var player_id = format_player_id(fields[0]);
