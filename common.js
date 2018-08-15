@@ -148,9 +148,11 @@ function get_player_index( player_id, team ) {
 }
 
 function get_player_team( player_id ) {
-	for( var i=0; i<team.length; i++) {
-		if ( player_id == team[i].id) {
-			return team;
+	for( var t=0; i<teams.length; t++) {
+		for( var i=0; i<teams[t].players.length; i++) {
+			if ( player_id == teams[t].players[i].id) {
+				return team;
+			}
 		}
 	}
 	return undefined;
@@ -230,11 +232,17 @@ function sort_players( team, sort_field = 'sr' ) {
 		team.sort( function(player1, player2){
 				var val1 = -1;
 				if (player1.top_classes.length > 0) {
-					val1 = class_names.indexOf( player1.top_classes[0] );
+					val1 = 10 * (class_names.indexOf( player1.top_classes[0] )+1);
+				}
+				if (player1.top_classes.length > 1) {
+					val1 += class_names.indexOf( player1.top_classes[1] ) + 1;
 				}
 				var val2 = -1;
 				if (player2.top_classes.length > 0) {
-					val2 = class_names.indexOf( player2.top_classes[0] );
+					val2 = 10 * (class_names.indexOf( player2.top_classes[0] )+1);
+				}
+				if (player2.top_classes.length > 1) {
+					val2 += class_names.indexOf( player2.top_classes[1] ) + 1;
 				}
 				return val1 - val2;
 			} );
@@ -249,18 +257,6 @@ function sort_players( team, sort_field = 'sr' ) {
 				} 
 			} );
 	}
-}
-
-function sort_team( team_index, sort_field = 'sr' ) {
-	if (  teams[team_index].captain_index !== -1 ) {
-		var captain = teams[team_index].players[teams[team_index].captain_index];
-	}
-	sort_players( teams[team_index].players, sort_field );
-	if (  teams[team_index].captain_index !== -1 ) {
-		teams[team_index].captain_index = teams[team_index].players.indexOf( captain );
-	}
-	save_players_list();
-	redraw_teams();
 }
 
 function str_padding( source_str, length, padding_char=" " ) {
