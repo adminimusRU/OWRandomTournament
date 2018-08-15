@@ -30,7 +30,7 @@ var RandomTeamBuilder = {
 	// reasonable range: 30 - 100
 	// recommended: 50
 	OF_max_thresold: 50,
-	roll_debug: true,
+	roll_debug: false,
 	
 	// internal
 	balance_max_sr_diff: 100,
