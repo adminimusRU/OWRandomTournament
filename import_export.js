@@ -137,7 +137,6 @@ function export_teams( format, include_players, include_sr, include_classes, inc
 }
 
 function import_lobby( format, import_str ) {
-	//var import_str = document.getElementById("dlg_textarea").value;
 	var added_players = [];
 	var players_for_update = [];
 
@@ -151,7 +150,6 @@ function import_lobby( format, import_str ) {
 			
 			// check format
 			if ( import_struct.format_version > 3 ) {
-				//throw "Unsupported format version";
 				throw new Error("Unsupported format version");
 			}
 			
@@ -164,13 +162,8 @@ function import_lobby( format, import_str ) {
 				}
 				
 				imported_player = sanitize_player_struct( imported_player, import_struct.format_version );
-				
-				//lobby.splice(lobby.length, 0, imported_player);
 				added_players.push( imported_player );
 			}
-			
-			//redraw_lobby();
-			//save_players_list();
 		}
 		catch(err) {
 			// try to parse as plain battletag list?
@@ -186,7 +179,7 @@ function import_lobby( format, import_str ) {
 				
 				// @ToDo check battletag format ?				
 				var player_id = format_player_id(fields[0]);
-				//var player_id = format_player_id( battletag_list[i] );
+
 				// check duplicates
 				if (find_player_by_id(player_id) !== undefined ) {
 					continue;
@@ -212,14 +205,12 @@ function import_lobby( format, import_str ) {
 				if ( fields.length >= 3 ) {
 					for ( var c = 2; c < fields.length; c++ ) {
 						if (class_names.indexOf(fields[c]) == -1) {
-							//throw "Incorrect class name "+fields[c];
 							throw new Error("Incorrect class name "+fields[c]);
 						}
 						new_player.top_classes.push( fields[c] );
 					}
 				}
 				
-				//lobby.push( new_player );
 				if ( fields.length == 1 ) {
 					players_for_update.push( new_player );
 				}
@@ -230,13 +221,6 @@ function import_lobby( format, import_str ) {
 			alert("Incorrect import format: "+err.message);
 			return false;
 		}
-		
-		/*for( var p in added_players ) {
-			lobby.push( added_players[p] );
-		}*/
-		
-		//redraw_lobby();
-		//save_players_list();
 		
 		// get stats for added players
 		if (players_for_update.length > 0) {
