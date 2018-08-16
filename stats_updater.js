@@ -59,7 +59,6 @@ var StatsUpdater = {
 				}
 				this.totalQueueLength ++;
 			}
-			//this.totalQueueLength += player_s.length;
 		} else {
 			// check duplicates
 			var index_found = this.queue.indexOf( player_s );
@@ -103,13 +102,11 @@ var StatsUpdater = {
 				this.onStart.call( undefined );
 			}
 		} else if ( this.state == StatsUpdaterState.updating ) {
-			//this.totalQueueLength++;
 			this.state = StatsUpdaterState.updating;
 			if(typeof this.onProgressChange == "function") {
 				this.onProgressChange.call( undefined );
 			}
 		} else if ( this.state == StatsUpdaterState.waiting ) {
-			//this.totalQueueLength = 1;
 			this.update_fails = 0;
 			this.currentIndex = 1;
 			this.state = StatsUpdaterState.updating;
@@ -169,7 +166,7 @@ var StatsUpdater = {
 		OWAPI.onSuccess = this.onOWAPISuccess.bind(StatsUpdater);
 		OWAPI.onFail = this.onOWAPIFail.bind(StatsUpdater);
 		OWAPI.getStats();
-		//this.currentIndex++;
+
 		this.current_id = player_struct.id;
 		
 		if(typeof this.onProgressChange == "function") {
@@ -209,7 +206,6 @@ var StatsUpdater = {
 				if(typeof this.onWarning == "function") {
 					this.onWarning.call( undefined, OWAPI.id, msg );
 				}
-				//document.getElementById("stats_update_log").innerHTML += OWAPI.id+": "+msg+"</br>";
 			}
 		}
 		
