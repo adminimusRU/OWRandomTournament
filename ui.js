@@ -727,9 +727,8 @@ function player_drop(ev) {
 		}
 	}
 	
-	
-	// dropped on empty slot
 	if (target_id == "") {
+		// dropped on empty slot
 		var parent_id = ev.currentTarget.parentElement.parentElement.id;
 		if (parent_id == "lobby") {
 			target_team = lobby;
@@ -770,6 +769,11 @@ function player_drop(ev) {
 	if (drag_action == "swap") {
 		// replace target with dragged player
 		target_team[target_index] = dragged_player;
+	}
+	
+	if (drag_action == "remove") {
+		// remove from update queue
+		StatsUpdater.removeFromQueue(dragged_id);
 	}
 	
 	save_players_list();
@@ -833,16 +837,11 @@ function on_player_stats_updated( player_id ) {
 		
 		// find and redraw player
 		var player_struct = find_player_by_id( player_id );
-		/*var is_small = (lobby.indexOf(player_struct) == -1);
-		var player_item_row = document.getElementById( player_id ).parentElement;
-		var player_cell = draw_player_cell( player_struct, is_small );
-		player_item_row.innerHTML = "";
-		player_item_row.appendChild(player_cell);*/
-		redraw_player( player_struct );
-		
-		highlight_player( player_id );
-		
-		save_players_list();
+		if ( player_struct !== undefined ) {
+			redraw_player( player_struct );
+			highlight_player( player_id );
+			save_players_list();
+		}
 	}
 }
 
