@@ -82,9 +82,6 @@ var RandomTeamBuilder = {
 		}
 		
 		for( p in this.players) {
-			/*for( c=0; c<this.players[p].top_classes.length; c++ ) {
-				total_class_count[this.players[p].top_classes[c]] += 1 / (c+1);
-			}*/
 			if ( this.players[p].top_classes.length == 2 ) {
 				total_class_count[this.players[p].top_classes[0]] += 2/3;
 				total_class_count[this.players[p].top_classes[1]] += 1/3;
@@ -98,24 +95,13 @@ var RandomTeamBuilder = {
 		
 		for( c in class_names ) {
 			this.target_class_count[class_names[c]] = this.team_size * (total_class_count[class_names[c]] / this.players.length);
-			
-			// round 
 			this.target_class_count[class_names[c]]  = round_to(this.target_class_count[class_names[c]], 1);
-			
-			// round to nearest 0.5
-			/*var rem = this.target_class_count[class_names[c]] % 0.5;
-			rem = ( rem < 0.25 ? -rem : (0.5-rem) );
-			this.target_class_count[class_names[c]] += rem;*/
 		}
 		
-		// dbg
-		/*document.getElementById("stats_update_log").innerHTML += "Target SR = "+this.target_team_sr+"</br>";
-		document.getElementById("stats_update_log").innerHTML += "Target classes = "+JSON.stringify(this.target_class_count)+"</br>";*/
 		if (this.roll_debug) {
 			if(typeof this.onDebugMessage == "function") {
 				this.onDebugMessage.call( undefined, "Target SR = "+this.target_team_sr );
 				this.onDebugMessage.call( undefined, "Target classes = "+JSON.stringify(this.target_class_count) );
-				//this.onDebugMessage.call( undefined, "Reasonable_OF_min_thresold = "+reasonable_OF_min_thresold );
 			}
 		}
 		
@@ -123,7 +109,6 @@ var RandomTeamBuilder = {
 		
 		// roll teams
 		while ( this.players.length >= this.team_size ) {
-			//dbg
 			var combinations_checked = 0;
 			
 			// init
@@ -141,18 +126,6 @@ var RandomTeamBuilder = {
 				// calc objective function
 				var OF_current = this.calcObjectiveFunction( picked_players );
 				
-				//dbg
-				/*var msg = this.player_selection_mask.reduce( function(accumulator, currentValue) { return accumulator+=currentValue; }, "" );
-				msg += " -> " + OF_current;
-				document.getElementById("stats_update_log").innerHTML += msg+"</br>";*/
-				
-				/*if (this.roll_debug) {
-					if(typeof this.onDebugMessage == "function") {
-						var msg = this.player_selection_mask.reduce( function(accumulator, currentValue) { return accumulator+=currentValue; }, "" );
-						this.onDebugMessage.call( undefined, "mask: "+msg );
-					}
-				}*/
-								
 				if ( OF_current < this.OF_min ) {
 					// remember current roll
 					this.best_roll = this.player_selection_mask.slice();
@@ -168,10 +141,6 @@ var RandomTeamBuilder = {
 				if (combinations_checked >= this.max_combinations) break;
 			};
 			
-			//dbg
-			/*var msg = "best roll :: " + this.best_roll.reduce( function(accumulator, currentValue) { return accumulator+=currentValue; }, "" );
-			msg += " -> " + this.OF_min;
-			document.getElementById("stats_update_log").innerHTML += msg+"</br>";*/
 			if (this.roll_debug) {
 				if(typeof this.onDebugMessage == "function") {
 					this.onDebugMessage.call( undefined, "Team #"+(this.teams.length+1) );
@@ -323,21 +292,11 @@ var RandomTeamBuilder = {
 			otp_conflicts = this.calcOTPConflicts( picked_players );
 		}
 		
-		var objective_func = this.calcObjectiveFunctionValue( sr_diff, class_unevenness, otp_conflicts );
-			
-		//dbg
-		/*var msg="";
-		for( i in picked_players ) {
-			msg += picked_players[i].display_name+", ";
-		}
-		msg += " :: "+sr_diff+" :: "+class_unevenness+" :: "+objective_func;
-		document.getElementById("stats_update_log").innerHTML += msg+"</br>";*/
-			
+		var objective_func = this.calcObjectiveFunctionValue( sr_diff, class_unevenness, otp_conflicts );			
 		return objective_func;
 	},
 	
 	calcObjectiveFunctionValue: function( sr_diff, class_unevenness, otp_conflicts ) {
-		//return Math.round( 
 		var OF = 
 			(class_unevenness * this.balance_priority
 			+ (sr_diff/this.balance_max_sr_diff*100)*(100-this.balance_priority)
@@ -379,9 +338,6 @@ var RandomTeamBuilder = {
 		}
 		
 		for( p in team) {
-			/*for( c=0; c<team[p].top_classes.length; c++ ) {
-				current_class_count[team[p].top_classes[c]] += 1 / (c+1);
-			}*/
 			if ( team[p].top_classes.length == 2 ) {
 				current_class_count[team[p].top_classes[0]] += 2/3;
 				current_class_count[team[p].top_classes[1]] += 1/3;
@@ -399,7 +355,6 @@ var RandomTeamBuilder = {
 			total_class_unevenness += current_class_unevenness;
 		}
 		
-		//return Math.round( total_class_unevenness, 1 );
 		return round_to( total_class_unevenness, 1 );
 	},
 	
