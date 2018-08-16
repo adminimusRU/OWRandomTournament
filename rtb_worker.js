@@ -3,15 +3,12 @@ importScripts("common.js");
 importScripts("random_team_builder.js");
 
 onmessage = function(e) {
-	//console.log('Worker: message received:'+e);
 	if ( ! Array.isArray(e.data) ) {
 		return;
 	}
 	if ( e.data.length == 0 ) {
 		return;
 	}
-	
-	//console.log('Worker: message received, type '+e.data[0]);
 	
 	var event_type = e.data[0];
 	if ( event_type == "init" ) {
@@ -45,8 +42,6 @@ onmessage = function(e) {
 		
 		close();
 	}
-	
-	
 }
 
 function on_team_roll_progress( current_progress ) {
