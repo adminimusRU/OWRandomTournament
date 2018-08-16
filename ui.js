@@ -32,7 +32,7 @@ function add_player_click() {
 
 function apply_settings() {
 	// check if team size changed
-	if ( (Settings["team_size"] != Number(document.getElementById("team_size".value))) && (teams.length > 0) ) {
+	if ( (Settings["team_size"] != Number(document.getElementById("team_size").value)) && (teams.length > 0) ) {
 		if ( ! confirm("Team size setting changed. All teams will be deleted!") ) {
 			return;
 		}
@@ -718,6 +718,7 @@ function on_player_stats_updated( player_id ) {
 			save_players_list();
 			redraw_lobby();
 			highlight_player( player_id );
+			setTimeout( function() {document.getElementById(player_id).scrollIntoView(false);}, 100 );
 			document.getElementById("new_player_id").value = "";
 			document.getElementById("add_btn").disabled = false;
 			
