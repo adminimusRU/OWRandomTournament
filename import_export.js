@@ -75,7 +75,7 @@ function export_teams( format, include_players, include_sr, include_classes, inc
 			setup_str += "<tr>";
 			for ( var t = team_offset; t < team_offset+table_columns; t++ ) {
 				if ( t >= teams.length ) break;
-				setup_str += "<td colspan='"+title_colspan+"' style='text-align: center;font-style: italic;background-color: gray; color: white;'>";
+				setup_str += "<td colspan='"+title_colspan+"' style='text-align: center;background-color: gray; color: white;'>";
 				setup_str += escapeHtml( teams[t].name );
 				setup_str += "</td>";
 				// vertical spacer
