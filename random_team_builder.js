@@ -43,6 +43,8 @@ var RandomTeamBuilder = {
 	OF_min: 0,
 	best_roll: [],
 	
+	filtered_players: [],
+	
 	// public methods
 	rollTeams: function() {
 		if ( this.players.length < this.team_size ) {
@@ -60,7 +62,25 @@ var RandomTeamBuilder = {
 				this.onDebugMessage.call( undefined, "max_combinations = "+this.max_combinations );
 				this.onDebugMessage.call( undefined, "OF_min_thresold = "+this.OF_min_thresold );
 				this.onDebugMessage.call( undefined, "OF_max_thresold = "+this.OF_max_thresold );
-				
+			}
+		}
+		
+		// filter players without stats
+		this.filtered_players = [];
+		for ( var i=this.players.length-1; i>=0; i-- ) {
+			var exclude = false;
+			if ( this.players[i].sr == 0 ) {
+				exclude = true;
+			}
+			if ( is_undefined(this.players[i].empty, false) ) {
+				exclude = true;
+			}
+			if ( this.players[i].top_classes.length == 0 ) {
+				exclude = true;
+			}
+			
+			if (exclude) {
+				this.filtered_players.push( this.players.splice(i, 1)[0] );
 			}
 		}
 		
@@ -191,6 +211,9 @@ var RandomTeamBuilder = {
 				this.players = this.players.concat( removed_team.players );
 			}
 		}
+		
+		// return excluded players to lobby
+		this.players = this.players.concat(this.filtered_players);
 		
 		var execTime = performance.now() - start_time;
 		if (this.roll_debug) {
