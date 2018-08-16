@@ -109,6 +109,7 @@ var StatsUpdater = {
 		} else if ( this.state == StatsUpdaterState.waiting ) {
 			this.update_fails = 0;
 			this.currentIndex = 1;
+			this.current_id = this.queue[0].id;
 			this.state = StatsUpdaterState.updating;
 			setTimeout( this.updateNextPlayer.bind(this), this.min_api_request_interval );
 			if(typeof this.onStart == "function") {
