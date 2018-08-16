@@ -82,8 +82,6 @@ input.team-title:hover {
 	border-spacing: 5px 5px;
 	width: 14em;
 	display: inline-block;
-	/*margin-right: 1em;
-	margin-bottom: 0.5em;*/
 	margin-top: 0.2em;
 }
 
@@ -162,7 +160,6 @@ span.sr-edited {
 	display: inline-block;
 	font-size: 14pt;
 	white-space: nowrap;
-	/*width: 9em;*/
 	width: 8em;
 	overflow-x: hidden;
 }
@@ -181,8 +178,6 @@ span.sr-edited {
 	font-size: 70%;
 	margin-left: 0.2em;
 	height: 2em;
-	/*padding-top: 1px;
-    padding-bottom: 1px;*/
 }
 
 .lobby-container {
@@ -428,7 +423,6 @@ div[id="stats_update_log"] {
 	cursor: grab;
 	color: white;
 	padding-left: 0.5em;
-	/*font-style: italic;*/
 }
 
 .team-title-name {
@@ -450,7 +444,6 @@ div[id="stats_update_log"] {
 	top: -0.2em;
 	margin-left: 1em;
 	margin-right: 1em;
-	/*margin-bottom: -0.5em;*/
 }
 
 .range-sub {
@@ -460,7 +453,7 @@ div[id="stats_update_log"] {
 }
 
 .range-sub-left {
-	/*float: left;*/
+	
 }
 
 .range-sub-right {
