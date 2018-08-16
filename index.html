@@ -12,12 +12,12 @@
 <script src="owapi.js"></script>
 <script src="stats_updater.js"></script>
 <script src="import_export.js"></script>
-<!--<script src="random_team_builder.js"></script>-->
 <script src="ui.js"></script>
 
 </head>
 
 <script language="JavaScript" type="text/javascript">
+// global variables
 var lobby = [];
 var teams = [];
 
@@ -25,26 +25,8 @@ var player_being_added;
 var player_being_edited;
 var team_being_edited;
 var lobby_filter_timer = 0;
-//var selected_player_team1 = "";
 
 var Settings = get_default_settings();
-
-/*var team_size = 6;
-var region = "eu";*/
-
-// player stats fetcher
-/*var players_for_update = [];
-var total_players_for_update = 0;
-var min_api_request_interval = 6000; //milliseconds
-
-var stat_update_fails = 0;
-var silent_update = false; // show message when update completed successfully
-var silent_update_errors = false; // show message when update failed
-
-var stats_updater_ready = true; // set to false when update is done, but still need to wait for request interval before next update
-var stats_update_max_retry = 2;
-var stats_update_current_retry = 2;
-var stats_update_dbg = false;*/
 
 
 // init stats updater
@@ -60,8 +42,6 @@ StatsUpdater.onWarning = on_stats_update_warning;
 // RandomTeamBuilder object inside worker thread
 var RtbWorker;
 var roll_debug = false;
-
-
 </script>
 
 <body>
@@ -143,17 +123,13 @@ var roll_debug = false;
 				
 				<input class="big-btn" type="button" onclick="reset_roll_click();" value="Reset" title="Move all players back to lobby"/>
 				<br/>
+				<br/>				
 				<br/>
-								
-				<br/>
-				
-								
+												
 				<input class="big-btn" type="button" id="settings_btn" onclick="settings_dlg_open();" value="&#9881; Settings" title="Open settings dialog"/>
 				<br/>
 				<br/>
-				
 				<br/>
-				
 				
 				<input id="update_all_stats_btn" class="big-btn" type="button" onclick="update_all_stats();" value="&#8635; Update stats" title="Update stats for all players" />
 				<input id="update_stats_stop_btn" class="big-btn" type="button" onclick="stop_stats_update();" value="Stop" style="display:none" />
@@ -163,7 +139,6 @@ var roll_debug = false;
 						</progress>
 					</div>
 					<div id="stats_updater_status" style="min-height: 2em;">
-						<!--Updating stats <br/> 123/456 randomlongbtag-->
 					</div>
 					
 					<br/>
@@ -185,8 +160,6 @@ var roll_debug = false;
 					<input class="medium-btn" type="button" onclick="test();" value="test" title=""/>
 				</div>
 			</div>
-			<br/>
-			
 		</div>
 		
 		<div class="cell" style="width: 1em">
@@ -194,14 +167,9 @@ var roll_debug = false;
 		</div>
 		
 		<div class="cell workspace-cell">
-			<!-- rolled teams -->
-			
 			<div class="teams-container" id="teams_container">
-				
-				
-				
+				<!-- rolled teams -->
 			</div>
-			
 		</div>
 	</div>
 </div>
@@ -230,7 +198,7 @@ var roll_debug = false;
 			</div>
 			
 			<div>
-			<input id="dlg_ok" class="big-btn" type="button" value="OK" onclick="import_lobby_ok();"/>
+				<input id="dlg_ok" class="big-btn" type="button" value="OK" onclick="import_lobby_ok();"/>
 			</div>
 		</div>
 	</div>
@@ -386,9 +354,6 @@ var roll_debug = false;
 				<br/>
 				<input id="dlg_update_player_stats" class="big-btn" type="button" value="&#8635; Update stats" onclick="update_current_player_stats();"/>
 				<br/>
-				<!--<div style="margin-top: 1em;">
-										
-				</div>-->
 			</div>
 			<br/>
 			
@@ -628,7 +593,6 @@ var roll_debug = false;
 					<div class="cell">Captain:</div>
 					<div class="cell">
 						<select id="dlg_edit_team_captain" style="width: 100%;">
-							<!--<option value="-1">-</option>-->
 						</select>
 					</div>
 				</div>
@@ -662,63 +626,10 @@ if ( saved_settings_json != null ) {
 }
 apply_stats_updater_settings();
 
-
-/*var settings_list = [
-	"team_size",
-	"region",
-	"balance_adjust_sr",
-	"balance_adjust_sr_dps",
-	"balance_adjust_sr_tank",
-	"balance_adjust_sr_support",
-	"balance_class_uneveness_value",
-	"balance_separate_otps",
-	"update_class",
-	"update_sr",
-	"update_edited_fields",
-	"update_picked",
-	"dlg_setup_format",
-	"dlg_setup_share_sr",
-	"dlg_setup_share_classes"
-	];
-
-for ( i in settings_list ) {
-	var setting_value = localStorage.getItem(settings_list[i]);
-	if( setting_value !== null ) {
-		var setting_input = document.getElementById(settings_list[i]);
-		if ( setting_input.type == "checkbox" ) {
-			setting_input.checked = (setting_value == 'true');
-		} else if ( setting_input.type == "text" ) {
-			setting_input.value = setting_value;
-		} else if ( setting_input.type == "number" ) {
-			setting_input.value = Number(setting_value);
-		} else if ( setting_input.type == "range" ) {
-			setting_input.value = Number(setting_value);
-		}
-		
-		if (StatsUpdater.hasOwnProperty(settings_list[i])) {
-			StatsUpdater[settings_list[i]] = setting_value;
-		}
-	}
-}
-
-// set default values to inputs
-if (document.getElementById("team_size").value == 0 ) {
-	document.getElementById("team_size").value = team_size;
-}
-if (document.getElementById("region").value == "" ) {
-	document.getElementById("region").value = region;
-}
-
-apply_team_size();
-apply_region();
-apply_adjust_sr_change();*/
-
-
 // adjust lobby margin to account scrollbar width
 var lobby_container = document.getElementsByClassName("lobby-container").item(0);
 lobby_container.style.marginRight = "-"+get_scrollbar_width()+"px";
 lobby_container.style.paddingRight = ""+get_scrollbar_width()+"px";
-
 </script>
 </body>
 </html>
