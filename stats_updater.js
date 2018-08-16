@@ -120,6 +120,20 @@ var StatsUpdater = {
 		}
 	},
 	
+	removeFromQueue: function( player_id ) {
+		var index_found = -1;
+		for ( var i=0; i<this.queue.length; i++) {
+			if (this.queue[i].id == player_id ) {
+				index_found = i;
+				break;
+			}
+		}
+		if ( index_found > 0 ) {
+			this.queue.splice( index_found, 1 );
+			this.totalQueueLength --;
+		}
+	},
+	
 	stop: function( terminate=false ) {
 		if ( terminate ) {
 			OWAPI.onSuccess = undefined;
