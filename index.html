@@ -247,6 +247,7 @@ var roll_debug = false;
 				<select id="dlg_team_export_format_value" onchange="export_teams_dlg_change_format();">
 					<option value="text-list">text list</option>
 					<option value="html-table">HTML table</option>
+					<option value="image">image</option>
 				</select>
 			</div>
 			<div id="dlg_team_export_options" class="dlg_options" onchange="export_teams_dlg_change_format();">
@@ -609,6 +610,9 @@ var roll_debug = false;
 			
 			
 <div id="debug_log"></div>
+
+<canvas id="canvas" style="display:none;" width="1000" height="2000">
+</canvas>
 
 <script>
 //restore saved players to teams
