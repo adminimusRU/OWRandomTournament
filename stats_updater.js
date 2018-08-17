@@ -1,4 +1,4 @@
-var StatsUpdaterState = {
+const StatsUpdaterState = {
 	idle: 1,
 	updating: 2,
 	waiting: 3,
@@ -58,7 +58,6 @@ var StatsUpdater = {
 				} else {
 					this.queue.push( player_s[i] );
 				}
-				this.totalQueueLength ++;
 				added_count++;
 			}
 		} else {
@@ -84,14 +83,14 @@ var StatsUpdater = {
 			} else if (high_priority) {
 				// insert at index 1
 				this.queue.splice( 1, 0, player_s );
-				this.totalQueueLength ++;
 				added_count++;
 			} else {
 				this.queue.push( player_s );
-				this.totalQueueLength ++;
 				added_count++;
 			}
 		}
+		
+		this.totalQueueLength += added_count;
 		if ( added_count == 0 ) {
 			// nothing really added to queue
 			return;
