@@ -37,6 +37,7 @@ var StatsUpdater = {
 	// high_priority - insert at queue head, otherwise at the end
 	addToQueue: function( player_s, stats_max_age=0, high_priority=false ) {
 		var max_stats_age_date = new Date(Date.now() - (stats_max_age*24*3600*1000));
+		var added_count = 0;
 		if ( Array.isArray(player_s) ) {
 			if (player_s.length == 0 ) {
 				return;
@@ -58,6 +59,7 @@ var StatsUpdater = {
 					this.queue.push( player_s[i] );
 				}
 				this.totalQueueLength ++;
+				added_count++;
 			}
 		} else {
 			// check duplicates
@@ -83,12 +85,14 @@ var StatsUpdater = {
 				// insert at index 1
 				this.queue.splice( 1, 0, player_s );
 				this.totalQueueLength ++;
+				added_count++;
 			} else {
 				this.queue.push( player_s );
 				this.totalQueueLength ++;
+				added_count++;
 			}
 		}
-		if ( this.queue.length == 0 ) {
+		if ( added_count == 0 ) {
 			// nothing really added to queue
 			return;
 		}
