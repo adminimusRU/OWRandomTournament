@@ -223,13 +223,63 @@ function export_teams_dlg_change_format() {
 		html_container.innerHTML = export_str;
 
 		select_html( html_container );
-	} else {
+	} else if ( format == "text-list" ) {
 		document.getElementById("dlg_html_export_teams").style.display = "none";
 		document.getElementById("dlg_html_export_teams_hint").style.display = "none";
 		document.getElementById("dlg_textarea_export_teams").style.display = "";
 		document.getElementById("dlg_textarea_export_teams").value = export_str;
 		document.getElementById("dlg_textarea_export_teams").select();
 		document.getElementById("dlg_textarea_export_teams").focus();
+	} else if ( format == "image" ) {
+		var html_container = document.getElementById("dlg_html_export_teams");
+		html_container.innerHTML = "";
+		html_container.style.display = "";
+		document.getElementById("dlg_html_export_teams_hint").style.display = "none";
+		document.getElementById("dlg_textarea_export_teams").style.display = "none";
+		
+		// convert html to image
+				
+		// calculate image size
+		var tmp_div = document.createElement("div");
+		tmp_div.innerHTML = export_str;
+		document.body.appendChild(tmp_div);
+		var img_width = tmp_div.firstChild.clientWidth;
+		var img_height = tmp_div.firstChild.clientHeight;
+		document.body.removeChild(tmp_div);
+
+		var data = '<svg xmlns="http://www.w3.org/2000/svg" width="'+img_width+'" height="'+img_height+'">' +
+				   '<foreignObject width="100%" height="100%">' +
+				   '<div xmlns="http://www.w3.org/1999/xhtml" >' +
+					 export_str +
+				   '</div>' +
+				   '</foreignObject>' +
+				   '</svg>';
+			
+		data = encodeURIComponent(data);
+		
+		var canvas = document.getElementById('canvas');
+		canvas.width = img_width;
+		canvas.height = img_height;
+		var ctx = canvas.getContext('2d');
+		
+		var svg_img = new Image();
+
+		svg_img.onload = function() {
+			ctx.drawImage(svg_img, 0, 0);
+
+			canvas.toBlob(function(blob) {
+				var newImg = document.createElement('img'),
+				url = URL.createObjectURL(blob);
+
+				newImg.onload = function() { URL.revokeObjectURL(url); 	};
+
+				newImg.src = url;
+				html_container.appendChild(newImg);
+			});
+		}
+
+		svg_img.src = "data:image/svg+xml," + data;
+		//document.body.appendChild(svg_img);
 	}
 }
 
