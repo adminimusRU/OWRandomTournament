@@ -8,6 +8,11 @@ function add_empty_team() {
 	teams.push( new_team );
 	save_players_list();
 	redraw_teams();
+	
+	var last_team_node = document.getElementById("teams_container").lastChild;
+	setTimeout( function() {last_team_node.scrollIntoView(false);}, 100 );
+	
+	update_teams_count();
 }
 
 function add_player_click() {
@@ -449,6 +454,29 @@ function sort_team( team_index, sort_field = 'sr' ) {
 	sort_players( teams[team_index].players, sort_field );
 	if ( teams[team_index].captain_index !== -1 ) {
 		teams[team_index].captain_index = teams[team_index].players.indexOf( captain );
+	}
+}
+
+function sort_team_click( team_index, sort_field = 'sr' ) {
+	sort_team( team_index, sort_field );
+	save_players_list();
+	redraw_teams();
+}
+
+function sort_teams() {
+	var sort_field = "name";
+	teams.sort( function(team1, team2){
+				var val1 = team1[sort_field].toLowerCase();
+				var val2 = team2[sort_field].toLowerCase();
+				return ( val1<val2 ? -1 : (val1>val2?1:0) );
+			} );
+	save_players_list();
+	redraw_teams();
+}
+
+function sort_teams_players( sort_field = 'sr' ) {
+	for( var t in teams ) {
+		sort_team( t, sort_field );
 	}
 	save_players_list();
 	redraw_teams();
@@ -1323,7 +1351,7 @@ function redraw_teams() {
 		img.style.height = "0.9em";
 		toolbar_btn.appendChild(img);
 		toolbar_btn.title = "Sort players by class";
-		toolbar_btn.onclick = sort_team.bind(this, t, 'class');
+		toolbar_btn.onclick = sort_team_click.bind(this, t, 'class');
 		current_team_toolbar.appendChild(toolbar_btn);
 		
 		var toolbar_btn = document.createElement("input");
@@ -1331,7 +1359,7 @@ function redraw_teams() {
 		toolbar_btn.className = "team_btn";
 		toolbar_btn.value = "\u2191\u2193 Az";
 		toolbar_btn.title = "Sort players by name";
-		toolbar_btn.onclick = sort_team.bind(this, t, 'display_name');
+		toolbar_btn.onclick = sort_team_click.bind(this, t, 'display_name');
 		current_team_toolbar.appendChild(toolbar_btn);
 		
 		var toolbar_btn = document.createElement("input");
@@ -1339,7 +1367,7 @@ function redraw_teams() {
 		toolbar_btn.className = "team_btn";
 		toolbar_btn.value = "\u2191\u2193 123";
 		toolbar_btn.title = "Sort players by SR";
-		toolbar_btn.onclick = sort_team.bind(this, t, 'sr');
+		toolbar_btn.onclick = sort_team_click.bind(this, t, 'sr');
 		current_team_toolbar.appendChild(toolbar_btn);
 		
 		var toolbar_btn = document.createElement("input");
@@ -1394,6 +1422,8 @@ function redraw_teams() {
 		current_team_toolbar_container.appendChild(current_team_container);
 		teams_container.appendChild(current_team_toolbar_container);
 	}
+	
+	update_teams_count();
 }
 
 function reset_highlighted_players() {
@@ -1426,4 +1456,8 @@ function select_html( html_container ) {
 		selection.removeAllRanges();
 		selection.addRange(range);
 	}
+}
+
+function update_teams_count() {
+	document.getElementById("team_count").innerHTML = teams.length;
 }
