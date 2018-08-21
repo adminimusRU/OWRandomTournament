@@ -552,3 +552,9 @@ a.action-href {
 a.action-href:visited {
 	color: blue;
 }
+
+.big-toolbar {
+	opacity: 1;
+	padding-bottom: 1em;
+	font-size: 120%;
+}
