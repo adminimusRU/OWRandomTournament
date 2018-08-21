@@ -116,14 +116,14 @@ var roll_debug = false;
 				<input class="big-btn" type="button" id="roll_btn" onclick="roll_teams();" value="&#127922; Roll teams" title="Roll random teams from lobby"/>
 				<br/>
 				<br/>
-				
+				<!--
 				<input class="big-btn" type="button" onclick="add_empty_team();" value="&#10133; Add team" title="Add empty team"/>
 				<br/>
 				<br/>
 				
-				<input class="big-btn" type="button" onclick="reset_roll_click();" value="Reset" title="Move all players back to lobby"/>
+				<input class="big-btn" type="button" onclick="reset_roll_click();" value="Reset" title="Delete all teams"/>
 				<br/>
-				<br/>
+				<br/>-->
 				
 				<input class="big-btn" type="button" onclick="export_teams_dlg_open();" value="Export teams"/>
 				<br/>
@@ -171,6 +171,28 @@ var roll_debug = false;
 		</div>
 		
 		<div class="cell workspace-cell">
+			<div class="team-toolbar big-toolbar">
+				<input title="Delete all teams" type="button" class="team_btn" onclick="reset_roll_click();" value=" X "/>
+				
+				<div style="float:right; width: 1em; height: 0.5em;"></div>
+				
+				<button title="Sort players by class" class="team_btn" onclick="sort_teams_players('class');">
+					&uarr;&darr;
+					<img src="class_icons/dps.png" style="height: 0.9em;">
+				</button>
+				<input title="Sort players by name" type="button" class="team_btn" onclick="sort_teams_players('display_name');" value="&uarr;&darr;Az"/>
+				<input title="Sort players by SR" type="button" class="team_btn" onclick="sort_teams_players('sr');" value="&uarr;&darr;123"/>
+				
+				<div style="float:right; width: 1em; height: 0.5em;"></div>
+				
+				<input title="Sort teams by name" type="button" class="team_btn" onclick="sort_teams();" value="&uarr;&darr;T"/>
+								
+				<div style="float:right; width: 1em; height: 0.5em;"></div>
+				
+				<input title="Add empty team" type="button" class="team_btn" onclick="add_empty_team();" value="&#10133;"/>
+				
+				<div><span id="team_count">0</span> teams<br/></div>
+			</div>
 			<div class="teams-container" id="teams_container">
 				<!-- rolled teams -->
 			</div>
