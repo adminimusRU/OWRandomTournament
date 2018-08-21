@@ -257,7 +257,7 @@ function export_teams_dlg_change_format() {
 			
 		data = encodeURIComponent(data);
 		
-		var canvas = document.getElementById('canvas');
+		var canvas = document.createElement('canvas');
 		canvas.width = img_width;
 		canvas.height = img_height;
 		var ctx = canvas.getContext('2d');
@@ -279,7 +279,6 @@ function export_teams_dlg_change_format() {
 		}
 
 		svg_img.src = "data:image/svg+xml," + data;
-		//document.body.appendChild(svg_img);
 	}
 }
 
