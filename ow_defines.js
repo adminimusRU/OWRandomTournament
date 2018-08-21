@@ -38,3 +38,15 @@ var hero_classes = {
 	reinhardt:	"tank",
 	wrecking_ball:"tank",
 };
+
+var rank_names = [
+	"unraked",
+	"bronze",
+	"silver",
+	"gold",
+	"platinum",
+	"diamond",
+	"master",
+	"grandmaster",
+	"top500"
+];
