@@ -71,8 +71,6 @@ function export_teams( format, include_players, include_sr, include_classes, inc
 function export_teams_html( format, include_players, include_sr, include_classes, include_captains, table_columns, draw_icons ) {
 	var setup_str = "";
 	
-	// @ToDo prepare icons as data:url	
-	
 	var title_colspan = 1;
 	if ( include_players ) {
 		if ( include_sr ) title_colspan++;
@@ -107,7 +105,12 @@ function export_teams_html( format, include_players, include_sr, include_classes
 					if ( include_sr ) {
 						setup_str += "<td style='text-align: right; padding-right: 0.5em; border-bottom: 1px solid gray;border-left: 1px solid gray;'>";
 						if ( p < teams[t].players.length ) {
-							setup_str += teams[t].players[p].sr;
+							if (draw_icons) {
+								var rank_name = get_rank_name(teams[t].players[p].sr);
+								setup_str += "<img src='"+rank_icons_datauri[rank_name]+"'/>";
+							} else {
+								setup_str += teams[t].players[p].sr;
+							}
 						}
 						
 						setup_str += "</td>";
@@ -125,7 +128,11 @@ function export_teams_html( format, include_players, include_sr, include_classes
 						setup_str += escapeHtml( teams[t].players[p].display_name );
 						if ( include_captains ) {
 							if ( teams[t].captain_index == p ) {
-								setup_str += " \u265B";
+								if (draw_icons) {
+									setup_str += "<span style='color: green;'> \u265B</span>";
+								} else {
+									setup_str += " \u265B";
+								}
 							}
 						}
 					}
@@ -135,8 +142,14 @@ function export_teams_html( format, include_players, include_sr, include_classes
 						setup_str += "<td style='text-align: left; border-bottom: 1px solid gray; border-right: 1px solid gray;'>";
 						if ( p < teams[t].players.length ) {
 							if ( teams[t].players[p].top_classes[0] != undefined ) {
-								var class_str = teams[t].players[p].top_classes[0];
-								if (class_str == "support") class_str = "sup";
+								var class_name = teams[t].players[p].top_classes[0];
+								if (draw_icons) {
+									var class_str = "<img src='"+class_icons_datauri[class_name]+"'/>";
+								} else {
+									var class_str = class_name;
+									if (class_str == "support") class_str = "sup";
+								}
+								
 								setup_str += class_str;
 							}
 						}
@@ -266,6 +279,72 @@ function import_lobby( format, import_str ) {
 		setTimeout( function() {highlight_players( added_players );}, 500 );
 	}
 	return true;
+}
+
+function prepare_datauri_icons() {
+	for ( var c in class_names ) {
+		var image = new Image();
+		image.class_name = class_names[c];
+
+		image.onload = function () {
+			var img_size_px = 20;
+			
+			// downscale in 3 steps to get better quality with offscreen canvas
+			var oc = document.createElement('canvas');
+			var octx = oc.getContext('2d');
+			oc.width = this.width  * 0.5;
+			oc.height = this.height * 0.5;
+			octx.drawImage(this, 0, 0, oc.width, oc.height);
+			
+			var oc2 = document.createElement('canvas');
+			var octx2 = oc2.getContext('2d');
+			oc2.width = oc.width  * 0.5;
+			oc2.height = oc.height * 0.5;
+			octx2.drawImage(oc, 0, 0, oc.width * 0.5, oc.height * 0.5);
+
+			var oc3 = document.createElement('canvas');
+			var octx3 = oc3.getContext('2d');
+			oc3.width = img_size_px;
+			oc3.height = img_size_px;
+			octx3.drawImage(oc2, 0, 0, img_size_px, img_size_px);
+			
+			class_icons_datauri[this.class_name] = oc3.toDataURL('image/png');
+		};
+
+		image.src = "class_icons/"+class_names[c]+".png";
+	}
+	
+	for ( var r in rank_names ) {
+		var image = new Image();
+		image.rank_name = rank_names[r];
+
+		image.onload = function () {
+			var img_size_px = 20;
+			
+			// downscale in 3 steps to get better quality with offscreen canvas
+			var oc = document.createElement('canvas');
+			var octx = oc.getContext('2d');
+			oc.width = this.width  * 0.5;
+			oc.height = this.height * 0.5;
+			octx.drawImage(this, 0, 0, oc.width, oc.height);
+			
+			var oc2 = document.createElement('canvas');
+			var octx2 = oc2.getContext('2d');
+			oc2.width = oc.width  * 0.5;
+			oc2.height = oc.height * 0.5;
+			octx2.drawImage(oc, 0, 0, oc.width * 0.5, oc.height * 0.5);
+
+			var oc3 = document.createElement('canvas');
+			var octx3 = oc3.getContext('2d');
+			oc3.width = img_size_px;
+			oc3.height = img_size_px;
+			octx3.drawImage(oc2, 0, 0, img_size_px, img_size_px);
+			
+			rank_icons_datauri[this.rank_name] = oc3.toDataURL('image/png');
+		};
+
+		image.src = "rank_icons/"+rank_names[r]+"_small.png";
+	}
 }
 
 function restore_saved_teams() {
