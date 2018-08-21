@@ -28,6 +28,10 @@ var lobby_filter_timer = 0;
 
 var Settings = get_default_settings();
 
+// class icons in data:url strings
+var class_icons_datauri = {};
+var rank_icons_datauri = {};
+
 
 // init stats updater
 StatsUpdater.onPlayerUpdated = on_player_stats_updated;
@@ -351,7 +355,7 @@ var roll_debug = false;
 			
 			<div style="text-align: left;">
 				<br/>
-				Stats last updated <span id="dlg_edit_player_last_updated"></span>
+				Stats last updated: <span id="dlg_edit_player_last_updated"></span>
 				<br/>
 				<input id="dlg_update_player_stats" class="big-btn" type="button" value="&#8635; Update stats" onclick="update_current_player_stats();"/>
 				<br/>
@@ -611,9 +615,6 @@ var roll_debug = false;
 			
 <div id="debug_log"></div>
 
-<canvas id="canvas" style="display:none;" width="1000" height="2000">
-</canvas>
-
 <script>
 //restore saved players to teams
 restore_saved_teams();
@@ -634,6 +635,9 @@ apply_stats_updater_settings();
 var lobby_container = document.getElementsByClassName("lobby-container").item(0);
 lobby_container.style.marginRight = "-"+get_scrollbar_width()+"px";
 lobby_container.style.paddingRight = ""+get_scrollbar_width()+"px";
+
+// load class and rank icons and convert them to data:uri strings, for team export
+prepare_datauri_icons();
 </script>
 </body>
 </html>
