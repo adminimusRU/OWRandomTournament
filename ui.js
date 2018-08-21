@@ -470,7 +470,12 @@ function update_all_stats() {
 }
 
 function update_current_player_stats() {
+	// forcing update of manually edited fields
+	delete player_being_edited.se;
+	delete player_being_edited.ce;
+	
 	StatsUpdater.addToQueue( player_being_edited, 0, true );
+	
 	document.getElementById("dlg_update_player_stats_loader").style.display = "";
 	document.getElementById("dlg_edit_player_update_result").style.display = "none";
 	document.getElementById("dlg_edit_player_update_result").innerHTML = "";
