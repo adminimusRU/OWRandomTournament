@@ -441,6 +441,12 @@ function settings_dlg_open() {
 	open_dialog( "popup_dlg_settings" );
 }
 
+function shuffle_teams() {
+	teams = array_shuffle( teams );
+	save_players_list();
+	redraw_teams();
+}
+
 function sort_lobby( sort_field = 'sr' ) {
 	sort_players(lobby, sort_field);
 	save_players_list();
