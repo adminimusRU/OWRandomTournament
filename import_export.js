@@ -144,7 +144,7 @@ function export_teams_html( format, include_players, include_sr, include_classes
 							if ( teams[t].players[p].top_classes[0] != undefined ) {
 								var class_name = teams[t].players[p].top_classes[0];
 								if (draw_icons) {
-									var class_str = "<img src='"+class_icons_datauri[class_name]+"'/>";
+									var class_str = "<img style='filter: opacity(60%);' src='"+class_icons_datauri[class_name]+"'/>";
 								} else {
 									var class_str = class_name;
 									if (class_str == "support") class_str = "sup";
