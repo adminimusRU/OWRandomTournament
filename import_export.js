@@ -314,9 +314,9 @@ function prepare_datauri_icons() {
 		image.src = "class_icons/"+class_names[c]+".png";
 	}
 	
-	for ( var r in rank_names ) {
+	for ( var rank_name in ow_ranks ) {
 		var image = new Image();
-		image.rank_name = rank_names[r];
+		image.rank_name = rank_name;
 
 		image.onload = function () {
 			var img_size_px = 20;
@@ -343,17 +343,17 @@ function prepare_datauri_icons() {
 			rank_icons_datauri[this.rank_name] = oc3.toDataURL('image/png');
 		};
 
-		image.src = "rank_icons/"+rank_names[r]+"_small.png";
+		image.src = "rank_icons/"+rank_name+"_small.png";
 	}
 }
 
 function restore_saved_teams() {
-	var saved_format = localStorage.getItem("saved_format");
+	var saved_format = localStorage.getItem( storage_prefix+"saved_format" );
 	if ( saved_format === null ) {
 		saved_format = 1;
 	}
 	
-	var saved_players_json = localStorage.getItem("lobby");
+	var saved_players_json = localStorage.getItem( storage_prefix+"lobby" );
 	if ( saved_players_json != null ) {
 		var saved_team = JSON.parse(saved_players_json);
 		for ( var i in saved_team ) {
@@ -361,7 +361,7 @@ function restore_saved_teams() {
 		}
 	}
 	
-	var saved_team_setup_json = localStorage.getItem("team_setup");
+	var saved_team_setup_json = localStorage.getItem( storage_prefix+"team_setup" );
 	if ( saved_team_setup_json != null ) {
 		var saved_team_setup = JSON.parse(saved_team_setup_json);
 		for ( var t in saved_team_setup ) {
@@ -427,7 +427,7 @@ function sanitize_player_struct( player_struct, saved_format ) {
 
 function save_players_list() {
 	// store players to browser local storage
-	localStorage.setItem("lobby", JSON.stringify(lobby));
-	localStorage.setItem("team_setup", JSON.stringify(teams));
-	localStorage.setItem("saved_format", 3);
+	localStorage.setItem(storage_prefix+"lobby", JSON.stringify(lobby));
+	localStorage.setItem(storage_prefix+"team_setup", JSON.stringify(teams));
+	localStorage.setItem(storage_prefix+"saved_format", 3);
 }

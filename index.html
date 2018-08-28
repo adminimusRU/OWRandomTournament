@@ -27,6 +27,7 @@ var team_being_edited;
 var lobby_filter_timer = 0;
 
 var Settings = get_default_settings();
+const storage_prefix = "owrt_";
 
 // class icons in data:url strings
 var class_icons_datauri = {};
@@ -631,11 +632,21 @@ var roll_debug = false;
 <div id="debug_log"></div>
 
 <script>
+// rename old storage items
+var old_stogage_items = ["settings", "lobby", "saved_format", "team_setup"];
+for( let item_name of old_stogage_items ) {
+	var item_value = localStorage.getItem(item_name);
+	if ( item_value !== null ) {
+		localStorage.setItem( storage_prefix+item_name, item_value );
+		localStorage.removeItem( item_name );
+	}
+}
+
 //restore saved players to teams
 restore_saved_teams();
 
 // restore settings
-var saved_settings_json = localStorage.getItem("settings");
+var saved_settings_json = localStorage.getItem(storage_prefix+"settings");
 if ( saved_settings_json != null ) {
 	var saved_settings = JSON.parse(saved_settings_json);
 	for ( var i in Settings ) {

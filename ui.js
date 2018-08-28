@@ -63,7 +63,7 @@ function apply_settings() {
 		Settings[setting_name] = setting_value;
 	}
 	
-	localStorage.setItem("settings", JSON.stringify(Settings));
+	localStorage.setItem( storage_prefix+"settings", JSON.stringify(Settings) );
 	apply_stats_updater_settings();
 	close_dialog( "popup_dlg_settings" );
 }
