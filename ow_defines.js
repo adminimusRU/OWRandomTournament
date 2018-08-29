@@ -39,19 +39,6 @@ var hero_classes = {
 	wrecking_ball:"tank",
 };
 
-/*
-var rank_names = [
-	"unraked",
-	"bronze",
-	"silver",
-	"gold",
-	"platinum",
-	"diamond",
-	"master",
-	"grandmaster",
-	"top500"
-];*/
-
 var ow_ranks = {
 	"unranked":		{ min: 0, max: 0 },
 	"bronze":		{ min: 1, max: 1499 },
@@ -60,5 +47,5 @@ var ow_ranks = {
 	"platinum":		{ min: 2500, max: 2999 },
 	"diamond":		{ min: 3000, max: 3499 },
 	"master":		{ min: 3500, max: 3999 },
-	"grandmaster":	{ min: 4000, max: 4999 },
+	"grandmaster":	{ min: 4000, max: 5000 },
 };

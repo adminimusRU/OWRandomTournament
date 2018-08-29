@@ -159,25 +159,12 @@ function get_player_team( player_id ) {
 }
 
 function get_rank_name( sr ) {
-	if (sr == 0) {
-		return "unranked"
-	} else if ( sr < 1500) {
-		return "bronze";
-	} else if ( sr < 2000 ) {
-		return "silver";
-	} else if ( sr < 2500 ) {
-		return "gold";
-	} else if ( sr < 3000 ) {
-		return "platinum";
-	} else if ( sr < 3500 ) {
-		return "diamond";
-	} else if ( sr < 4000 ) {
-		return "master";
-	} else if ( sr <= 5000 ) {
-		return "grandmaster";
-	} else {
-		return "unranked";
+	for ( const rank_name in ow_ranks ) {
+		if ( (sr >= ow_ranks[rank_name].min) && (sr <= ow_ranks[rank_name].max) ) {
+			return rank_name;
+		}
 	}
+	return "unranked";
 }
 
 function get_scrollbar_width() {
