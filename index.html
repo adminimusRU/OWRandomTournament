@@ -398,7 +398,6 @@ var roll_debug = false;
 		<div class="dlg-content">
 			<span class="team-title">Settings</span>
 			<input  title="Close" type="button" class="team_btn dlg-close" onclick="close_dialog('popup_dlg_settings');" value="X"/>
-			<br/>
 			<br/>	
 			
 			<div id="dlg_settings">
@@ -476,6 +475,11 @@ var roll_debug = false;
 						<label for="roll_separate_otps">Do not place similar one-trick ponies into same team</label>
 						</br>
 						
+						Captains &nbsp;
+						<select id="roll_captains">
+							<option value="disabled">do not assign</option>
+							<option value="highest-ranked">highest ranked player</option>
+						</select>
 					</div>
 				</div>
 				
