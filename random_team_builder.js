@@ -18,6 +18,8 @@ var RandomTeamBuilder = {
 	balance_priority: 50,
 	// do not place similar one-trick-ponies together
 	separate_otps: true,
+	// auto assign captains for rolled teams. Possible values: "highest-ranked", "disabled"
+	assign_captains: "highest-ranked",
 	// maximum number of combinations checked to find balanced team.
 	// reasonable range: 1000 - 300000
 	// recommended optimal: 50000
@@ -183,9 +185,11 @@ var RandomTeamBuilder = {
 			// create team from best roll
 			var new_team = create_empty_team();
 			new_team.players = this.pickPlayersByMask( this.best_roll, true );
-			sort_players( new_team.players );
+			sort_players( new_team.players, 'sr' );
 			new_team.name = "Team "+new_team.players[0].display_name;
-			new_team.captain_index = 0;
+			if ( this.assign_captains === "highest-ranked" ) {
+				new_team.captain_index = 0;
+			}
 			this.teams.push( new_team );
 			
 			if(typeof this.onProgressChange == "function") {
