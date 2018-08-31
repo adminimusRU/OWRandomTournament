@@ -129,6 +129,7 @@ function get_default_settings() {
 		roll_coverage: 57, // OF_max_thresold = 50
 		roll_separate_otps: true,
 		roll_team_count_power2: false,
+		roll_captains: "highest-ranked",
 		
 		region: "eu",
 		update_class: true,
