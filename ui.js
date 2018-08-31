@@ -422,6 +422,7 @@ function roll_teams() {
 		
 		balance_priority: Settings.roll_balance_priority,
 		separate_otps: Settings.roll_separate_otps,
+		assign_captains: Settings.roll_captains,
 		
 		max_combinations: max_combinations,
 		OF_max_thresold: OF_max_thresold,
