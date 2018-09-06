@@ -4,7 +4,7 @@
 
 function add_empty_team() {
 	var new_team = create_empty_team();
-	new_team.name = "New team";
+	new_team.name = "Team "+(teams.length+1);
 	teams.push( new_team );
 	save_players_list();
 	redraw_teams();

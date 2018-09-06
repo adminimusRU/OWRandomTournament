@@ -186,9 +186,12 @@ var RandomTeamBuilder = {
 			var new_team = create_empty_team();
 			new_team.players = this.pickPlayersByMask( this.best_roll, true );
 			sort_players( new_team.players, 'sr' );
-			new_team.name = "Team "+new_team.players[0].display_name;
+			
 			if ( this.assign_captains === "highest-ranked" ) {
 				new_team.captain_index = 0;
+				new_team.name = "Team "+new_team.players[0].display_name;
+			} else {
+				new_team.name = "Team "+(this.teams.length+1);
 			}
 			this.teams.push( new_team );
 			
