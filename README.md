@@ -4,7 +4,7 @@ Tool for building balanced teams of random players for tournaments.
 [Live version on GitHub Pages](https://adminimusru.github.io/OWRandomTournament/index.html)
 
 ## Features:
-  * Automatical creation of balanced teams from given set of players. Teams are balanced by average SR and player classes/roles;
+  * Automatic creation of balanced teams from given set of players. Teams are balanced by average SR and player classes/roles;
     * Adjustable balance priority (SR or classes);
     * Tweakable average SR calculation depending on player's main class to reflect different gameplay impact;
     * Separation of similar one-trick ponies;
