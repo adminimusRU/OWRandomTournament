@@ -18,6 +18,8 @@ var RandomTeamBuilder = {
 	balance_priority: 50,
 	// do not place similar one-trick-ponies together
 	separate_otps: true,
+	// minimum level requirement (anti-smurf)
+	min_level: 0,
 	// auto assign captains for rolled teams. Possible values: "highest-ranked", "disabled"
 	assign_captains: "highest-ranked",
 	// maximum number of combinations checked to find balanced team.
@@ -82,6 +84,13 @@ var RandomTeamBuilder = {
 			}
 			
 			if (exclude) {
+				this.filtered_players.push( this.players.splice(i, 1)[0] );
+			}
+		}
+		
+		// filter players by minimum level
+		for ( var i=this.players.length-1; i>=0; i-- ) {
+			if ( this.players[i].level < this.min_level ) {
 				this.filtered_players.push( this.players.splice(i, 1)[0] );
 			}
 		}
