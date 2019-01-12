@@ -36,12 +36,17 @@ function add_player_click() {
 }
 
 function apply_settings() {
+	var need_redraw_teams = false;
 	// check if team size changed
 	if ( (Settings["team_size"] != Number(document.getElementById("team_size").value)) && (teams.length > 0) ) {
 		if ( ! confirm("Team size setting changed. All teams will be deleted!") ) {
 			return;
 		}
 		reset_roll();
+	}
+	
+	if ( Settings["show_numeric_sr"] != (document.getElementById("show_numeric_sr").value) ) {
+		need_redraw_teams = true;	
 	}
 	
 	for ( setting_name in Settings ) {
@@ -66,6 +71,10 @@ function apply_settings() {
 	localStorage.setItem( storage_prefix+"settings", JSON.stringify(Settings) );
 	apply_stats_updater_settings();
 	close_dialog( "popup_dlg_settings" );
+	
+	if (need_redraw_teams) {
+		redraw_teams();
+	}
 }
 
 function cancel_roll() {
@@ -1049,9 +1058,11 @@ function draw_player_cell( player_struct, small=false, is_captain=false ) {
 	player_icon.appendChild(icon_image);
 	
 	// SR value
-	if ( ! small ) {
-		br_node = document.createElement("br");
-		player_icon.appendChild(br_node);
+	if ( (! small) || Settings["show_numeric_sr"] ) {
+		if (! small) {
+			br_node = document.createElement("br");
+			player_icon.appendChild(br_node);
+		}
 	
 		var icon_sr = document.createElement("div");
 		icon_sr.className = "icon-sr";
@@ -1071,7 +1082,6 @@ function draw_player_cell( player_struct, small=false, is_captain=false ) {
 	
 		player_icon.appendChild(icon_sr);
 	}
-	
 	new_player_item.appendChild(player_icon);
 	
 	// space after rank icon
@@ -1389,6 +1399,7 @@ function redraw_teams() {
 		current_team_toolbar_container.appendChild(current_team_toolbar);
 		
 		// team as table
+		// team header
 		var current_team_container = document.createElement("div");
 		current_team_container.className = "small-team";
 		var current_team_table = document.createElement("div");
@@ -1415,6 +1426,7 @@ function redraw_teams() {
 		team_title_row.oncontextmenu = function(event){team_contextmenu(event);};
 		current_team_table.appendChild(team_title_row);
 		
+		// team players as rows
 		for( var p=0; p<teams[t].players.length; p++) {
 			var is_captain = (p == teams[t].captain_index);
 			var player_widget = draw_player( teams[t].players[p], true, is_captain );

@@ -406,16 +406,12 @@ var roll_debug = false;
 						Main
 					</div>
 					<div class="group-content">
-						<div class="table">
-							<div class="row">
-								<div class="cell">
-									Team size &nbsp;
-								</div>
-								<div class="cell">
-									<input id="team_size" name="team_size" type="number" size=3 min=1 max=12 style="width: 3em;" value=""/> players
-								</div>
-							</div>
-						</div>
+						<label for="team_size">Team size</label>
+						<input id="team_size" type="number" size=3 min=1 max=12 style="width: 3em;" value=""/> players
+						</br>
+						
+						<input type="checkbox" id="show_numeric_sr">
+						<label for="show_numeric_sr">Show numeric SR values in teams table</label>
 					</div>
 				</div>
 				
@@ -650,9 +646,6 @@ for( let item_name of old_stogage_items ) {
 	}
 }
 
-//restore saved players to teams
-restore_saved_teams();
-
 // restore settings
 var saved_settings_json = localStorage.getItem(storage_prefix+"settings");
 if ( saved_settings_json != null ) {
@@ -663,6 +656,10 @@ if ( saved_settings_json != null ) {
 		}
 	}
 }
+
+//restore saved players to teams
+restore_saved_teams();
+
 apply_stats_updater_settings();
 
 // adjust lobby margin to account scrollbar width

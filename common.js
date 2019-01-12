@@ -119,6 +119,7 @@ function format_player_name( id ) {
 function get_default_settings() {
 	return {
 		team_size: 6,
+		show_numeric_sr: false,
 		
 		roll_adjust_sr: false,
 		roll_adjust_dps: 110,
