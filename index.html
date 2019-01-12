@@ -74,12 +74,13 @@ var roll_debug = false;
 			<input title="Clear lobby" type="button" class="team_btn" onclick="clear_lobby();" value=" X "/>
 			<input title="Import lobby" id="import_lobby_btn" type="button" class="team_btn" onclick="import_lobby_dlg_open();" value="Import"/>
 			<input title="Export lobby" type="button" class="team_btn" onclick="export_lobby_dlg_open();" value="Export"/>
-			<button title="Sort lobby by class" class="team_btn" onclick="sort_lobby('class');">
+			<input title="Sort lobby by level" type="button" class="team_btn" onclick="sort_lobby('level', this);" value="&uarr;&darr;L"/>
+			<button title="Sort lobby by class" class="team_btn" onclick="sort_lobby('class', this);">
 				&uarr;&darr;
 				<img src="class_icons/dps.png" style="height: 0.9em;">
 			</button>
-			<input title="Sort lobby by name" type="button" class="team_btn" onclick="sort_lobby('display_name');" value="&uarr;&darr;Az"/>
-			<input title="Sort lobby by SR" type="button" class="team_btn" onclick="sort_lobby('sr');" value="&uarr;&darr;123"/>
+			<input title="Sort lobby by name" type="button" class="team_btn" onclick="sort_lobby('display_name', this);" value="&uarr;&darr;Az"/>
+			<input title="Sort lobby by SR" type="button" class="team_btn" onclick="sort_lobby('sr', this);" value="&uarr;&darr;123"/>
 			</div>
 			<br/>
 					
@@ -169,16 +170,16 @@ var roll_debug = false;
 				
 				<div style="float:right; width: 1em; height: 0.5em;"></div>
 				
-				<button title="Sort players by class" class="team_btn" onclick="sort_teams_players('class');">
+				<button title="Sort all players by class" class="team_btn" onclick="sort_teams_players('class', this);">
 					&uarr;&darr;
 					<img src="class_icons/dps.png" style="height: 0.9em;">
 				</button>
-				<input title="Sort players by name" type="button" class="team_btn" onclick="sort_teams_players('display_name');" value="&uarr;&darr;Az"/>
-				<input title="Sort players by SR" type="button" class="team_btn" onclick="sort_teams_players('sr');" value="&uarr;&darr;123"/>
+				<input title="Sort all players by name" type="button" class="team_btn" onclick="sort_teams_players('display_name', this);" value="&uarr;&darr;Az"/>
+				<input title="Sort all players by SR" type="button" class="team_btn" onclick="sort_teams_players('sr', this);" value="&uarr;&darr;123"/>
 				
 				<div style="float:right; width: 1em; height: 0.5em;"></div>
 				
-				<input title="Sort teams by name" type="button" class="team_btn" onclick="sort_teams();" value="&uarr;&darr;T"/>
+				<input title="Sort teams by name" type="button" class="team_btn" onclick="sort_teams(this);" value="&uarr;&darr;T"/>
 				<input title="Shuffle teams" type="button" class="team_btn" onclick="shuffle_teams();" value="&#x2b8d;T"/>
 								
 				<div style="float:right; width: 1em; height: 0.5em;"></div>

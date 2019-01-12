@@ -217,7 +217,11 @@ function round_to( value, precision ) {
 	return Math.round(value * Math.pow(10, precision)) / Math.pow(10, precision);
 }
 
-function sort_players( team, sort_field = 'sr' ) {
+function sort_players( team, sort_field = 'sr', order_asc=false ) {
+	var order = 1;
+	if (order_asc) {
+		order = -1;
+	}
 	if ( sort_field == 'class' ) {
 		team.sort( function(player1, player2){
 				var val1 = -1;
@@ -234,16 +238,16 @@ function sort_players( team, sort_field = 'sr' ) {
 				if (player2.top_classes.length > 1) {
 					val2 += class_names.indexOf( player2.top_classes[1] ) + 1;
 				}
-				return val1 - val2;
+				return order * (val1 - val2);
 			} );
 	} else {
 		team.sort( function(player1, player2){
 				if( typeof player1[sort_field] === 'string') {
 					var val1 = player1[sort_field].toLowerCase();
 					var val2 = player2[sort_field].toLowerCase();
-					return ( val1<val2 ? -1 : (val1>val2?1:0) );
+					return order * ( val1<val2 ? -1 : (val1>val2?1:0) );
 				} else { 
-					return player2[sort_field] - player1[sort_field];
+					return order * (player2[sort_field] - player1[sort_field]);
 				} 
 			} );
 	}
