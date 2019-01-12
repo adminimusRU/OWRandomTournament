@@ -13,6 +13,7 @@ var hero_classes = {
 	sombra:		"dps",
 	mccree:		"dps",
 	doomfist:	"dps",
+	ashe:		"dps",
 	
 	torbjorn:	"dps",
 	hanzo:		"dps",
@@ -47,5 +48,6 @@ var ow_ranks = {
 	"platinum":		{ min: 2500, max: 2999 },
 	"diamond":		{ min: 3000, max: 3499 },
 	"master":		{ min: 3500, max: 3999 },
-	"grandmaster":	{ min: 4000, max: 5000 },
+	"grandmaster":	{ min: 4000, max: 4399 },
+	"top500":		{ min: 4400, max: 5000 },
 };
