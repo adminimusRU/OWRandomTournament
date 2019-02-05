@@ -53,6 +53,10 @@ var OWAPI = {
 							throw new Error("Player has no stats in region "+OWAPI.region.toUpperCase());
 						}
 						if ( stats_obj[OWAPI.region].stats.competitive !== null ) {
+							if ( ! stats_obj[OWAPI.region].stats.competitive.hasOwnProperty('overall_stats') ) {
+								OWAPI.can_retry = false;
+								throw new Error("Player has no stats in region "+OWAPI.region.toUpperCase());
+							}
 							OWAPI.sr = Number(stats_obj[OWAPI.region].stats.competitive.overall_stats.comprank);
 							
 							OWAPI.level = stats_obj[OWAPI.region].stats.competitive.overall_stats.prestige*100 + stats_obj[OWAPI.region].stats.competitive.overall_stats.level,
