@@ -212,7 +212,11 @@ function import_lobby( format, import_str ) {
 				// split string to fields (btag, SR, class, offclass)
 				var fields = battletag_list[i].split(/[ \t.,;|]+/);
 				
-				// @ToDo check battletag format ?				
+				// check battletag format
+				if ( /^[^#]+[-#]\d+$/.test(fields[0]) == false ) {
+					throw new Error("Incorrect battletag "+fields[0]);
+				}
+				
 				var player_id = format_player_id(fields[0]);
 
 				// check duplicates
@@ -239,6 +243,7 @@ function import_lobby( format, import_str ) {
 				}
 				if ( fields.length >= 3 ) {
 					for ( var c = 2; c < fields.length; c++ ) {
+						if (fields[c] == "") continue;
 						if (class_names.indexOf(fields[c]) == -1) {
 							throw new Error("Incorrect class name "+fields[c]);
 						}
