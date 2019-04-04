@@ -1082,7 +1082,7 @@ function draw_player_cell( player_struct, small=false, is_captain=false ) {
 		img_node.classList.add("rank-icon-small");
 	}
 	var rank_name = get_rank_name(player_struct.sr);
-	img_node.src = "rank_icons/"+rank_name+"_small.png";
+	img_node.src = get_rank_icon( rank_name, player_struct.id );
 	img_node.title = rank_name;
 	icon_image.appendChild(img_node);
 	player_icon.appendChild(icon_image);
