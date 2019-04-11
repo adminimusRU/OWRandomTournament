@@ -768,7 +768,7 @@ function player_drop(ev) {
 			target_team = lobby;
 			target_index = lobby.length;
 		} else {
-			var team_node = ev.currentTarget.parentElement.parentElement.parentElement;
+			var team_node = ev.currentTarget.parentElement.parentElement.parentElement.parentElement;
 			var team_index = Array.prototype.indexOf.call( document.getElementById("teams_container").children , team_node);
 			if ( team_index !== -1 ) {
 				target_team = teams[team_index].players;
@@ -779,6 +779,8 @@ function player_drop(ev) {
 		if ( dragged_team == target_team ) {
 			// just move to end within team
 			target_index = target_team.length - 1;
+		} else {
+			drag_action = "move"; 
 		}
 	}
 	
