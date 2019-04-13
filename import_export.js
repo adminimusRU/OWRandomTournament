@@ -348,7 +348,7 @@ function prepare_datauri_icons() {
 			rank_icons_datauri[this.rank_name] = oc3.toDataURL('image/png');
 		};
 
-		image.src = "rank_icons/"+rank_name+"_small.png";
+		image.src = get_rank_icon_src(rank_name);
 	}
 }
 
