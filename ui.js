@@ -490,7 +490,7 @@ function sort_team_click( team_index, sort_field = 'sr', button_element=undefine
 	redraw_teams();
 }
 
-function sort_teams(button_element=undefined) {
+function sort_teams(button_element=undefined, sort_field = 'name') {
 	var order = 1;
 	if (button_element !== undefined) {
 		if (button_element.hasAttribute("order_inverse")) {
@@ -501,12 +501,29 @@ function sort_teams(button_element=undefined) {
 		}
 	}
 	
-	var sort_field = "name";
-	teams.sort( function(team1, team2){
-				var val1 = team1[sort_field].toLowerCase();
-				var val2 = team2[sort_field].toLowerCase();
-				return order *( val1<val2 ? -1 : (val1>val2?1:0) );
-			} );
+	if ( sort_field == 'captain_sr' ) {
+		teams.sort( function(team1, team2){
+					if ( team1.captain_index >= 0 ) {
+						var val1 = team1.players[team1.captain_index].sr;
+					} else {
+						var val1 = team1.players[0].sr;
+					}
+					
+					if ( team2.captain_index >= 0 ) {
+						var val2 = team2.players[team2.captain_index].sr;
+					} else {
+						var val2 = team2.players[0].sr;
+					}
+					return order *( val1<val2 ? -1 : (val1>val2?1:0) );
+				} );
+		
+	} else {
+		teams.sort( function(team1, team2){
+					var val1 = team1[sort_field].toLowerCase();
+					var val2 = team2[sort_field].toLowerCase();
+					return order *( val1<val2 ? -1 : (val1>val2?1:0) );
+				} );
+	}
 	save_players_list();
 	redraw_teams();
 }
@@ -902,7 +919,7 @@ function on_rtb_worker_message(e) {
 		
 		save_players_list();
 		redraw_lobby();
-		redraw_teams();
+		sort_teams(undefined, 'captain_sr');
 		
 		document.getElementById("roll_progress_bar").value = 100;
 		document.getElementById("dlg_roll_progress_text").innerHTML = "Roll complete";
