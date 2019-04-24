@@ -448,7 +448,7 @@ var RandomTeamBuilder = {
 	calcSRStDev: function( team, team_sr ) {
 		var sr_stdev = 0;
 		for( p in team) {
-			sr_stdev += (team[p].sr - team_sr)*(team[p].sr - team_sr);
+			sr_stdev += (this.calcPlayerSR(team[p]) - team_sr)*(this.calcPlayerSR(team[p]) - team_sr);
 		}
 		sr_stdev = Math.round( Math.sqrt( sr_stdev / (team.length-1) ) );
 		return sr_stdev;
