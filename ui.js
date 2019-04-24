@@ -77,6 +77,23 @@ function apply_settings() {
 	}
 }
 
+function balance_priority_mousedown(ev) {
+	balance_priority_mouse_moving = true;
+	if (balance_priority_mouse_moving) {
+		read_balance_prority_input(ev);
+	}
+}
+
+function balance_priority_mousemove(ev) {
+	if (balance_priority_mouse_moving) {
+		read_balance_prority_input(ev);
+	}
+}
+
+function balance_priority_mouseup(ev) {
+	balance_priority_mouse_moving = false;
+}
+
 function cancel_roll() {
 	RtbWorker.terminate();
 	close_dialog( "popup_dlg_roll_progress" );
@@ -429,7 +446,10 @@ function roll_teams() {
 			support: Settings.roll_adjust_support,
 		},
 		
-		balance_priority: Settings.roll_balance_priority,
+		balance_priority_sr: Settings.roll_balance_priority_sr,
+		balance_priority_class: Settings.roll_balance_priority_class,
+		balance_priority_dispersion: Settings.roll_balance_priority_dispersion,
+		
 		separate_otps: Settings.roll_separate_otps,
 		min_level: Settings.roll_min_level,
 		assign_captains: Settings.roll_captains,
@@ -842,6 +862,63 @@ function roll_adjust_sr_change() {
 	}
 }
 
+function roll_balance_priority_input_change(input) {
+	if (Number(input.value) < 0) {
+		input.value = 0;
+	}
+	if (Number(input.value) > 100) {
+		input.value = 100;
+	}
+	
+	// change remaining balance factor proportionally
+	var input_names = [
+		"roll_balance_priority_sr",
+		"roll_balance_priority_class",
+		"roll_balance_priority_dispersion"
+	];
+	input_names.splice( input_names.indexOf(input.id), 1 );
+	
+	var input_values = [];
+	var values_sum = 0;
+	for (var i=0; i<input_names.length; i++ ) {
+		let input_value = Number(document.getElementById(input_names[i]).value);
+		input_values.push( input_value );
+		values_sum += input_value;
+	}
+	
+	var reminder = 100 - Number(input.value);
+	
+	var new_sum = 0;
+	var max_index = 0;
+	for (var i=0; i<input_values.length; i++ ) {
+		if (values_sum > 0 ) {
+			input_values[i] = Math.round( reminder * input_values[i]/values_sum );
+		} else {
+			input_values[i] = 0;
+		}
+		new_sum += input_values[i];
+		if ( input_values[i] > input_values[max_index] ) {
+			max_index = i;
+		}
+	}
+	
+	// rounding error
+	input_values[max_index] += reminder - new_sum;
+	
+	for (var i=0; i<input_names.length; i++ ) {
+		document.getElementById(input_names[i]).value = input_values[i];
+	}
+	
+	// redraw canvas
+	var pointer = balance_priority_calc_pointer( 
+		Number(document.getElementById("roll_balance_priority_sr").value),
+		Number(document.getElementById("roll_balance_priority_class").value),
+		Number(document.getElementById("roll_balance_priority_dispersion").value)
+	);
+
+	balance_priority_draw_canvas( pointer.x, pointer.y );
+}
+
 function team_contextmenu(ev) {
 	ev.preventDefault();
 	
@@ -1027,6 +1104,69 @@ function apply_lobby_filter() {
 		} else {
 			document.getElementById(lobby[i].id).parentElement.style.display = "none";
 		}
+	}
+}
+
+function balance_priority_calc_pointer( priority_sr, priority_class, priority_dispersion ) {
+	var triangle = get_balance_triangle_dimensions();
+	
+	//denormalize distances
+	if ( priority_class > 0 ) {
+		denorm_class = triangle.width / 
+			( 1/Math.cos(30*Math.PI/180) +
+			2/Math.tan(60*Math.PI/180)*priority_sr/priority_class +
+			priority_dispersion/priority_class/Math.cos(30*Math.PI/180) );
+		denorm_sr = denorm_class * priority_sr/priority_class;
+		denorm_disp = denorm_class * priority_dispersion/priority_class;
+	} else if ( priority_sr > 0 ) {
+		denorm_class = 0;
+		denorm_sr = Math.round( triangle.width * Math.sin(60*Math.PI/180) / ( 1 + priority_dispersion/priority_sr));
+		denorm_disp = Math.round( denorm_sr * priority_dispersion/priority_sr );
+	} else {
+		denorm_class = 0;
+		denorm_sr = 0;
+		denorm_disp = Math.round( triangle.width * Math.sin(60*Math.PI/180) );
+	}
+	
+	// calc pointer coordinates
+	x = Math.round( triangle.width + triangle.offset_x - denorm_class/Math.cos(30*Math.PI/180) - denorm_sr/Math.tan(60*Math.PI/180) );
+	y = Math.round( triangle.height + triangle.offset_y - denorm_sr );
+	
+	return {
+		x: x,
+		y: y
+	};
+}
+
+function balance_priority_draw_canvas( pointer_x, pointer_y ) {
+	var canvas = document.getElementById("roll_balance_priority_canvas");
+	if (canvas.getContext) {
+		var ctx = canvas.getContext('2d');
+		ctx.clearRect(0, 0, canvas.width, canvas.height);
+		
+		// draw triangle
+		var triangle = get_balance_triangle_dimensions();
+	
+		ctx.beginPath();
+		ctx.moveTo(triangle.offset_x, triangle.height + triangle.offset_y);
+		ctx.lineTo(triangle.offset_x + triangle.width, triangle.height + triangle.offset_y);
+		ctx.lineTo(triangle.offset_x + triangle.width/2, triangle.offset_y);
+		ctx.closePath();
+ 
+		ctx.lineWidth = 3;
+		ctx.strokeStyle = '#666666';
+		ctx.stroke();
+		
+		ctx.fillStyle = balance_priority_canvas_gradient;
+		ctx.fill();
+		
+		// draw pointer circle
+		ctx.beginPath();
+		ctx.arc(pointer_x, pointer_y, 8, 0, 2 * Math.PI);
+		ctx.lineWidth = 2;
+		ctx.strokeStyle = '#0000FF';
+		ctx.stroke();
+		ctx.closePath();
 	}
 }
 
@@ -1308,7 +1448,7 @@ function fill_settings_dlg( settings_obj ) {
 	for ( setting_name in settings_obj ) {
 		var setting_value = settings_obj[setting_name];
 		var setting_input = document.getElementById(setting_name);
-		if (setting_input === null) { alert("help"+setting_name);}
+		if (setting_input === null) { alert("input not found: "+setting_name); continue;}
 		switch( setting_input.type ) {
 			case "checkbox":
 				setting_input.checked = setting_value;
@@ -1317,8 +1457,47 @@ function fill_settings_dlg( settings_obj ) {
 				setting_input.value = setting_value;
 		}
 	}
+	
+	// init balance priority input canvas
+	var canvas = document.getElementById("roll_balance_priority_canvas");
+	var x = 0;
+	var y = 0;
+	if (canvas.getContext) {
+		var ctx = canvas.getContext('2d');
+		
+		var triangle = get_balance_triangle_dimensions();
+	
+		canvas.width = triangle.width + triangle.offset_x*2;
+		canvas.height = triangle.height + triangle.offset_y*2;
+		
+		canvas.addEventListener("mousedown", balance_priority_mousedown);
+		canvas.addEventListener("mousemove", balance_priority_mousemove);
+		canvas.addEventListener("mouseup", balance_priority_mouseup);
+		
+		// color gradient
+		var center = balance_priority_calc_pointer( 34, 33, 33 );
+		balance_priority_canvas_gradient = ctx.createRadialGradient(center.x, center.y, 1, center.x, center.y, Math.round(triangle.width/2/Math.cos(30*Math.PI/180)) );
+		balance_priority_canvas_gradient.addColorStop(0, "#6be585");
+		balance_priority_canvas_gradient.addColorStop(0.3, "#92ac74");
+		balance_priority_canvas_gradient.addColorStop(1, "#dd3e54");
+		
+		var pointer = balance_priority_calc_pointer( settings_obj.roll_balance_priority_sr, settings_obj.roll_balance_priority_class, settings_obj.roll_balance_priority_dispersion );
+
+		balance_priority_draw_canvas( pointer.x, pointer.y );
+	}
 		
 	roll_adjust_sr_change();
+}
+
+function get_balance_triangle_dimensions() {
+	var w = 200;
+	var h = Math.round( (w/2) * Math.tan(60*Math.PI/180) );
+	return {
+		width: w,
+		height: h,
+		offset_x: 10,
+		offset_y: 10
+	};
 }
 
 function highlight_player( player_id ) {
@@ -1351,6 +1530,46 @@ function log_stats_update_error( msg ) {
 
 function open_dialog( dialog_id ) {
 	document.getElementById( dialog_id ).style.display = "block";
+}
+
+function read_balance_prority_input(ev) {
+	var canvas = document.getElementById("roll_balance_priority_canvas");
+	var canvas_bounds = canvas.getBoundingClientRect();
+	var x = ev.clientX - Math.round(canvas_bounds.left);
+	var y = ev.clientY - Math.round(canvas_bounds.top);
+	
+	var triangle = get_balance_triangle_dimensions();
+	
+	// calc distance to opposite edge
+	var coord_sr = triangle.height + triangle.offset_y - y;
+	var coord_class = Math.round((triangle.width - (x-triangle.offset_x) - (triangle.height-(y-triangle.offset_y))*Math.tan(30*Math.PI/180)) * Math.sin(60*Math.PI/180));
+	var coord_disp = Math.round(((x-triangle.offset_x) - (triangle.height-(y-triangle.offset_y))*Math.tan(30*Math.PI/180)) * Math.sin(60*Math.PI/180));
+	
+	// check if point inside triangle
+	if ( (coord_sr<0) || (coord_class<0) || (coord_disp<0) ) {
+		return;
+	}
+	
+	// normalize
+	var priority_sr 	= Math.round( 100*coord_sr/(coord_sr+coord_class+coord_disp) );
+	var priority_class 	= Math.round( 100*coord_class/(coord_sr+coord_class+coord_disp) );
+	var priority_disp 	= Math.round( 100*coord_disp/(coord_sr+coord_class+coord_disp) );
+	
+	// rounding error
+	var diff = 100-priority_sr-priority_class-priority_disp;
+	if ( (priority_sr >= priority_class) && (priority_sr >= priority_disp) ) {
+		priority_sr += diff;
+	} else if ( (priority_class >= priority_sr) && (priority_class >= priority_disp) ) {
+		priority_class += diff;
+	} else {
+		priority_disp += diff;
+	}
+	
+	document.getElementById("roll_balance_priority_sr").value = priority_sr;
+	document.getElementById("roll_balance_priority_class").value = priority_class;
+	document.getElementById("roll_balance_priority_dispersion").value = priority_disp;
+	
+	balance_priority_draw_canvas( x, y );
 }
 
 function redraw_lobby() {

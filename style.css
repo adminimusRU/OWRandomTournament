@@ -331,7 +331,7 @@ textarea {
 }
 
 div[id="dlg_settings"] {
-	width: 25em;
+	/*width: 25em;*/
 	text-align: left;
 }
 
@@ -462,7 +462,8 @@ div[id="stats_update_log"] {
 }
 
 .range-title {
-	padding-top: 0.5em;
+	/*padding-top: 0.5em;*/
+	font-weight: bold;
 }
 
 .html-export-container {
@@ -557,4 +558,8 @@ a.action-href:visited {
 	opacity: 1;
 	padding-bottom: 1em;
 	font-size: 120%;
+}
+
+.roll_balance_priority_input{
+	width: 3em;
 }

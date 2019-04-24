@@ -14,8 +14,10 @@ var RandomTeamBuilder = {
 	// example: adjust_sr_by_class: {'dps':120, 'tank':100, 'support':80},
 	adjust_sr: false,
 	adjust_sr_by_class: {},
-	// 0 - prioritize SR, 100 - prioritize classes
-	balance_priority: 50,
+	// balance factors priority (percents, sum must be 100)
+	balance_priority_sr: 34,
+	balance_priority_class: 33,
+	balance_priority_dispersion: 33,
 	// do not place similar one-trick-ponies together
 	separate_otps: true,
 	// minimum level requirement (anti-smurf)
@@ -43,6 +45,8 @@ var RandomTeamBuilder = {
 	player_selection_mask: [],
 	target_class_count: {},
 	target_team_sr: 0,
+	// target SR dispersion (measured as standard deviation)
+	target_sr_stdev: 0,
 		
 	OF_min: 0,
 	best_roll: [],
@@ -61,7 +65,9 @@ var RandomTeamBuilder = {
 				this.onDebugMessage.call( undefined, "team_count_power2 = "+this.team_count_power2 );
 				this.onDebugMessage.call( undefined, "adjust_sr = "+this.adjust_sr );
 				this.onDebugMessage.call( undefined, "adjust_sr_by_class = "+JSON.stringify(this.adjust_sr_by_class) );
-				this.onDebugMessage.call( undefined, "balance_priority = "+this.balance_priority );
+				this.onDebugMessage.call( undefined, "balance_priority_sr = "+this.balance_priority_sr );
+				this.onDebugMessage.call( undefined, "balance_priority_class = "+this.balance_priority_class );
+				this.onDebugMessage.call( undefined, "balance_priority_dispersion = "+this.balance_priority_dispersion );
 				this.onDebugMessage.call( undefined, "separate_otps = "+this.separate_otps );
 				this.onDebugMessage.call( undefined, "max_combinations = "+this.max_combinations );
 				this.onDebugMessage.call( undefined, "OF_min_thresold = "+this.OF_min_thresold );
@@ -98,7 +104,7 @@ var RandomTeamBuilder = {
 		// shuffle players, so every roll will be different
 		this.players = array_shuffle( this.players );
 		
-		// calculate average class count and SR per team  -> balance target 
+		// calculate average class count, sr dispersion and SR per team  -> balance target 
 		var total_class_count = {};
 		var target_team_count = Math.floor( this.players.length / this.team_size );
 		if (this.team_count_power2) {
@@ -129,10 +135,14 @@ var RandomTeamBuilder = {
 			this.target_class_count[class_names[c]]  = round_to(this.target_class_count[class_names[c]], 1);
 		}
 		
+		this.target_sr_stdev = this.calcSRStDev( this.players, this.target_team_sr );
+		
 		if (this.roll_debug) {
 			if(typeof this.onDebugMessage == "function") {
 				this.onDebugMessage.call( undefined, "Target SR = "+this.target_team_sr );
 				this.onDebugMessage.call( undefined, "Target classes = "+JSON.stringify(this.target_class_count) );
+				this.onDebugMessage.call( undefined, "Target sr stdev = "+JSON.stringify(this.target_sr_stdev) );
+				
 			}
 		}
 		
@@ -203,6 +213,18 @@ var RandomTeamBuilder = {
 				new_team.name = "Team "+(this.teams.length+1);
 			}
 			this.teams.push( new_team );
+			
+			if (this.roll_debug) {
+				if(typeof this.onDebugMessage == "function") {
+					var team_sr = this.calcTeamSR(new_team.players);
+					var sr_diff = Math.abs( team_sr - this.target_team_sr );
+					var class_unevenness = this.calcClassUnevenness( new_team.players );
+					var sr_stdev = this.calcSRStDev( new_team.players, team_sr );
+					this.onDebugMessage.call( undefined, "OF sr diff = "+sr_diff );
+					this.onDebugMessage.call( undefined, "OF CU = "+class_unevenness );
+					this.onDebugMessage.call( undefined, "OF sr_stdiv= "+sr_stdev );
+				}
+			}
 			
 			if(typeof this.onProgressChange == "function") {
 				var current_progress = Math.round( (this.teams.length / target_team_count)*100 );
@@ -324,22 +346,26 @@ var RandomTeamBuilder = {
 	},
 	
 	calcObjectiveFunction: function( picked_players ) {
-		var sr_diff = Math.abs( this.calcTeamSR(picked_players) - this.target_team_sr );
+		var team_sr = this.calcTeamSR(picked_players);
+		var sr_diff = Math.abs( team_sr - this.target_team_sr );
 		var class_unevenness = this.calcClassUnevenness( picked_players );
 		var otp_conflicts = 0;
 		if (this.separate_otps) {
 			otp_conflicts = this.calcOTPConflicts( picked_players );
 		}
+		var sr_stdev = this.calcSRStDev( picked_players, team_sr );
 		
-		var objective_func = this.calcObjectiveFunctionValue( sr_diff, class_unevenness, otp_conflicts );			
+		var objective_func = this.calcObjectiveFunctionValue( sr_diff, class_unevenness, otp_conflicts, sr_stdev );			
 		return objective_func;
 	},
 	
-	calcObjectiveFunctionValue: function( sr_diff, class_unevenness, otp_conflicts ) {
+	calcObjectiveFunctionValue: function( sr_diff, class_unevenness, otp_conflicts, sr_stdev ) {
 		var OF = 
-			(class_unevenness * this.balance_priority
-			+ (sr_diff/this.balance_max_sr_diff*100)*(100-this.balance_priority)
-			+ otp_conflicts )
+			(class_unevenness * this.balance_priority_class
+			+ (sr_diff/this.balance_max_sr_diff*100)*this.balance_priority_sr
+			+ Math.abs(sr_stdev - this.target_sr_stdev)*this.balance_priority_dispersion  
+			+ otp_conflicts
+			)
 			/100 ;
 		return round_to( OF, 1 );
 	},
@@ -417,6 +443,15 @@ var RandomTeamBuilder = {
 		}
 		
 		return otp_conflicts_count * 10000;	
+	},
+	
+	calcSRStDev: function( team, team_sr ) {
+		var sr_stdev = 0;
+		for( p in team) {
+			sr_stdev += (team[p].sr - team_sr)*(team[p].sr - team_sr);
+		}
+		sr_stdev = Math.round( Math.sqrt( sr_stdev / (team.length-1) ) );
+		return sr_stdev;
 	},
 }
 
