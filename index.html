@@ -418,7 +418,8 @@ var balance_priority_canvas_gradient;
 						<div class="group-content">
 							<div class="range-title">Balance priority</div>
 							<div style="text-align: center;">
-								<label for="roll_balance_priority_sr">Average SR: </label>
+								<label for="roll_balance_priority_sr">
+								Average SR: </label>
 								<input id="roll_balance_priority_sr" type="number" class="roll_balance_priority_input" value="0" min="0" max="100" autocomplete="off" onchange="roll_balance_priority_input_change(this);">
 								%
 								<br/>
@@ -427,51 +428,68 @@ var balance_priority_canvas_gradient;
 								
 								<br/>
 								<div style="text-align: left;">
-									<label for="roll_balance_priority_class">classes: </label>
+									<label for="roll_balance_priority_class" title="Equal distribution of tanks, dps and supports in rolled teams">
+									Classes: </label>
 									<input id="roll_balance_priority_class" type="number" class="roll_balance_priority_input" value="0" min="0" max="100" autocomplete="off" onchange="roll_balance_priority_input_change(this);">
 									%
 								
 									<div style="float: right;">
-									<label for="roll_balance_priority_dispersion" >SR dispersion: </label>
+									<label for="roll_balance_priority_dispersion" title="Equal SR dispersion in rolled teams">
+									SR dispersion: </label>
 									<input id="roll_balance_priority_dispersion" type="number" class="roll_balance_priority_input" value="0" min="0" max="100" autocomplete="off" onchange="roll_balance_priority_input_change(this);">
 									%
 									</div>
 								</div>
 							</div>
 							<br/>
-													
-							<div class="range-title">Roll quality</div>
-							<input id="roll_quality" type="range" size=3 min=0 max=100 autocomplete="off" value="70" style="width:90%"/>
+							
+							<div class="range-title" title="Shift target SR standard deviation from average of lobby">
+								Target dispersion: 
+								<span id="roll_sr_stdev_adjust_value"></span>
+							</div>
+							<input id="roll_sr_stdev_adjust" type="range" size=3 min="-1000" max="1000" autocomplete="off" value="0" style="width:90%" onchange="settings_on_range_change(this, true);" oninput="settings_on_range_change(this, true);"/>
+							</br>
+							<div class="range-sub-container">
+								<div class="range-sub range-sub-left">less disperion</div>
+								<div class="range-sub range-sub-right">more dispersion</div>
+							</div>
+							<br/>
+							
+							<div class="range-title">
+								Roll quality: 
+								<span id="roll_quality_value"></span>
+							</div>
+							<input id="roll_quality" type="range" size=3 min=0 max=100 autocomplete="off" value="70" style="width:90%" onchange="settings_on_range_change(this);" oninput="settings_on_range_change(this);"/>
 							</br>
 							<div class="range-sub-container">
 								<div class="range-sub range-sub-left">fast, poor balance</div>
 								<div class="range-sub range-sub-right">slow, best balance</div>
 							</div>
 							<br/>
-													
-							<div class="range-title">Roll coverage</div>
-							<input id="roll_coverage" type="range" size=3 min=0 max=100 autocomplete="off" value="50" style="width:90%"/>
+							
+							<div class="range-title">
+								Roll coverage: 
+								<span id="roll_coverage_value"></span>
+							</div>
+							<input id="roll_coverage" type="range" size=3 min=0 max=100 autocomplete="off" value="50" style="width:90%" onchange="settings_on_range_change(this);" oninput="settings_on_range_change(this);"/>
 							</br>
 							<div class="range-sub-container">
 								<div class="range-sub range-sub-left">some players benched, only balanced teams</div>
 								<div class="range-sub range-sub-right">all participate, some teams poorly balanced</div>
 							</div>
 							<br/>
-													
+							
 							<input type="checkbox" id="roll_team_count_power2">
 							<label for="roll_team_count_power2">Team count should be 2<sup>n</sup> (for better bracket)</label>
 							</br>
-							
 							
 							<input type="checkbox" id="roll_separate_otps">
 							<label for="roll_separate_otps">Do not place similar one-trick ponies into same team</label>
 							</br>
 							
-							
 							<label for="roll_min_level">Minimum level</label>
 							<input type="number" id="roll_min_level" size=4 min=0 max=9999 autocomplete="off" value="0"/>
 							</br>
-							
 							
 							Captains &nbsp;
 							<select id="roll_captains">

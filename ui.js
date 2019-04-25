@@ -450,6 +450,8 @@ function roll_teams() {
 		balance_priority_class: Settings.roll_balance_priority_class,
 		balance_priority_dispersion: Settings.roll_balance_priority_dispersion,
 		
+		target_sr_stdev_adjust: Settings.roll_sr_stdev_adjust,
+		
 		separate_otps: Settings.roll_separate_otps,
 		min_level: Settings.roll_min_level,
 		assign_captains: Settings.roll_captains,
@@ -917,6 +919,21 @@ function roll_balance_priority_input_change(input) {
 	);
 
 	balance_priority_draw_canvas( pointer.x, pointer.y );
+}
+
+function settings_on_range_change( range_input, include_sign=false ) {
+	var span = document.getElementById(range_input.id+"_value");
+	if (span !== null) {
+		var value = Number(range_input.value);
+		if (include_sign) {
+			if (value >= 0) {
+				value = "+"+value;
+			} else {
+				value = "-"+value;
+			}
+		}
+		span.innerHTML = value;
+	}
 }
 
 function team_contextmenu(ev) {
@@ -1456,6 +1473,9 @@ function fill_settings_dlg( settings_obj ) {
 			default:
 				setting_input.value = setting_value;
 		}
+		
+		// trigger onchange event to update ui
+		setting_input.dispatchEvent(new Event("change"));
 	}
 	
 	// init balance priority input canvas
@@ -1485,8 +1505,6 @@ function fill_settings_dlg( settings_obj ) {
 
 		balance_priority_draw_canvas( pointer.x, pointer.y );
 	}
-		
-	roll_adjust_sr_change();
 }
 
 function get_balance_triangle_dimensions() {

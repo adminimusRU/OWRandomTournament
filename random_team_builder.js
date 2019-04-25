@@ -18,6 +18,8 @@ var RandomTeamBuilder = {
 	balance_priority_sr: 34,
 	balance_priority_class: 33,
 	balance_priority_dispersion: 33,
+	// target SR standard deviation for rolled teams = lobby SR std.dev. + target_sr_stdev_adjust
+	target_sr_stdev_adjust: 0,
 	// do not place similar one-trick-ponies together
 	separate_otps: true,
 	// minimum level requirement (anti-smurf)
@@ -68,6 +70,7 @@ var RandomTeamBuilder = {
 				this.onDebugMessage.call( undefined, "balance_priority_sr = "+this.balance_priority_sr );
 				this.onDebugMessage.call( undefined, "balance_priority_class = "+this.balance_priority_class );
 				this.onDebugMessage.call( undefined, "balance_priority_dispersion = "+this.balance_priority_dispersion );
+				this.onDebugMessage.call( undefined, "target_sr_stdev_adjust = "+this.target_sr_stdev_adjust );				
 				this.onDebugMessage.call( undefined, "separate_otps = "+this.separate_otps );
 				this.onDebugMessage.call( undefined, "max_combinations = "+this.max_combinations );
 				this.onDebugMessage.call( undefined, "OF_min_thresold = "+this.OF_min_thresold );
@@ -135,7 +138,10 @@ var RandomTeamBuilder = {
 			this.target_class_count[class_names[c]]  = round_to(this.target_class_count[class_names[c]], 1);
 		}
 		
-		this.target_sr_stdev = this.calcSRStDev( this.players, this.target_team_sr );
+		this.target_sr_stdev = this.calcSRStDev( this.players, this.target_team_sr ) + this.target_sr_stdev_adjust;
+		if ( this.target_sr_stdev < 0 ) {
+			this.target_sr_stdev = 0;
+		}
 		
 		if (this.roll_debug) {
 			if(typeof this.onDebugMessage == "function") {

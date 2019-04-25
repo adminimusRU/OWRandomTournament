@@ -509,6 +509,14 @@ input[id="roll_coverage"]::-webkit-slider-runnable-track {
   background: linear-gradient(to right, #6be585, #92ac74 60%, #dd3e54);
 }
 
+input[id="roll_sr_stdev_adjust"]::-moz-range-track {
+  background: linear-gradient(to right, #dd3e54, #6be585, #dd3e54);
+}
+input[id="roll_sr_stdev_adjust"]::-webkit-slider-runnable-track {
+  background: linear-gradient(to right, #dd3e54, #6be585, #dd3e54);
+}
+
+
 
 .loader {
 	border: 0.3em solid #f3f3f3;

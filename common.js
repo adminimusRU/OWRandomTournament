@@ -126,6 +126,7 @@ function get_default_settings() {
 		roll_balance_priority_sr: 34,
 		roll_balance_priority_class: 33,
 		roll_balance_priority_dispersion: 33,
+		roll_sr_stdev_adjust: 0,
 		roll_quality: 70, // ~= 50k combinations
 		roll_coverage: 57, // OF_max_thresold = 50
 		roll_separate_otps: true,
