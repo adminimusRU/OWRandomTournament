@@ -801,7 +801,7 @@ function player_drop(ev) {
 		}
 	}
 	
-	if (target_id == "") {
+	if ( (target_id == "") && (drag_action != "remove") ) {
 		// dropped on empty slot
 		var parent_id = ev.currentTarget.parentElement.parentElement.id;
 		if (parent_id == "lobby") {
