@@ -41,6 +41,10 @@ function calc_team_sr( team ) {
 	return team_sr;
 }
 
+function convert_range_log_scale( raw_value, out_min, out_max, precision=0, input_range=100 ) {
+	return round_to( Math.pow( 2, Math.log2(out_min)+(Math.log2(out_max)-Math.log2(out_min))*raw_value/input_range ), precision );
+}
+
 function create_empty_player() {
 	return {
 			id: "",
@@ -117,12 +121,13 @@ function format_player_name( id ) {
 function get_default_settings() {
 	return {
 		team_size: 6,
-		show_numeric_sr: false,
+		show_numeric_sr: true,
 		
 		roll_adjust_sr: false,
 		roll_adjust_dps: 110,
 		roll_adjust_tank: 100,
 		roll_adjust_support: 90,
+		roll_sr_scale: 0,
 		roll_balance_priority_sr: 34,
 		roll_balance_priority_class: 33,
 		roll_balance_priority_dispersion: 33,

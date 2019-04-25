@@ -445,6 +445,7 @@ function roll_teams() {
 			dps: Settings.roll_adjust_dps,
 			support: Settings.roll_adjust_support,
 		},
+		sr_exp_scale: Settings.roll_sr_scale,
 		
 		balance_priority_sr: Settings.roll_balance_priority_sr,
 		balance_priority_class: Settings.roll_balance_priority_class,
@@ -1187,10 +1188,6 @@ function balance_priority_draw_canvas( pointer_x, pointer_y ) {
 	}
 }
 
-function convert_range_log_scale( raw_value, out_min, out_max, precision=0, input_range=100 ) {
-	return round_to( Math.pow( 2, Math.log2(out_min)+(Math.log2(out_max)-Math.log2(out_min))*raw_value/input_range ), precision );
-}
-
 function draw_player( player_struct, small=false, is_captain=false ) {
 	var new_player_item_row = document.createElement("div");
 	new_player_item_row.className = "row";
@@ -1761,6 +1758,29 @@ function select_html( html_container ) {
 		range.selectNodeContents(html_container);
 		selection.removeAllRanges();
 		selection.addRange(range);
+	}
+}
+
+function update_sr_scale_sample() {
+	var container = document.getElementById("settings_sr_scale_sample");
+	container.innerHTML = "";
+	var sr_scale = Number(document.getElementById("roll_sr_scale").value);
+	
+	var samples = [
+		2000,
+		3200,		
+		3700,
+		4000,
+		4200,
+		4400
+	];
+	
+	for ( i=0; i<samples.length; i++ ) {
+		var sr_new = samples[i] + convert_range_log_scale( samples[i], 1, sr_scale, 0, 5000 );
+		var text_node = document.createTextNode(samples[i].toString()+" → "+sr_new);
+		var elem = document.createElement("div");
+		elem.appendChild(text_node);
+		container.appendChild(elem);
 	}
 }
 

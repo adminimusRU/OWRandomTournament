@@ -14,6 +14,9 @@ var RandomTeamBuilder = {
 	// example: adjust_sr_by_class: {'dps':120, 'tank':100, 'support':80},
 	adjust_sr: false,
 	adjust_sr_by_class: {},
+	// expopentialy increase SR scale by specified amount. 0 = no changes
+	// higher ranks will receive more SR boost
+	sr_exp_scale: 0,
 	// balance factors priority (percents, sum must be 100)
 	balance_priority_sr: 34,
 	balance_priority_class: 33,
@@ -67,6 +70,7 @@ var RandomTeamBuilder = {
 				this.onDebugMessage.call( undefined, "team_count_power2 = "+this.team_count_power2 );
 				this.onDebugMessage.call( undefined, "adjust_sr = "+this.adjust_sr );
 				this.onDebugMessage.call( undefined, "adjust_sr_by_class = "+JSON.stringify(this.adjust_sr_by_class) );
+				this.onDebugMessage.call( undefined, "sr_exp_scale = "+JSON.stringify(this.sr_exp_scale) );
 				this.onDebugMessage.call( undefined, "balance_priority_sr = "+this.balance_priority_sr );
 				this.onDebugMessage.call( undefined, "balance_priority_class = "+this.balance_priority_class );
 				this.onDebugMessage.call( undefined, "balance_priority_dispersion = "+this.balance_priority_dispersion );
@@ -391,6 +395,8 @@ var RandomTeamBuilder = {
 	
 	calcPlayerSR: function ( player ) {
 		var player_sr = player.sr;
+		
+		// adjust sr by main class
 		if ( this.adjust_sr ) {
 			if ( player.top_classes !== undefined ) {
 				var top_class = player.top_classes[0];
@@ -399,6 +405,10 @@ var RandomTeamBuilder = {
 				}
 			}
 		}
+		
+		// exponential scale
+		player_sr += convert_range_log_scale( player_sr, 1, this.sr_exp_scale, 0, 5000 );
+		
 		return player_sr;
 	},
 	

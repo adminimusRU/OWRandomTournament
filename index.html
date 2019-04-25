@@ -444,10 +444,10 @@ var balance_priority_canvas_gradient;
 							<br/>
 							
 							<div class="range-title" title="Shift target SR standard deviation from average of lobby">
-								Target dispersion: 
+								Target SR dispersion: 
 								<span id="roll_sr_stdev_adjust_value"></span>
 							</div>
-							<input id="roll_sr_stdev_adjust" type="range" size=3 min="-1000" max="1000" autocomplete="off" value="0" style="width:90%" onchange="settings_on_range_change(this, true);" oninput="settings_on_range_change(this, true);"/>
+							<input id="roll_sr_stdev_adjust" type="range" size=3 min="-1000" max="1000" step="10" autocomplete="off" value="0" style="width:90%" onchange="settings_on_range_change(this, true);" oninput="settings_on_range_change(this, true);"/>
 							</br>
 							<div class="range-sub-container">
 								<div class="range-sub range-sub-left">less disperion</div>
@@ -522,6 +522,21 @@ var balance_priority_canvas_gradient;
 								<input disabled id="roll_adjust_support" class="percent" type="number" size=3 min=0 max=999 autocomplete="off" value="80"/>
 								%  </br>
 							</div>
+							<br/>
+							
+							<div class="range-title" title="">
+								Exponential SR scale: 
+								<span id="roll_sr_scale_value"></span>
+							</div>
+							<input id="roll_sr_scale" type="range" size=3 min="0" max="5000" step="50" autocomplete="off" value="0" style="width:90%" onchange="settings_on_range_change(this, true); update_sr_scale_sample();" oninput="settings_on_range_change(this, true);"/>
+							</br>
+							<div class="subgroup">
+								SR scaling result: <br/>
+								<div id="settings_sr_scale_sample" style="display: flex; flex-flow: column wrap; max-height: 3em;">
+								</div>
+							</div>
+							
+							<br/>
 						</div>
 					</div>
 					
