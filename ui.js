@@ -475,6 +475,12 @@ function settings_dlg_open() {
 	open_dialog( "popup_dlg_settings" );
 }
 
+function shuffle_lobby() {
+	lobby = array_shuffle( lobby );
+	save_players_list();
+	redraw_lobby();
+}
+
 function shuffle_teams() {
 	teams = array_shuffle( teams );
 	save_players_list();

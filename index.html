@@ -76,16 +76,21 @@ var balance_priority_canvas_gradient;
 			</div>
 			
 			<div class="team-toolbar">
-			<input title="Clear lobby" type="button" class="team_btn" onclick="clear_lobby();" value=" X "/>
-			<input title="Import lobby" id="import_lobby_btn" type="button" class="team_btn" onclick="import_lobby_dlg_open();" value="Import"/>
-			<input title="Export lobby" type="button" class="team_btn" onclick="export_lobby_dlg_open();" value="Export"/>
-			<input title="Sort lobby by level" type="button" class="team_btn" onclick="sort_lobby('level', this);" value="&uarr;&darr;L"/>
-			<button title="Sort lobby by class" class="team_btn" onclick="sort_lobby('class', this);">
-				&uarr;&darr;
-				<img src="class_icons/dps.png" style="height: 0.9em;">
-			</button>
-			<input title="Sort lobby by name" type="button" class="team_btn" onclick="sort_lobby('display_name', this);" value="&uarr;&darr;Az"/>
-			<input title="Sort lobby by SR" type="button" class="team_btn" onclick="sort_lobby('sr', this);" value="&uarr;&darr;123"/>
+				<input title="Clear lobby" type="button" class="team_btn" onclick="clear_lobby();" value=" X "/>
+				
+				<input title="Import lobby" id="import_lobby_btn" type="button" class="team_btn" onclick="import_lobby_dlg_open();" value="Import"/>
+				<input title="Export lobby" type="button" class="team_btn" onclick="export_lobby_dlg_open();" value="Export"/>
+			
+				<div class="dropdown" style="float:right;">
+					<button class="team_btn dropbtn">&uarr;&darr; Sort &#x25BC;</button>
+					<div class="dropdown-content">
+						<div onclick="sort_lobby('display_name', this);">by name</div>
+						<div onclick="sort_lobby('sr', this);">by SR</div>
+						<div onclick="sort_lobby('class', this);">by class</div>
+						<div onclick="sort_lobby('level', this);">by level</div>
+						<div onclick="shuffle_lobby();">shuffle</div>
+					</div>
+				</div>
 			</div>
 			<br/>
 					
@@ -170,27 +175,34 @@ var balance_priority_canvas_gradient;
 		</div>
 		
 		<div class="cell workspace-cell">
-			<div class="team-toolbar big-toolbar" style="min-width: 25em;">
-				<input title="Delete all teams" type="button" class="team_btn" onclick="reset_roll_click();" value=" X "/>
+			<div class="team-toolbar big-toolbar" style="min-width: 35em;">
+				<input title="Delete all teams, move all players to lobby" type="button" class="team_btn" onclick="reset_roll_click();" value=" &#x2716; Clear teams"/>
 				
-				<div style="float:right; width: 1em; height: 0.5em;"></div>
+				<div class="team_toolbar_spacer"></div>
 				
-				<button title="Sort all players by class" class="team_btn" onclick="sort_teams_players('class', this);">
-					&uarr;&darr;
-					<img src="class_icons/dps.png" style="height: 0.9em;">
-				</button>
-				<input title="Sort all players by name" type="button" class="team_btn" onclick="sort_teams_players('display_name', this);" value="&uarr;&darr;Az"/>
-				<input title="Sort all players by SR" type="button" class="team_btn" onclick="sort_teams_players('sr', this);" value="&uarr;&darr;123"/>
+				<div class="dropdown" style="float:right;">
+					<button class="team_btn dropbtn">&uarr;&darr; Sort players &#x25BC;</button>
+					<div class="dropdown-content">
+						<div onclick="sort_teams_players('display_name', this);">by name</div>
+						<div onclick="sort_teams_players('sr', this);">by SR</div>
+						<div onclick="sort_teams_players('class', this);">by class</div>
+					</div>
+				</div>
 				
-				<div style="float:right; width: 1em; height: 0.5em;"></div>
+				<div class="team_toolbar_spacer"></div>
 				
-				<input title="Sort teams by captain rank" type="button" class="team_btn" onclick="sort_teams(this, 'captain_sr');" value="&uarr;&darr;SR"/>
-				<input title="Sort teams by name" type="button" class="team_btn" onclick="sort_teams(this);" value="&uarr;&darr;T"/>
-				<input title="Shuffle teams" type="button" class="team_btn" onclick="shuffle_teams();" value="&#x2b8d;T"/>
+				<div class="dropdown" style="float:right;">
+					<button class="team_btn dropbtn">&uarr;&darr; Sort teams &#x25BC;</button>
+					<div class="dropdown-content">
+						<div onclick="sort_teams(this);">by name</div>
+						<div onclick="sort_teams(this, 'captain_sr');">by captain SR</div>
+						<div onclick="shuffle_teams();">shuffle</div>
+					</div>
+				</div>
 								
-				<div style="float:right; width: 1em; height: 0.5em;"></div>
+				<div class="team_toolbar_spacer"></div>
 				
-				<input title="Add empty team" type="button" class="team_btn" onclick="add_empty_team();" value="&#10133;"/>
+				<input title="Add new empty team" type="button" class="team_btn" onclick="add_empty_team();" value="&#10133; Add team"/>
 				
 				<div><span id="team_count">0</span> teams<br/></div>
 			</div>

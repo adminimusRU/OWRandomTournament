@@ -568,6 +568,51 @@ a.action-href:visited {
 	font-size: 120%;
 }
 
+.team_toolbar_spacer {
+	float:right;
+	width: 1em;
+	height: 0.5em;
+}
+
 .roll_balance_priority_input{
 	width: 3em;
 }
+
+/* 
+	dropdown menu in toolbars 
+*/
+
+.dropbtn {
+	float: none;
+}
+
+.dropdown {
+	position: relative;
+	display: inline-block;
+}
+
+.dropdown-content {
+	display: none;
+	position: absolute;
+	background-color: ButtonFace;
+	color: ButtonText;
+	min-width: 8em;
+	box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+	z-index: 1;
+}
+
+.dropdown-content div {
+	padding: 0.2em;
+	text-decoration: none;
+	display: block;
+	font-size: 80%;
+	cursor: default;
+}
+
+.dropdown-content div:hover {
+	color: HighlightText;
+	background-color: Highlight;
+}
+
+.dropdown:hover .dropdown-content {display: block;}
+
