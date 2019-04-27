@@ -1472,7 +1472,9 @@ function fill_settings_dlg( settings_obj ) {
 		}
 		
 		// trigger onchange event to update ui
-		setting_input.dispatchEvent(new Event("change"));
+		if (setting_input.type != "number") {
+			setting_input.dispatchEvent(new Event("change"));
+		}
 	}
 	
 	// init balance priority input canvas

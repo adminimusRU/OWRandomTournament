@@ -220,7 +220,7 @@ var RandomTeamBuilder = {
 				new_team.captain_index = 0;
 				new_team.name = "Team "+new_team.players[0].display_name;
 			} else {
-				new_team.name = "Team "+(this.teams.length+1);
+				new_team.name = "Team "+(this.teams.length+1).toString().padStart( target_team_count.toString().length, " ");
 			}
 			this.teams.push( new_team );
 			
