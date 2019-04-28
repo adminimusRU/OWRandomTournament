@@ -58,6 +58,8 @@ var RandomTeamBuilder = {
 	
 	filtered_players: [],
 	
+	predefined_captains_count: 0,
+	
 	// public methods
 	rollTeams: function() {
 		if ( this.players.length < this.team_size ) {
@@ -147,12 +149,22 @@ var RandomTeamBuilder = {
 			this.target_sr_stdev = 0;
 		}
 		
+		// count predefined captains
+		this.predefined_captains_count = 0;
+		for ( var i=this.players.length-1; i>=0; i-- ) {
+			if ( this.players[i].captain ) {
+				this.predefined_captains_count++;
+			}
+		}
+		if ( this.predefined_captains_count > target_team_count ) {
+			this.predefined_captains_count = target_team_count;
+		}
+		
 		if (this.roll_debug) {
 			if(typeof this.onDebugMessage == "function") {
 				this.onDebugMessage.call( undefined, "Target SR = "+this.target_team_sr );
 				this.onDebugMessage.call( undefined, "Target classes = "+JSON.stringify(this.target_class_count) );
-				this.onDebugMessage.call( undefined, "Target sr stdev = "+JSON.stringify(this.target_sr_stdev) );
-				
+				this.onDebugMessage.call( undefined, "Target sr stdev = "+JSON.stringify(this.target_sr_stdev) );				
 			}
 		}
 		
@@ -216,12 +228,29 @@ var RandomTeamBuilder = {
 			new_team.players = this.pickPlayersByMask( this.best_roll, true );
 			sort_players( new_team.players, 'sr' );
 			
-			if ( this.assign_captains === "highest-ranked" ) {
-				new_team.captain_index = 0;
-				new_team.name = "Team "+new_team.players[0].display_name;
-			} else {
-				new_team.name = "Team "+(this.teams.length+1).toString().padStart( target_team_count.toString().length, " ");
+			// assign captain
+			// check if we have predefined captain in team
+			for ( var i=new_team.players.length-1; i>=0; i-- ) {
+				if (new_team.players[i].captain) {
+					new_team.captain_index = i;
+					this.predefined_captains_count--;
+					break;
+				}
 			}
+			// if no predefined captain, pick according to settings
+			if (new_team.captain_index == -1) {
+				if ( this.assign_captains === "highest-ranked" ) {
+					new_team.captain_index = 0;
+				}
+			}
+			
+			// team name
+			if (new_team.captain_index == -1) {
+				new_team.name = "Team "+(this.teams.length+1).toString().padStart( target_team_count.toString().length, " ");
+			} else {
+				new_team.name = "Team "+new_team.players[new_team.captain_index].display_name;
+			}
+			
 			this.teams.push( new_team );
 			
 			if (this.roll_debug) {
@@ -230,6 +259,7 @@ var RandomTeamBuilder = {
 					var sr_diff = Math.abs( team_sr - this.target_team_sr );
 					var class_unevenness = this.calcClassUnevenness( new_team.players );
 					var sr_stdev = this.calcSRStDev( new_team.players, team_sr );
+					this.onDebugMessage.call( undefined, "team name = "+new_team.name );
 					this.onDebugMessage.call( undefined, "OF sr diff = "+sr_diff );
 					this.onDebugMessage.call( undefined, "OF CU = "+class_unevenness );
 					this.onDebugMessage.call( undefined, "OF sr_stdiv= "+sr_stdev );
@@ -363,18 +393,20 @@ var RandomTeamBuilder = {
 		if (this.separate_otps) {
 			otp_conflicts = this.calcOTPConflicts( picked_players );
 		}
+		var captains_conflicts = this.calcCaptainsConflicts( picked_players );
 		var sr_stdev = this.calcSRStDev( picked_players, team_sr );
 		
-		var objective_func = this.calcObjectiveFunctionValue( sr_diff, class_unevenness, otp_conflicts, sr_stdev );			
+		var objective_func = this.calcObjectiveFunctionValue( sr_diff, class_unevenness, otp_conflicts, sr_stdev, captains_conflicts );			
 		return objective_func;
 	},
 	
-	calcObjectiveFunctionValue: function( sr_diff, class_unevenness, otp_conflicts, sr_stdev ) {
+	calcObjectiveFunctionValue: function( sr_diff, class_unevenness, otp_conflicts, sr_stdev, captains_conflicts ) {
 		var OF = 
 			(class_unevenness * this.balance_priority_class
 			+ (sr_diff/this.balance_max_sr_diff*100)*this.balance_priority_sr
 			+ Math.abs(sr_stdev - this.target_sr_stdev)*this.balance_priority_dispersion  
 			+ otp_conflicts
+			+ captains_conflicts
 			)
 			/100 ;
 		return round_to( OF, 1 );
@@ -468,6 +500,25 @@ var RandomTeamBuilder = {
 		}
 		sr_stdev = Math.round( Math.sqrt( sr_stdev / (team.length-1) ) );
 		return sr_stdev;
+	},
+	
+	calcCaptainsConflicts: function( team ) {
+		if ( this.predefined_captains_count <= 0 ) {
+			// all predefined captain assigned. Do not alter OF
+			return 0;
+		}
+		var captains_count = 0;
+		for( p in team) {
+			if ( team[p].captain ) {
+				captains_count++;
+			}
+		}
+		
+		if ( captains_count == 1 ) {
+			return 0;
+		} else {
+			return 10000;
+		}
 	},
 }
 

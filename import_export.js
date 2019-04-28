@@ -1,8 +1,18 @@
+function export_captains() {
+	var export_str = "";
+	for( i in lobby) {
+		if (lobby[i].captain) {
+			export_str += lobby[i].id.trim().replace("-", "#")+"\n";
+		}
+	}
+	return export_str.trim();
+}
+
 function export_lobby( format ) {
 	var export_str = "";
 	if ( format == "json" ) {
 		var export_struct = {
-			format_version: 3,
+			format_version: 4,
 			players: lobby
 			};
 		export_str = JSON.stringify(export_struct, null, ' ');
@@ -12,7 +22,7 @@ function export_lobby( format ) {
 			export_str += player_id + "\n";
 		}
 	} else if ( format == "csv" ) {
-		export_str += "BattleTag\tSR\tMain_class\tSecondary_class\tMain_hero\tName\tLevel\tLast_updated\n";
+		export_str += "BattleTag\tSR\tMain_class\tSecondary_class\tMain_hero\tCaptain\tName\tLevel\tLast_updated\n";
 		for( i in lobby) {
 			var player_id = lobby[i].id.trim().replace("-", "#");
 			var main_class = "";
@@ -24,7 +34,7 @@ function export_lobby( format ) {
 			var last_updated = lobby[i].last_updated.toISOString();
 			
 			export_str += player_id+"\t"+lobby[i].sr+"\t"+main_class+"\t"+secondary_class+"\t"
-						+main_hero+"\t"+lobby[i].display_name+"\t"+lobby[i].level+"\t"+last_updated+"\n";
+						+main_hero+"\t"+lobby[i].captain+"\t"+lobby[i].display_name+"\t"+lobby[i].level+"\t"+last_updated+"\n";
 		}
 	}
 	
@@ -171,6 +181,39 @@ function export_teams_html( format, include_players, include_sr, include_classes
 	return setup_str;
 }
 
+function import_captains( import_str ) {
+	if (import_str == null || import_str == "") {
+		return;
+	}
+	
+	try {
+		var battletag_list = import_str.trim().split("\n");
+		for( i in battletag_list ) {
+			// check battletag format
+			if ( /^[^#]+[-#]\d+$/.test(battletag_list[i]) == false ) {
+				throw new Error("Incorrect battletag "+battletag_list[i]);
+			}
+			
+			var player_id = format_player_id(battletag_list[i]);
+			var player_struct = find_player_by_id(player_id);
+			if (player_struct == undefined) {
+				continue;
+			}
+			
+			player_struct.captain = true;
+		}
+	} catch(err) {
+		// try to parse as plain battletag list?
+		alert("Incorrect import format: "+err.message);
+		return false;
+	}
+	
+	redraw_lobby();
+	save_players_list();
+	
+	return true;
+}
+
 function import_lobby( format, import_str ) {
 	var added_players = [];
 	var players_for_update = [];
@@ -184,7 +227,7 @@ function import_lobby( format, import_str ) {
 			var import_struct = JSON.parse(import_str);
 			
 			// check format
-			if ( import_struct.format_version > 3 ) {
+			if ( import_struct.format_version > 4 ) {
 				throw new Error("Unsupported format version");
 			}
 			
@@ -417,6 +460,10 @@ function sanitize_player_struct( player_struct, saved_format ) {
 		player_struct.last_updated = new Date(0);
 	}
 	
+	if ( saved_format <= 3 ) {
+		player_struct.captain = false;
+	}
+	
 	if ( saved_format >= 3 ) {
 		// restore dates from strings
 		if ( player_struct.last_updated !== undefined ) {
@@ -434,5 +481,5 @@ function save_players_list() {
 	// store players to browser local storage
 	localStorage.setItem(storage_prefix+"lobby", JSON.stringify(lobby));
 	localStorage.setItem(storage_prefix+"team_setup", JSON.stringify(teams));
-	localStorage.setItem(storage_prefix+"saved_format", 3);
+	localStorage.setItem(storage_prefix+"saved_format", 4);
 }

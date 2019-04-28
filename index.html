@@ -80,6 +80,16 @@ var balance_priority_canvas_gradient;
 				
 				<input title="Import lobby" id="import_lobby_btn" type="button" class="team_btn" onclick="import_lobby_dlg_open();" value="Import"/>
 				<input title="Export lobby" type="button" class="team_btn" onclick="export_lobby_dlg_open();" value="Export"/>
+				
+				<div class="dropdown" style="float:right;">
+					<button class="team_btn dropbtn">&#x265B Captains &#x25BC;</button>
+					<div class="dropdown-content">
+						<div onclick="assign_captains();">assign by SR</div>
+						<div onclick="export_captains_dlg_open();">export btags</div>
+						<div onclick="import_captains_dlg_open();">import btags</div>
+						<div onclick="clear_captains();">clear all</div>
+					</div>
+				</div>
 			
 				<div class="dropdown" style="float:right;">
 					<button class="team_btn dropbtn">&uarr;&darr; Sort &#x25BC;</button>
@@ -94,7 +104,7 @@ var balance_priority_canvas_gradient;
 			</div>
 			<br/>
 					
-			<span id="lobby_count">0</span> players<br/>
+			<span id="lobby_count">0</span> players, <span id="lobby_captain_count">0</span> captains<br/>
 			
 			<div style="display: flex; align-items: baseline">
 				<label for="lobby_filter">Filter: &nbsp;</label>
@@ -353,6 +363,12 @@ var balance_priority_canvas_gradient;
 					<div class="cell">
 						<input id="dlg_player_sr" type="number" min=0 max=5000>
 						<span id="dlg_player_sr_edited" class="dlg-edited-mark" title="SR was manually edited" onclick="clear_edited_mark('se');">&#9997;</span>
+					</div>
+				</div>
+				<div class="row">
+					<div class="cell"><label for="dlg_player_captain" title="Will be assigned as team captain in roll (ignoring SR). Each team can only have one predefined captain.">Captain:</label></div>
+					<div class="cell">
+						<input type="checkbox" id="dlg_player_captain">
 					</div>
 				</div>
 			</div>
@@ -731,8 +747,48 @@ var balance_priority_canvas_gradient;
 		</div>
 	</div>
 </div>
+
+<div id="popup_dlg_import_captains" class="dlg" style="display:none">
+	<div class="dlg-background"></div>
+	<div class="dlg-container">
+		<div class="dlg-content">
+			<span class="team-title">Import captains</span>
+			<input title="Close" type="button" class="team_btn dlg-close" onclick="close_dialog('popup_dlg_import_captains');" value="X"/>
+			<br/>
+			<br/>
+									
+			<textarea id="dlg_textarea_import_captains" rows="20" cols="80"></textarea>
 			
+			<div style="text-align: left;">
+			Enter captain BattleTags
+			</div>
+			<br/>
 			
+			<div>
+				<input id="dlg_ok" class="big-btn" type="button" value="OK" onclick="import_captains_ok();"/>
+			</div>
+		</div>
+	</div>
+</div>
+
+<div id="popup_dlg_export_captains" class="dlg" style="display:none">
+	<div class="dlg-background"></div>
+	<div class="dlg-container">
+		<div class="dlg-content">
+			<span class="team-title">Export captains</span>
+			<input title="Close" type="button" class="team_btn dlg-close" onclick="close_dialog('popup_dlg_export_captains');" value="X"/>
+			<br/>
+			<br/>
+									
+			<textarea id="dlg_textarea_export_captains" rows="20" cols="80"></textarea>
+			
+			<div>
+				<input id="dlg_ok" class="big-btn" type="button" value="OK" onclick="close_dialog('popup_dlg_export_captains');"/>
+			</div>
+		</div>
+	</div>
+</div>
+
 <div id="debug_log"></div>
 
 <script>

@@ -55,6 +55,7 @@ function create_empty_player() {
 			top_classes: [],
 			top_heroes: [],
 			last_updated: new Date(0),
+			captain: false,
 		};
 }
 
@@ -83,6 +84,7 @@ function create_random_player( id ) {
 			top_classes: top_classes,
 			top_heroes: top_heroes,
 			last_updated: new Date(0),
+			captain: false,
 			fake_id: true
 		};
 }

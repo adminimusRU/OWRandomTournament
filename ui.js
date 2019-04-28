@@ -77,6 +77,51 @@ function apply_settings() {
 	}
 }
 
+function assign_captains() {
+	var min_captain_sr = parseInt(prompt("Minimum captain SR", "3600"), 10);
+	if ( isNaN(min_captain_sr) || (min_captain_sr>5000) || (min_captain_sr<1)) {
+		alert("SR must be between 1 and 5000");
+		return;
+	}
+	
+	//clear current captains
+	for (var i=0; i<lobby.length; i++) {
+		lobby[i].captain = false;
+	}
+	
+	var captains_count = Math.floor( lobby.length / Settings.team_size );
+	
+	while( captains_count > 0 ) {
+		//find highest ranked player
+		var highest_sr = 0;
+		var highest_sr_index = -1;
+		for (var i=0; i<lobby.length; i++) {
+			if ( lobby[i].sr <  min_captain_sr ) {
+				continue;
+			}
+			if ( lobby[i].captain ) {
+				continue;
+			}
+			
+			if ( lobby[i].sr > highest_sr ) {
+				highest_sr = lobby[i].sr;
+				highest_sr_index = i;
+			}
+		}
+		
+		// new captain found
+		if ( highest_sr_index != -1 ) {
+			lobby[highest_sr_index].captain = true;
+			captains_count--;
+		} else {
+			break;
+		}
+	}
+	
+	save_players_list();
+	redraw_lobby();
+}
+
 function balance_priority_mousedown(ev) {
 	balance_priority_mouse_moving = true;
 	if (balance_priority_mouse_moving) {
@@ -97,6 +142,14 @@ function balance_priority_mouseup(ev) {
 function cancel_roll() {
 	RtbWorker.terminate();
 	close_dialog( "popup_dlg_roll_progress" );
+}
+
+function clear_captains() {
+	for (var i=0; i<lobby.length; i++) {
+		lobby[i].captain = false;
+	}
+	save_players_list();
+	redraw_lobby();
 }
 
 function clear_lobby() {
@@ -173,6 +226,8 @@ function edit_player_ok() {
 	}
 	player_struct.sr = new_sr;
 	
+	player_struct.captain = document.getElementById("dlg_player_captain").checked;
+	
 	var top_classes = [];
 	top_classes.push( document.getElementById("dlg_main_class").value );
 	if ( document.getElementById("dlg_secondary_class").value !== "" ) {
@@ -193,6 +248,7 @@ function edit_player_ok() {
 	close_dialog("popup_dlg_edit_player");
 	save_players_list();
 	redraw_player( player_struct );
+	update_captains_count();
 	
 	player_being_edited = undefined;
 }
@@ -215,6 +271,14 @@ function edit_team_ok() {
 	close_dialog("popup_dlg_edit_team");
 	save_players_list();
 	redraw_teams();
+}
+
+function export_captains_dlg_open() {
+	open_dialog("popup_dlg_export_captains");
+	var export_str = export_captains( );
+	document.getElementById("dlg_textarea_export_captains").value = export_str;
+	document.getElementById("dlg_textarea_export_captains").select();
+	document.getElementById("dlg_textarea_export_captains").focus();
 }
 
 function export_lobby_dlg_open() {
@@ -380,6 +444,19 @@ function generate_random_teams() {
 
 	save_players_list();
 	redraw_teams();
+}
+
+function import_captains_dlg_open() {
+	open_dialog("popup_dlg_import_captains");
+	document.getElementById("dlg_textarea_import_captains").value = "";
+	document.getElementById("dlg_textarea_import_captains").focus();
+}
+
+function import_captains_ok() {
+	var import_str = document.getElementById("dlg_textarea_import_captains").value;
+	if ( import_captains(import_str) ) {
+		close_dialog("popup_dlg_import_captains");
+	}
 }
 
 function import_lobby_dlg_open() {
@@ -1316,7 +1393,7 @@ function draw_player_cell( player_struct, small=false, is_captain=false ) {
 	player_name.appendChild(name_display);
 	
 	// captain mark
-	if ( is_captain ) {
+	if ( is_captain || ( (!small) && player_struct.captain ) ) {
 		var captain_icon = document.createElement("span");
 		captain_icon.className = "captain-mark";
 		captain_icon.title = "team captain";
@@ -1417,6 +1494,9 @@ function fill_player_stats_dlg() {
 	} else {
 		document.getElementById("dlg_player_sr_edited").style.visibility = "";
 	}
+	
+	document.getElementById("dlg_player_captain").checked = player_struct.captain;
+	
 	document.getElementById("dlg_player_level").value = player_struct.level;
 	
 	if ( Array.isArray(player_struct.top_classes) ) {
@@ -1608,6 +1688,8 @@ function redraw_lobby() {
 	}
 	
 	document.getElementById("lobby_count").innerHTML = lobby.length;
+	
+	update_captains_count();
 		
 	if (document.getElementById("lobby_filter").value != "") {
 		apply_lobby_filter();
@@ -1767,6 +1849,16 @@ function select_html( html_container ) {
 		selection.removeAllRanges();
 		selection.addRange(range);
 	}
+}
+
+function update_captains_count() {
+	var captains_count=0;
+	for( var i=0; i<lobby.length; i++) {
+		if (lobby[i].captain) {
+			captains_count++;
+		}
+	}
+	document.getElementById("lobby_captain_count").innerHTML = captains_count;
 }
 
 function update_sr_scale_sample() {
