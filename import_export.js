@@ -41,7 +41,7 @@ function export_lobby( format ) {
 	return export_str.trim();
 }
 
-function export_teams( format, include_players, include_sr, include_classes, include_captains, table_columns ) {
+function export_teams( format, include_players, include_sr, include_classes, include_captains, table_columns, name_field ) {
 	var setup_str = "";
 	
 	if ( format == "text-list" ) {
@@ -53,7 +53,13 @@ function export_teams( format, include_players, include_sr, include_classes, inc
 					if ( include_sr ) {
 						player_str += teams[t].players[p].sr + "\t";
 					}
-					player_str += teams[t].players[p].display_name;
+					
+					var player_name = player_name = teams[t].players[p][name_field];
+					if ( name_field == "id" ) {
+						player_name = player_name.replace("-", "#");
+					}
+					player_str += player_name;
+					
 					if ( include_captains ) {
 						if ( teams[t].captain_index == p ) {
 							player_str += " \u265B";
@@ -70,15 +76,15 @@ function export_teams( format, include_players, include_sr, include_classes, inc
 			}
 		}
 	} else if ( format == "html-table" ) {
-		setup_str = export_teams_html( format, include_players, include_sr, include_classes, include_captains, table_columns, false );
+		setup_str = export_teams_html( format, include_players, include_sr, include_classes, include_captains, table_columns, name_field, false );
 	} else if ( format == "image" ) {
-		setup_str = export_teams_html( format, include_players, include_sr, include_classes, include_captains, table_columns, true );
+		setup_str = export_teams_html( format, include_players, include_sr, include_classes, include_captains, table_columns, name_field, true );
 	}
 	
 	return setup_str.trim();
 }
 
-function export_teams_html( format, include_players, include_sr, include_classes, include_captains, table_columns, draw_icons ) {
+function export_teams_html( format, include_players, include_sr, include_classes, include_captains, table_columns, name_field, draw_icons ) {
 	var setup_str = "";
 	
 	var title_colspan = 1;
@@ -135,7 +141,12 @@ function export_teams_html( format, include_players, include_sr, include_classes
 					}
 					setup_str += "<td style='text-align: left; padding: 0.2em; white-space: nowrap; "+borders+"'>";
 					if ( p < teams[t].players.length ) {
-						setup_str += escapeHtml( teams[t].players[p].display_name );
+						var player_name = player_name = teams[t].players[p][name_field];
+						if ( name_field == "id" ) {
+							player_name = player_name.replace("-", "#");
+						}
+						setup_str += escapeHtml( player_name );
+						
 						if ( include_captains ) {
 							if ( teams[t].captain_index == p ) {
 								if (draw_icons) {

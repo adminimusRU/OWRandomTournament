@@ -300,21 +300,40 @@ var balance_priority_canvas_gradient;
 				</select>
 			</div>
 			<div id="dlg_team_export_options" class="dlg_options" onchange="export_teams_dlg_change_format();">
-				<input type="checkbox" id="dlg_team_export_players">
-				<label for="dlg_team_export_players">Include players</label>
-				<br/>
-				<input type="checkbox" id="dlg_team_export_sr">
-				<label for="dlg_team_export_sr">Include SR</label>
-				<br/>
-				<input type="checkbox" id="dlg_team_export_classes">
-				<label for="dlg_team_export_classes">Include classes/roles</label>
-				<br/>
-				<input type="checkbox" id="dlg_team_export_captains">
-				<label for="dlg_team_export_captains">Mark team captains</label>
-				<br/>
-				<label for="dlg_team_export_columns">Table columns</label>
-				<input id="dlg_team_export_columns" type="number" min=1 max=999 value=1>
+				<table style="width: 100%;">
+					<tr>
+					<td style="vertical-align: top;">
+						<input type="checkbox" id="dlg_team_export_players" checked>
+						<label for="dlg_team_export_players">Include players</label>
+						<br/>
+						<input type="checkbox" id="dlg_team_export_sr" checked>
+						<label for="dlg_team_export_sr">Include SR</label>
+					</td>
+					<td style="vertical-align: top;">
+						<input type="checkbox" id="dlg_team_export_captains" checked>
+						<label for="dlg_team_export_captains">Mark team captains</label>
+						<br/>
+						<input type="checkbox" id="dlg_team_export_classes" checked>
+						<label for="dlg_team_export_classes">Include classes/roles</label>
+					</td>
+					<td style="vertical-align: top;">
+						<label for="dlg_team_export_columns" style="display:inline-block;width: 7em;">
+						Table columns: </label>
+						<input id="dlg_team_export_columns" type="number" min=1 max=999 value=4 style="width: 3em;">
+						<br/>
+						<label for="dlg_team_export_names" style="display:inline-block;width: 7em;">
+						Player names: </label>
+						<select id="dlg_team_export_names">
+							<option value="display_name">Short name</option>
+							<option value="id">Full BattleTag</option>
+						</select>
+					</td>
+					</tr>
+				</table>
+				
+				
 			</div>
+			<br/>
 			
 			<textarea id="dlg_textarea_export_teams" rows="20" cols="80"></textarea>
 			<div id="dlg_html_export_teams" class="html-export-container"></div>
@@ -515,11 +534,13 @@ var balance_priority_canvas_gradient;
 							<label for="roll_separate_otps">Do not place similar one-trick ponies into same team</label>
 							</br>
 							
-							<label for="roll_min_level">Minimum level</label>
-							<input type="number" id="roll_min_level" size=4 min=0 max=9999 autocomplete="off" value="0"/>
+							<label for="roll_min_level" style="width: 7em;display: inline-block;">
+							Minimum level</label>
+							<input type="number" id="roll_min_level" size=4 min=0 max=9999 autocomplete="off" value="0" style="width: 4em;"/>
 							</br>
 							
-							Captains &nbsp;
+							<label for="roll_captains" style="width: 7em;display: inline-block;">
+							Captains</label>
 							<select id="roll_captains">
 								<option value="disabled">do not assign</option>
 								<option value="highest-ranked">highest ranked player</option>

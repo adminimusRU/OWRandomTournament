@@ -300,15 +300,15 @@ function export_teams_dlg_copy_html() {
 }
 
 function export_teams_dlg_change_format() {
-	// @ToDo save format and options
 	var format = document.getElementById("dlg_team_export_format_value").value;
 	var include_players = document.getElementById("dlg_team_export_players").checked;
 	var include_sr = document.getElementById("dlg_team_export_sr").checked;
 	var include_classes = document.getElementById("dlg_team_export_classes").checked;
 	var include_captains = document.getElementById("dlg_team_export_captains").checked;
 	var table_columns = Number(document.getElementById("dlg_team_export_columns").value);
+	var name_field = document.getElementById("dlg_team_export_names").value;
 	
-	var export_str = export_teams( format, include_players, include_sr, include_classes, include_captains, table_columns );
+	var export_str = export_teams( format, include_players, include_sr, include_classes, include_captains, table_columns, name_field );
 	
 	if ( format == "html-table" ) {
 		var html_container = document.getElementById("dlg_html_export_teams");
