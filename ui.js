@@ -31,6 +31,7 @@ function add_player_click() {
 	
 	player_being_added = create_empty_player();
 	player_being_added.id = player_id;
+	player_being_added.order = get_new_player_order();
 	
 	StatsUpdater.addToQueue( player_being_added, 0, true );
 }
@@ -400,8 +401,12 @@ function generate_random_players() {
 		return;
 	}
 
+	var order_base = get_new_player_order();
+
 	for( var i=1; i<=number_to_add; i++ ) {
 		var new_player = create_random_player(i);
+		new_player.order = order_base;
+		order_base++;
 		lobby.push( new_player );
 	}
 
@@ -427,14 +432,18 @@ function generate_random_teams() {
 	if( number_to_add > 10000 ) {
 		return;
 	}
+	
+	var order_base = get_new_player_order();
 
 	var player_counter = 1;
 	for( var i=1; i<=number_to_add; i++ ) {
 		var new_team = create_empty_team();
 		new_team.name = "Test team #"+i;
 		
-		for (var p=0; p<=team_size; p++) {
+		for (var p=0; p<=Settings.team_size; p++) {
 			var new_player = create_random_player(player_counter);
+			new_player.order = order_base;
+			order_base++;
 			new_team.players.push( new_player );
 			player_counter++;
 		}
@@ -1131,6 +1140,7 @@ function on_stats_update_error( player_id, error_msg ) {
 				var new_player = create_empty_player();
 				new_player.id = player_id;
 				new_player.display_name = format_player_name( player_id );
+				new_player.order = get_new_player_order();
 				delete new_player.empty;
 				
 				lobby.push( new_player );
@@ -1292,12 +1302,12 @@ function draw_player_cell( player_struct, small=false, is_captain=false ) {
 	}
 	new_player_item.id = player_struct.id;
 	if( ! player_struct.empty) {
-		new_player_item.title = player_struct.id;
+		new_player_item.title = player_struct.id.replace("-", "#");
 		new_player_item.title += "\nSR: " + player_struct.sr;
 		new_player_item.title += "\nLevel: " + player_struct.level;
 		new_player_item.title += "\nMain class: " + is_undefined(player_struct.top_classes[0], "-");
 		new_player_item.title += "\nSecondary class: " + is_undefined(player_struct.top_classes[1], "-");
-		
+		new_player_item.title += "\nOrder added: #" + player_struct.order;
 	}
 	if ( Array.isArray(player_struct.top_heroes) ) {
 		new_player_item.title += "\nTop heroes: ";

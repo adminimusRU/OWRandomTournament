@@ -56,6 +56,7 @@ function create_empty_player() {
 			top_heroes: [],
 			last_updated: new Date(0),
 			captain: false,
+			order: 0,
 		};
 }
 
@@ -85,7 +86,8 @@ function create_random_player( id ) {
 			top_heroes: top_heroes,
 			last_updated: new Date(0),
 			captain: false,
-			fake_id: true
+			fake_id: true,
+			order: 0,
 		};
 }
 
@@ -146,6 +148,19 @@ function get_default_settings() {
 		update_sr: true,
 		update_edited_fields: false,
 	};
+}
+
+function get_new_player_order() {
+	var max_order = 0;
+	for (var i=0; i<lobby.length; i++){
+		max_order = Math.max( max_order, lobby[i].order );
+	}
+	for( var t=0; i<teams.length; t++) {
+		for( var i=0; i<teams[t].players.length; i++) {
+			max_order = Math.max( max_order, teams[t].players[i].order );
+		}
+	}
+	return max_order+1;
 }
 
 function get_player_index( player_id, team ) {

@@ -12,7 +12,7 @@ function export_lobby( format ) {
 	var export_str = "";
 	if ( format == "json" ) {
 		var export_struct = {
-			format_version: 4,
+			format_version: 5,
 			players: lobby
 			};
 		export_str = JSON.stringify(export_struct, null, ' ');
@@ -242,6 +242,8 @@ function import_lobby( format, import_str ) {
 				throw new Error("Unsupported format version");
 			}
 			
+			var order_base = get_new_player_order();
+			
 			for( var i=0; i<import_struct.players.length; i++) {
 				var imported_player = import_struct.players[i];
 				
@@ -251,6 +253,12 @@ function import_lobby( format, import_str ) {
 				}
 				
 				imported_player = sanitize_player_struct( imported_player, import_struct.format_version );
+				
+				if ( imported_player.order <= 0 ) {
+					order_base++;
+				}
+				imported_player.order += order_base;
+				
 				added_players.push( imported_player );
 			}
 		}
@@ -260,6 +268,7 @@ function import_lobby( format, import_str ) {
 			return false;
 		}
 	} else if( format == "text") {
+		var order_base = get_new_player_order();
 		try {
 			var battletag_list = import_str.trim().split("\n");
 			for( i in battletag_list ) {
@@ -283,6 +292,9 @@ function import_lobby( format, import_str ) {
 				delete new_player.empty;
 				new_player.id = player_id;
 				new_player.display_name = player_name;
+				
+				new_player.order = order_base;
+				order_base++;
 				
 				// additional fields
 				if ( fields.length >= 2 ) {
@@ -413,10 +425,16 @@ function restore_saved_teams() {
 	}
 	
 	var saved_players_json = localStorage.getItem( storage_prefix+"lobby" );
+	var order = 1;
 	if ( saved_players_json != null ) {
 		var saved_team = JSON.parse(saved_players_json);
 		for ( var i in saved_team ) {
-			lobby.push( sanitize_player_struct(saved_team[i], saved_format) );
+			var player_struct = sanitize_player_struct(saved_team[i], saved_format);
+			if ( player_struct.order <= 0 ) {
+				player_struct.order = order;
+				order++;
+			}
+			lobby.push( player_struct );
 		}
 	}
 	
@@ -431,7 +449,12 @@ function restore_saved_teams() {
 				new_team.captain_index = -1;
 			}
 			for ( var i in saved_team_setup[t].players ) {
-				new_team.players.push( sanitize_player_struct(saved_team_setup[t].players[i], saved_format) );
+				var player_struct = sanitize_player_struct(saved_team_setup[t].players[i], saved_format);
+					if ( player_struct.order <= 0 ) {
+					player_struct.order = order;
+					order++;
+				}
+				new_team.players.push( player_struct );
 			}
 			teams.push( new_team );
 		}
@@ -475,6 +498,10 @@ function sanitize_player_struct( player_struct, saved_format ) {
 		player_struct.captain = false;
 	}
 	
+	if ( saved_format <= 4 ) {
+		player_struct.order = 0;
+	}
+	
 	if ( saved_format >= 3 ) {
 		// restore dates from strings
 		if ( player_struct.last_updated !== undefined ) {
@@ -492,5 +519,5 @@ function save_players_list() {
 	// store players to browser local storage
 	localStorage.setItem(storage_prefix+"lobby", JSON.stringify(lobby));
 	localStorage.setItem(storage_prefix+"team_setup", JSON.stringify(teams));
-	localStorage.setItem(storage_prefix+"saved_format", 4);
+	localStorage.setItem(storage_prefix+"saved_format", 5);
 }
