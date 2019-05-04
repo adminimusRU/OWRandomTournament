@@ -468,6 +468,20 @@ function import_captains_ok() {
 	}
 }
 
+function import_checkin_open() {
+	open_dialog("popup_dlg_import_checkin");
+	document.getElementById("dlg_textarea_import_checkin").value = "";
+	document.getElementById("dlg_textarea_import_checkin").focus();
+}
+
+function import_checkin_ok() {
+	var import_str = document.getElementById("dlg_textarea_import_checkin").value;
+	if ( import_checkin(import_str) ) {
+		close_dialog("popup_dlg_import_checkin");
+		redraw_lobby();
+	}
+}
+
 function import_lobby_dlg_open() {
 	open_dialog("popup_dlg_import_lobby");
 	document.getElementById("dlg_textarea_import_lobby").value = "";
@@ -487,8 +501,62 @@ function lobby_filter_clear() {
 	apply_lobby_filter();
 }
 
+function manual_checkin_open() {
+	open_dialog("popup_dlg_manual_checkin");
+	
+	// fill players table
+	var tbody = document.getElementById("manual_checkin_table").tBodies[0];
+	var thead = document.getElementById("manual_checkin_table").tHead;
+	var tfoot = document.getElementById("manual_checkin_table").tFoot;
+	
+	tbody.innerHTML = "";
+	for (var i=0; i<lobby.length; i++) {
+		var row = document.createElement("tr");
+		row.onclick = manual_checkin_row_click;
+		
+		var cell = document.createElement("td");
+		var cbox = document.createElement("input");
+		cbox.type = "checkbox";
+		cbox.setAttribute("player_id", lobby[i].id);
+		cbox.onchange = manual_checkin_checkbox_change;
+		cbox.autocomplete = "off";
+		if ( checkin_list.indexOf(lobby[i].id) != -1 ) {
+			cbox.checked = true;
+			row.classList.add("checked");
+		}
+		cell.appendChild(cbox);
+		row.appendChild(cell);
+		
+		cell = document.createElement("td");
+		var cellText = document.createTextNode(lobby[i].id.replace("-", "#"));
+		cell.appendChild(cellText);
+		row.appendChild(cell);
+		
+		tbody.appendChild(row);
+	}
+
+	// reset sorting marks
+	for ( var i=0; i<thead.rows[0].cells.length; i++ ) {
+		thead.rows[0].cells[i].removeAttribute("order_inverse");
+	}
+	sort_manual_chekin_table( 1 );
+	
+	tfoot.getElementsByTagName("td")[0].innerHTML = checkin_list.length;
+	tfoot.getElementsByTagName("td")[1].innerHTML = lobby.length;
+}
+
 function open_stats_update_log() {
 	open_dialog("popup_dlg_stats_log");
+}
+
+function reset_checkin() {
+	if( ! confirm("Clear all check-in marks?") ) {
+		return;
+	}
+	
+	checkin_list = [];
+	save_checkin_list();
+	redraw_lobby();
 }
 
 function reset_roll_click() {
@@ -546,6 +614,8 @@ function roll_teams() {
 		max_combinations: max_combinations,
 		OF_max_thresold: OF_max_thresold,
 		roll_debug: roll_debug,
+		
+		checkin_list: checkin_list,
 	}
 		
 	RtbWorker.postMessage(["init", rtb_settings]);
@@ -586,6 +656,57 @@ function sort_lobby( sort_field = 'sr', button_element=undefined ) {
 	sort_players(lobby, sort_field, order_inverse);
 	save_players_list();
 	redraw_lobby();
+}
+
+function sort_manual_chekin_table( sort_column_index ) {
+	var tbody = document.getElementById("manual_checkin_table").tBodies[0];
+	var thead = document.getElementById("manual_checkin_table").tHead;
+	var header_cell = thead.rows[0].cells[sort_column_index];
+	
+	var order = 1;
+	if (header_cell.hasAttribute("order_inverse")) {
+		order = -1;
+		header_cell.removeAttribute("order_inverse");
+	} else {
+		header_cell.setAttribute("order_inverse", "");
+	}
+	
+	// create temporary array of table rows and sort it in memory
+	// avoiding expensive DOM updates
+	var temp_rows = [];
+	for (var i = 0; i < tbody.rows.length; i++) {
+		temp_rows.push(tbody.rows[i]);
+	}
+	
+	temp_rows.sort( function(row1, row2){
+			if ( sort_column_index == 0 ) {
+				var this_row_calue = row1.cells[sort_column_index].getElementsByTagName("input")[0].checked;
+				var next_row_calue = row2.cells[sort_column_index].getElementsByTagName("input")[0].checked;
+			} else {
+				var this_row_calue = row1.cells[sort_column_index].innerText.toLowerCase();
+				var next_row_calue = row2.cells[sort_column_index].innerText.toLowerCase();
+			}
+			
+			return order * ( this_row_calue<next_row_calue ? -1 : (this_row_calue>next_row_calue?1:0) );
+			} 
+		);
+	
+	// rearrange table rows in DOM according to sorted array
+	for (var i = temp_rows.length-1; i >= 0; i--) {
+		temp_rows[i].parentNode.insertBefore(temp_rows[i], temp_rows[i].parentNode.firstChild);
+	}
+	
+	// draw arrow on this column header
+	for(var i=0; i<thead.rows[0].cells.length; i++) {
+		thead.rows[0].cells[i].classList.remove("sort-up");
+		thead.rows[0].cells[i].classList.remove("sort-down");
+	}
+	
+	if ( order > 0 ) {
+		thead.rows[0].cells[sort_column_index].classList.add("sort-up");
+	} else {
+		thead.rows[0].cells[sort_column_index].classList.add("sort-down");
+	}
 }
 
 function sort_team( team_index, sort_field = 'sr', order_inverse=false ) {	
@@ -717,6 +838,44 @@ function on_stats_update_limit_change() {
 	document.getElementById("dlg_stats_update_days").innerHTML = max_stats_age_days;
 	var max_stats_age_date = new Date(Date.now() - (max_stats_age_days*24*3600*1000));
 	document.getElementById("dlg_stats_update_date").innerHTML = max_stats_age_date.toLocaleDateString();
+}
+
+function manual_checkin_checkbox_change(ev){
+	var cbox = ev.target;
+	var tr = cbox.parentNode.parentNode;
+	
+	manual_checkin_toggle_player( tr, cbox );
+}
+
+function manual_checkin_row_click(ev) {
+	var tr = ev.currentTarget;
+	var cbox = tr.cells[0].getElementsByTagName("input")[0];
+	
+	if (ev.originalTarget.tagName.toLowerCase() != "input") {
+		cbox.checked = ! cbox.checked;
+	}
+	
+	manual_checkin_toggle_player( tr, cbox );
+}
+
+function manual_checkin_toggle_player( tr, cbox ) {
+	var player_id = cbox.getAttribute("player_id");
+	if ( cbox.checked ) {			
+		if ( checkin_list.indexOf(player_id) == -1 ) {
+			checkin_list.push(player_id);
+			save_checkin_list();
+			tr.classList.toggle("checked", true);
+		}
+	} else {
+		var index = checkin_list.indexOf(player_id);
+		if (index !== -1) {
+			checkin_list.splice( index, 1 );
+			save_checkin_list();
+			tr.classList.toggle("checked", false);
+		}
+	}
+	
+	document.getElementById("manual_checkin_table").tFoot.getElementsByTagName("td")[0].innerHTML = checkin_list.length;
 }
 
 function new_player_keyup(ev) {
@@ -1332,6 +1491,25 @@ function draw_player_cell( player_struct, small=false, is_captain=false ) {
 	new_player_item.ondblclick = function(event){player_dblClick(event);};
 	new_player_item.oncontextmenu = function(event){player_contextmenu(event);};
 	
+	// player background color depending on check-in process (only in lobby)
+	if ( (!small) && (checkin_list.length > 0) ) {
+		var roll_allowed = false;
+		if (checkin_list.indexOf(player_struct.id) !== -1) {
+			new_player_item.title += "\nCheck-in: +";
+			roll_allowed = true;
+		} else {
+			new_player_item.title += "\nCheck-in: -";
+		}
+		
+		if (roll_allowed) {
+			new_player_item.classList.add("player-roll-allow");
+		} else {
+			new_player_item.classList.add("player-roll-deny");
+		}
+		
+		
+	}
+	
 	// rank icon
 	var player_icon = document.createElement("div");
 	player_icon.className = "player-icon";
@@ -1401,6 +1579,15 @@ function draw_player_cell( player_struct, small=false, is_captain=false ) {
 	text_node = document.createTextNode( display_name );
 	name_display.appendChild(text_node);
 	player_name.appendChild(name_display);
+	
+	// check-in mark
+	if ( (!small) && (checkin_list.indexOf(player_struct.id) !== -1) ) {
+		var mark_display = document.createElement("span");
+		mark_display.className = "player-checkin-mark";
+		text_node = document.createTextNode( "\u2713" );
+		mark_display.appendChild(text_node);
+		player_name.appendChild(mark_display);
+	}
 	
 	// captain mark
 	if ( is_captain || ( (!small) && player_struct.captain ) ) {
@@ -1704,6 +1891,9 @@ function redraw_lobby() {
 	if (document.getElementById("lobby_filter").value != "") {
 		apply_lobby_filter();
 	}
+	
+	//check-in counter
+	document.getElementById("checkin_counter").innerHTML = checkin_list.length;
 }
 
 function redraw_player( player_struct ) {

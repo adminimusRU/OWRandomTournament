@@ -616,3 +616,65 @@ a.action-href:visited {
 
 .dropdown:hover .dropdown-content {display: block;}
 
+
+.manual-checkin-table {
+	border-collapse: collapse;
+	text-align: left;
+	cursor: pointer;
+}
+
+.manual-checkin-table td,th {
+	border: 1px solid gray;
+}
+
+.manual-checkin-table th,tfoot {
+	text-align: center;
+	font-weight: bold;
+	background-color: lightgray;
+}
+
+.manual-checkin-table tr:nth-child(even) {
+	background-color: #f2f2f2;
+}
+
+.manual-checkin-table th {
+	position: sticky;
+	top: 0;
+	min-width: 2em;
+}
+
+.manual-checkin-table tr:hover {
+	background-color: PaleGoldenRod;
+}
+
+.manual-checkin-table tfoot {
+	position: sticky;
+	bottom: 0;
+}
+
+th.sort-up:after {
+  content: '\2191';
+}
+
+th.sort-down:after {
+  content: '\2193';
+}
+
+.manual-checkin-table tr.checked {
+	background-color: LightGreen;
+}
+
+.player-checkin-mark {
+	color: Green;
+	padding-left: 0.5em;
+	font-size: 90%;
+	font-weight: bold;
+}
+
+.player-roll-allow {
+	background-color: #d3f8d3;
+}
+
+.player-roll-deny {
+	background-color: #ffd4cc;
+}

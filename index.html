@@ -21,6 +21,8 @@
 var lobby = [];
 var teams = [];
 
+var checkin_list = []; //id's of checked-in players
+
 var player_being_added;
 var player_being_edited;
 var team_being_edited;
@@ -99,6 +101,7 @@ var balance_priority_canvas_gradient;
 						<div onclick="sort_lobby('sr', this);">by SR</div>
 						<div onclick="sort_lobby('class', this);">by class</div>
 						<div onclick="sort_lobby('level', this);">by level</div>
+						<div onclick="sort_lobby('checkin', this);">by check-in</div>
 						<div onclick="shuffle_lobby();">shuffle</div>
 					</div>
 				</div>
@@ -141,6 +144,21 @@ var balance_priority_canvas_gradient;
 				<br/>
 				
 				<input class="big-btn" type="button" onclick="export_teams_dlg_open();" value="Export teams"/>
+				<br/>
+				<br/>
+				<br/>
+				
+				<fieldset style="text-align: center;">
+					<legend>Check-in</legend>
+					
+					<span id="checkin_counter">0</span> checked-in
+					<br/>
+					<input class="big-btn" type="button" onclick="manual_checkin_open();" value="Manual check-in"/>
+					<br/>
+					<br/>
+					<input class="medium-btn" type="button" onclick="import_checkin_open();" value="Import" title="Import list of checked-in players"/>
+					<input class="medium-btn" type="button" onclick="reset_checkin();" value="Reset" title="Clear check-in mark for all players"/>
+				</fieldset>
 				<br/>
 				<br/>
 				<br/>
@@ -294,9 +312,9 @@ var balance_priority_canvas_gradient;
 			
 			<div id="dlg_team_export_format" class="dlg_options">
 				<label for="dlg_team_export_format_value">Format: </label>
-				<select id="dlg_team_export_format_value" onchange="export_teams_dlg_change_format();">
+				<select id="dlg_team_export_format_value" onchange="export_teams_dlg_change_format();" autocomplete="off">
 					<option value="text-list">text list</option>
-					<option value="html-table">HTML table</option>
+					<option value="html-table" selected>HTML table</option>
 					<option value="image">image</option>
 				</select>
 			</div>
@@ -324,9 +342,9 @@ var balance_priority_canvas_gradient;
 						<br/>
 						<label for="dlg_team_export_names" style="display:inline-block;width: 7em;">
 						Player names: </label>
-						<select id="dlg_team_export_names">
+						<select id="dlg_team_export_names" autocomplete="off">
 							<option value="display_name">Short name</option>
-							<option value="id">Full BattleTag</option>
+							<option value="id" selected>Full BattleTag</option>
 						</select>
 					</td>
 					</tr>
@@ -811,6 +829,62 @@ var balance_priority_canvas_gradient;
 	</div>
 </div>
 
+<div id="popup_dlg_manual_checkin" class="dlg" style="display:none">
+	<div class="dlg-background"></div>
+	<div class="dlg-container">
+		<div class="dlg-content">
+			<span class="team-title">Manual check-in</span>
+			<input title="Close" type="button" class="team_btn dlg-close" onclick="close_dialog('popup_dlg_manual_checkin');redraw_lobby();" value="X"/>
+			<br/>
+			<br/>
+									
+			<div style="height: 35em; overflow-y: scroll; width: 30em;">
+				<table id="manual_checkin_table" class="manual-checkin-table">
+					<thead>
+						<tr>
+							<th onclick="sort_manual_chekin_table(0);" title="click to sort">&#9745;</th>
+							<th onclick="sort_manual_chekin_table(1);" title="click to sort">Battletag</th>
+						</tr>
+					</thead>
+					<tbody>
+						
+					</tbody>
+					<tfoot>
+						<tr>
+							<td title="Total checked-in">0</td>
+							<td title="Total players">0</td>
+						</tr>
+					</tfoot>
+				</table> 
+			</div>
+		</div>
+	</div>
+</div>
+
+
+<div id="popup_dlg_import_checkin" class="dlg" style="display:none">
+	<div class="dlg-background"></div>
+	<div class="dlg-container">
+		<div class="dlg-content">
+			<span class="team-title">Import check-in list</span>
+			<input title="Close" type="button" class="team_btn dlg-close" onclick="close_dialog('popup_dlg_import_checkin');" value="X"/>
+			<br/>
+			<br/>
+									
+			<textarea id="dlg_textarea_import_checkin" rows="20" cols="80"></textarea>
+			
+			<div style="text-align: left;">
+			Load list of checked-in players (BattleTags)
+			</div>
+			<br/>
+			
+			<div>
+				<input id="dlg_ok" class="big-btn" type="button" value="OK" onclick="import_checkin_ok();"/>
+			</div>
+		</div>
+	</div>
+</div>
+
 <div id="debug_log"></div>
 
 <script>
@@ -837,6 +911,9 @@ if ( saved_settings_json != null ) {
 
 //restore saved players to teams
 restore_saved_teams();
+
+restore_checkin_list();
+redraw_lobby();
 
 apply_stats_updater_settings();
 

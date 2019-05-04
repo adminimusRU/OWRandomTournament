@@ -2,6 +2,11 @@ var RandomTeamBuilder = {
 	players: [], // active players from lobby
 	teams: [], // rolled teams
 	
+	// id's of checked-in players. 
+	// not checked-in will be excluded from roll
+	// if empty - ignored
+	checkin_list: [], 
+	
 	// callbacks
 	onProgressChange: undefined,
 	onDebugMessage: undefined,
@@ -107,6 +112,15 @@ var RandomTeamBuilder = {
 		for ( var i=this.players.length-1; i>=0; i-- ) {
 			if ( this.players[i].level < this.min_level ) {
 				this.filtered_players.push( this.players.splice(i, 1)[0] );
+			}
+		}
+		
+		// filter by check-in
+		if ( this.checkin_list.length > 0 ) {
+			for ( var i=this.players.length-1; i>=0; i-- ) {
+				if ( this.checkin_list.indexOf(this.players[i].id) == -1 ) {
+					this.filtered_players.push( this.players.splice(i, 1)[0] );
+				}
 			}
 		}
 		

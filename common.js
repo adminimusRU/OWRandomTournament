@@ -267,6 +267,12 @@ function sort_players( team, sort_field = 'sr', order_asc=false ) {
 				}
 				return order * (val1 - val2);
 			} );
+	} else if ( sort_field == 'checkin' ) {
+		team.sort( function(player1, player2){
+				var val1 = checkin_list.indexOf(player1.id) ;
+				var val2 = checkin_list.indexOf(player2.id) ;
+				return order * (val1 - val2);
+			} );
 	} else {
 		team.sort( function(player1, player2){
 				if( typeof player1[sort_field] === 'string') {

@@ -92,7 +92,7 @@ function export_teams_html( format, include_players, include_sr, include_classes
 		if ( include_sr ) title_colspan++;
 		if ( include_classes ) title_colspan++;
 	}
-	var _team_size = teams[0].players.length;
+	var _team_size = Settings.team_size;
 	
 	setup_str += "<table style='border-collapse: collapse; background-color: white;'>\n";
 	
@@ -221,6 +221,33 @@ function import_captains( import_str ) {
 	
 	redraw_lobby();
 	save_players_list();
+	
+	return true;
+}
+
+function import_checkin( import_str ) {
+	if (import_str == null || import_str == "") {
+		return;
+	}
+		
+	var battletag_list = import_str.trim().split("\n");
+	for( i in battletag_list ) {
+		var player_id = undefined;
+		// check battletag format
+		if ( /^[^#]+[-#]\d+$/.test(battletag_list[i]) ) {
+			var player_id = format_player_id(battletag_list[i]);
+		}		
+		
+		if (player_id == undefined) {
+			continue;
+		}
+		
+		if ( checkin_list.indexOf(player_id) == -1 ) {
+			checkin_list.push(player_id);
+		};
+	}
+	
+	save_checkin_list();
 	
 	return true;
 }
@@ -418,6 +445,20 @@ function prepare_datauri_icons() {
 	}
 }
 
+function restore_checkin_list() {
+	var saved_checkin_json = localStorage.getItem( storage_prefix+"checkin" );
+	if ( saved_checkin_json != null ) {
+		var saved_checkin = JSON.parse(saved_checkin_json);
+		
+		// restore only existing players
+		for ( var i in saved_checkin ) {
+			if ( find_player_by_id(saved_checkin[i]) !== undefined ) {
+				checkin_list.push(saved_checkin[i]);
+			}
+		}
+	}
+}
+
 function restore_saved_teams() {
 	var saved_format = localStorage.getItem( storage_prefix+"saved_format" );
 	if ( saved_format === null ) {
@@ -513,6 +554,10 @@ function sanitize_player_struct( player_struct, saved_format ) {
 	
 	
 	return player_struct;
+}
+
+function save_checkin_list() {
+	localStorage.setItem(storage_prefix+"checkin", JSON.stringify(checkin_list));
 }
 
 function save_players_list() {
