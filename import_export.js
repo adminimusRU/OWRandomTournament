@@ -12,7 +12,7 @@ function export_lobby( format ) {
 	var export_str = "";
 	if ( format == "json" ) {
 		var export_struct = {
-			format_version: 5,
+			format_version: 6,
 			players: lobby
 			};
 		export_str = JSON.stringify(export_struct, null, ' ');
@@ -22,7 +22,22 @@ function export_lobby( format ) {
 			export_str += player_id + "\n";
 		}
 	} else if ( format == "csv" ) {
-		export_str += "BattleTag\tSR\tMain_class\tSecondary_class\tMain_hero\tCaptain\tName\tLevel\tLast_updated\n";
+		var fields = [];
+		
+		// header row
+		fields.push("BattleTag");
+		fields.push("Twitch_name");
+		fields.push("SR");
+		fields.push("Main_class");
+		fields.push("Secondary_class");
+		fields.push("Main_hero");
+		fields.push("Captain");
+		fields.push("Display_Name");
+		fields.push("Level");
+		fields.push("Last_updated");
+		
+		export_str += fields.join(",") + "\n";
+		
 		for( i in lobby) {
 			var player_id = lobby[i].id.trim().replace("-", "#");
 			var main_class = "";
@@ -33,8 +48,19 @@ function export_lobby( format ) {
 			if( lobby[i].top_heroes[0] !== undefined ) main_hero = lobby[i].top_heroes[0].hero;
 			var last_updated = lobby[i].last_updated.toISOString();
 			
-			export_str += player_id+"\t"+lobby[i].sr+"\t"+main_class+"\t"+secondary_class+"\t"
-						+main_hero+"\t"+lobby[i].captain+"\t"+lobby[i].display_name+"\t"+lobby[i].level+"\t"+last_updated+"\n";
+			fields = [];
+			fields.push(player_id);
+			fields.push(lobby[i].twitch_name);
+			fields.push(lobby[i].sr);
+			fields.push(main_class);
+			fields.push(secondary_class);
+			fields.push(main_hero);
+			fields.push(lobby[i].captain);
+			fields.push(lobby[i].display_name);
+			fields.push(lobby[i].level);
+			fields.push(last_updated);
+			
+			export_str += fields.join(",") + "\n";
 		}
 	}
 	
@@ -214,7 +240,6 @@ function import_captains( import_str ) {
 			player_struct.captain = true;
 		}
 	} catch(err) {
-		// try to parse as plain battletag list?
 		alert("Incorrect import format: "+err.message);
 		return false;
 	}
@@ -235,8 +260,17 @@ function import_checkin( import_str ) {
 		var player_id = undefined;
 		// check battletag format
 		if ( /^[^#]+[-#]\d+$/.test(battletag_list[i]) ) {
-			var player_id = format_player_id(battletag_list[i]);
-		}		
+			// assume battletag
+			player_id = format_player_id(battletag_list[i]);
+		} else {
+			// assume twitch nicknames
+			for( p in lobby) {
+				if ( lobby[p].twitch_name == battletag_list[i] ){
+					player_id = lobby[p].id;
+					break;
+				}
+			}
+		}
 		
 		if (player_id == undefined) {
 			continue;
@@ -265,7 +299,7 @@ function import_lobby( format, import_str ) {
 			var import_struct = JSON.parse(import_str);
 			
 			// check format
-			if ( import_struct.format_version > 4 ) {
+			if ( import_struct.format_version > 6 ) {
 				throw new Error("Unsupported format version");
 			}
 			
@@ -299,8 +333,8 @@ function import_lobby( format, import_str ) {
 		try {
 			var battletag_list = import_str.trim().split("\n");
 			for( i in battletag_list ) {
-				// split string to fields (btag, SR, class, offclass)
-				var fields = battletag_list[i].split(/[ \t.,;|]+/);
+				// split string to fields (btag, twitch, SR, class, offclass)
+				var fields = battletag_list[i].split(/[ \t.,;|]/);
 				
 				// check battletag format
 				if ( /^[^#]+[-#]\d+$/.test(fields[0]) == false ) {
@@ -325,26 +359,29 @@ function import_lobby( format, import_str ) {
 				
 				// additional fields
 				if ( fields.length >= 2 ) {
-					new_player.sr = Number( fields[1] );
+					new_player.twitch_name = ( fields[1] );
+				}
+				if ( fields.length >= 3 ) {
+					new_player.sr = Number( fields[2] );
 					if ( Number.isNaN(new_player.sr) ) {
-						throw new Error("Incorrect SR number "+fields[1]);
+						throw new Error("Incorrect SR number '"+fields[2]+"' on row #"+String(Number(i)+1));
 					}
 					if ( new_player.sr < 0 || new_player.sr > 5000 ) {
-						throw new Error("Incorrect SR value "+fields[1]);
+						throw new Error("Incorrect SR value '"+fields[2]+"' on row #"+String(Number(i)+1));
 					}
 					new_player.last_updated = new Date;
 				}
-				if ( fields.length >= 3 ) {
-					for ( var c = 2; c < fields.length; c++ ) {
+				if ( fields.length >= 4 ) {
+					for ( var c = 3; c < Math.min(fields.length, 5); c++ ) {
 						if (fields[c] == "") continue;
 						if (class_names.indexOf(fields[c]) == -1) {
-							throw new Error("Incorrect class name "+fields[c]);
+							throw new Error("Incorrect class name '"+fields[c]+"' on row #"+String(Number(i)+1));
 						}
 						new_player.top_classes.push( fields[c] );
 					}
 				}
 				
-				if ( fields.length == 1 ) {
+				if ( fields.length < 3 ) {
 					players_for_update.push( new_player );
 				}
 				added_players.push( new_player );
@@ -543,6 +580,10 @@ function sanitize_player_struct( player_struct, saved_format ) {
 		player_struct.order = 0;
 	}
 	
+	if ( saved_format <= 5 ) {
+		player_struct.twitch_name = "";
+	}
+	
 	if ( saved_format >= 3 ) {
 		// restore dates from strings
 		if ( player_struct.last_updated !== undefined ) {
@@ -564,5 +605,5 @@ function save_players_list() {
 	// store players to browser local storage
 	localStorage.setItem(storage_prefix+"lobby", JSON.stringify(lobby));
 	localStorage.setItem(storage_prefix+"team_setup", JSON.stringify(teams));
-	localStorage.setItem(storage_prefix+"saved_format", 5);
+	localStorage.setItem(storage_prefix+"saved_format", 6);
 }
