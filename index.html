@@ -254,7 +254,7 @@ var balance_priority_canvas_gradient;
 				<label for="dlg_player_import_format_value">Import format: </label>
 				<select id="dlg_player_import_format_value">
 					<option value="json">JSON (full info)</option>
-					<option value="text">text (btag, [SR, class, offclass])</option>
+					<option value="text">text/CSV (btag, [twitch_name, SR, class, offclass])</option>
 				</select>
 			</div>
 						
@@ -262,7 +262,7 @@ var balance_priority_canvas_gradient;
 			
 			<div style="text-align: left;">
 			For text format, fields can be separated with space, tab or following symbols: . , ; | <br/>
-			SR, class and offclass are optional.
+			twitch name, SR, class and offclass are optional.
 			</div>
 			
 			<div>
@@ -345,6 +345,7 @@ var balance_priority_canvas_gradient;
 						<select id="dlg_team_export_names" autocomplete="off">
 							<option value="display_name">Short name</option>
 							<option value="id" selected>Full BattleTag</option>
+							<option value="twitch_name">Twitch name</option>
 						</select>
 					</td>
 					</tr>
@@ -383,7 +384,17 @@ var balance_priority_canvas_gradient;
 			<div id="dlg_player_edit" class="dlg_options table">
 				<div class="row">
 					<div class="cell">BattleTag:</div>
-					<div class="cell"><a href="" id="dlg_player_id"></a></div>
+					<div class="cell">
+						<span id="dlg_player_id"></span>
+						<a id="dlg_player_id_link" rel="external" target="_blank" href="" title="">&#x29c9;</a>
+					</div>
+				</div>
+				<div class="row">
+					<div class="cell"><label for="dlg_player_twitch_name">Twitch nickname:</label></div>
+					<div class="cell">
+						<input id="dlg_player_twitch_name" type="text">
+						<a id="dlg_player_twitch_link" rel="external" target="_blank" href="" title="">&#x29c9;</a>
+					</div>
 				</div>
 				<div class="row">
 					<div class="cell"><label for="dlg_player_display_name">Name:</label></div>
@@ -838,12 +849,13 @@ var balance_priority_canvas_gradient;
 			<br/>
 			<br/>
 									
-			<div style="height: 35em; overflow-y: scroll; width: 30em;">
+			<div style="height: 35em; overflow-y: scroll; min-width: 30em;">
 				<table id="manual_checkin_table" class="manual-checkin-table">
 					<thead>
 						<tr>
 							<th onclick="sort_manual_chekin_table(0);" title="click to sort">&#9745;</th>
 							<th onclick="sort_manual_chekin_table(1);" title="click to sort">Battletag</th>
+							<th onclick="sort_manual_chekin_table(2);" title="click to sort">Twitch name</th>
 						</tr>
 					</thead>
 					<tbody>
@@ -853,6 +865,7 @@ var balance_priority_canvas_gradient;
 						<tr>
 							<td title="Total checked-in">0</td>
 							<td title="Total players">0</td>
+							<td></td>
 						</tr>
 					</tfoot>
 				</table> 
@@ -874,7 +887,7 @@ var balance_priority_canvas_gradient;
 			<textarea id="dlg_textarea_import_checkin" rows="20" cols="80"></textarea>
 			
 			<div style="text-align: left;">
-			Load list of checked-in players (BattleTags)
+			Load list of checked-in players (BattleTags or Twitch nicknames)
 			</div>
 			<br/>
 			

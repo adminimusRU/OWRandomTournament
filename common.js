@@ -49,6 +49,7 @@ function create_empty_player() {
 	return {
 			id: "",
 			display_name: "",
+			twitch_name: "",
 			sr: 0,
 			empty: true,
 			level: 0,
@@ -79,6 +80,7 @@ function create_random_player( id ) {
 	return {
 			id: "player"+id+"-"+Math.round(Math.random()*99999),
 			display_name: "player "+id,
+			twitch_name: "",
 			sr: Math.round(Math.random()*5000),
 			level: Math.round(Math.random()*2000),
 			empty: false,

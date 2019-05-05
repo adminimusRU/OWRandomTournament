@@ -625,6 +625,7 @@ a.action-href:visited {
 
 .manual-checkin-table td,th {
 	border: 1px solid gray;
+	padding: 0.2em 1em 0.2em 1em;
 }
 
 .manual-checkin-table th,tfoot {

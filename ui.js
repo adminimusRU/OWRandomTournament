@@ -221,6 +221,8 @@ function edit_player_ok() {
 	}
 	player_struct.display_name = new_name;
 	
+	player_struct.twitch_name = document.getElementById("dlg_player_twitch_name").value;
+	
 	var new_sr = Number(document.getElementById("dlg_player_sr").value);
 	if ( player_struct.sr != new_sr ) {
 		player_struct.se = true; // sr edited
@@ -529,6 +531,11 @@ function manual_checkin_open() {
 		
 		cell = document.createElement("td");
 		var cellText = document.createTextNode(lobby[i].id.replace("-", "#"));
+		cell.appendChild(cellText);
+		row.appendChild(cell);
+		
+		cell = document.createElement("td");
+		var cellText = document.createTextNode(lobby[i].twitch_name);
 		cell.appendChild(cellText);
 		row.appendChild(cell);
 		
@@ -1369,7 +1376,8 @@ function apply_lobby_filter() {
 	}
 	
 	for( var i=0; i<lobby.length; i++) {
-		if ( filter_value == "" || lobby[i].display_name.toLowerCase().includes( filter_value ) || lobby[i].id.toLowerCase().includes( filter_value ) ) {
+		if ( filter_value == "" || lobby[i].display_name.toLowerCase().includes( filter_value )
+			|| lobby[i].id.toLowerCase().includes( filter_value ) || lobby[i].twitch_name.toLowerCase().includes( filter_value ) ) {
 			document.getElementById(lobby[i].id).parentElement.style.display = "table-row";
 		} else {
 			document.getElementById(lobby[i].id).parentElement.style.display = "none";
@@ -1675,8 +1683,21 @@ function fill_player_stats_dlg() {
 	
 	document.getElementById("dlg_title_edit_player").innerHTML = escapeHtml( player_struct.display_name );
 	
-	document.getElementById("dlg_player_id").href = "https://playoverwatch.com/en-us/career/pc/"+player_struct.id;
 	document.getElementById("dlg_player_id").innerHTML = player_struct.id;
+	document.getElementById("dlg_player_id_link").href = "https://playoverwatch.com/en-us/career/pc/"+player_struct.id;
+	document.getElementById("dlg_player_id_link").title = "https://playoverwatch.com/en-us/career/pc/"+player_struct.id;
+	
+	document.getElementById("dlg_player_twitch_name").value = player_struct.twitch_name;
+	if ( player_struct.twitch_name !== "" ) {
+		document.getElementById("dlg_player_twitch_link").style.display = "inline";
+		document.getElementById("dlg_player_twitch_link").href = "https://www.twitch.tv/"+player_struct.twitch_name;
+		document.getElementById("dlg_player_twitch_link").title = "https://www.twitch.tv/"+player_struct.twitch_name;
+	} else {
+		document.getElementById("dlg_player_twitch_link").style.display = "none";
+		document.getElementById("dlg_player_twitch_link").href = "";
+		document.getElementById("dlg_player_twitch_link").title = "";
+	}
+	
 	
 	document.getElementById("dlg_player_display_name").value = player_struct.display_name;
 	if( player_struct.ne === true )  {
