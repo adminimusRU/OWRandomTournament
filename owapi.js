@@ -154,11 +154,10 @@ var OWAPI = {
 	
 	// returns top 2 hero classes
 	calculateTopClasses: function calculate_top_classes( hero_playtime ) {
-		var class_playtime = {
-			dps: 0,
-			tank: 0,
-			support: 0
-			};
+		var class_playtime = {};
+		for( c in hero_classes ) {
+			class_playtime[ hero_classes[c] ] = 0;
+		}
 		
 		for ( i=0; i<hero_playtime.length; i++ ) {
 			var hero_class = hero_classes[hero_playtime[i].hero];
