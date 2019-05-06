@@ -131,7 +131,8 @@ function get_default_settings() {
 		
 		roll_adjust_sr: false,
 		roll_adjust_dps: 110,
-		roll_adjust_tank: 100,
+		roll_adjust_maintank: 100,
+		roll_adjust_offtank: 100,
 		roll_adjust_support: 90,
 		roll_sr_scale: 0,
 		roll_balance_priority_sr: 34,
