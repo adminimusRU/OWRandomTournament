@@ -246,6 +246,10 @@ function edit_player_ok() {
 			}
 		}
 	}
+	// class duplicates
+	if( top_classes[0] === top_classes[1] ) {
+		top_classes.pop();
+	}
 	player_struct.top_classes = top_classes;
 		
 	close_dialog("popup_dlg_edit_player");
@@ -602,7 +606,8 @@ function roll_teams() {
 		
 		adjust_sr: Settings.roll_adjust_sr,
 		adjust_sr_by_class: {
-			tank: Settings.roll_adjust_tank,
+			maintank: Settings.roll_adjust_maintank,
+			offank: Settings.roll_adjust_offtank,
 			dps: Settings.roll_adjust_dps,
 			support: Settings.roll_adjust_support,
 		},
@@ -1306,6 +1311,7 @@ function on_stats_update_error( player_id, error_msg ) {
 				var new_player = create_empty_player();
 				new_player.id = player_id;
 				new_player.display_name = format_player_name( player_id );
+				
 				new_player.order = get_new_player_order();
 				delete new_player.empty;
 				
@@ -1727,6 +1733,9 @@ function fill_player_stats_dlg() {
 		} else {
 			document.getElementById("dlg_secondary_class").value = "";
 		}
+	} else {
+		document.getElementById("dlg_main_class").value = "dps";
+		document.getElementById("dlg_secondary_class").value = "";
 	}
 	
 	document.getElementById("dlg_top_heroes_icons").innerHTML = "";

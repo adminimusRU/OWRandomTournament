@@ -425,9 +425,10 @@ var balance_priority_canvas_gradient;
 				<div class="row">
 					<div class="cell">Main class: </div>
 					<div class="cell">
-						<select id="dlg_main_class">
-							<option value="dps">dps</option>
-							<option value="tank">tank</option>
+						<select id="dlg_main_class" autocomplete="off">
+							<option value="maintank">main tank</option>
+							<option value="offtank">off tank</option>
+							<option value="dps" selected>dps</option>
 							<option value="support">support</option>
 						</select>
 						<span id="dlg_player_class1_edited" class="dlg-edited-mark" title="Classes were manually edited" onclick="clear_edited_mark('ce');">&#9997;</span>
@@ -437,9 +438,10 @@ var balance_priority_canvas_gradient;
 					<div class="cell">Secondary class: </div>
 					<div class="cell">
 						<select id="dlg_secondary_class">
-							<option value="">-</option>
+							<option value="">-</option>							
+							<option value="maintank">main tank</option>
+							<option value="offtank">off tank</option>
 							<option value="dps">dps</option>
-							<option value="tank">tank</option>
 							<option value="support">support</option>
 						</select>
 						<span id="dlg_player_class2_edited" class="dlg-edited-mark" title="Classes were manually edited" onclick="clear_edited_mark('ce');">&#9997;</span>
@@ -589,16 +591,20 @@ var balance_priority_canvas_gradient;
 							<label for="roll_adjust_sr">Adjust player SR by main class</label>
 							</br>
 							<div class="subgroup" id="roll_adjust_sr_sub">
-								<img src="class_icons/tank.png" style="height: 1em;"/>
-								<input disabled id="roll_adjust_tank" class="percent" type="number" size=3 min=0 max=999 autocomplete="off" value="100"/>
+								<img src="class_icons/maintank.png" style="height: 1em;" title="main tank"/>
+								<input disabled id="roll_adjust_maintank" title="main tank" class="percent" type="number" size=3 min=0 max=999 autocomplete="off" value="100"/>
 								% &nbsp;
 								
-								<img src="class_icons/dps.png" style="height: 1em;"/>
-								<input disabled id="roll_adjust_dps" class="percent" type="number" size=3 min=0 max=999 autocomplete="off" value="120"/>
+								<img src="class_icons/offtank.png" style="height: 1em;" title="off tank"/>
+								<input disabled id="roll_adjust_offtank" title="off tank" class="percent" type="number" size=3 min=0 max=999 autocomplete="off" value="100"/>
 								% &nbsp;
 								
-								<img src="class_icons/support.png" style="height: 1em;"/>
-								<input disabled id="roll_adjust_support" class="percent" type="number" size=3 min=0 max=999 autocomplete="off" value="80"/>
+								<img src="class_icons/dps.png" style="height: 1em;" title="dps"/>
+								<input disabled id="roll_adjust_dps" title="dps" class="percent" type="number" size=3 min=0 max=999 autocomplete="off" value="120"/>
+								% &nbsp;
+								
+								<img src="class_icons/support.png" style="height: 1em;" title="support"/>
+								<input disabled id="roll_adjust_support" title="support" class="percent" type="number" size=3 min=0 max=999 autocomplete="off" value="80"/>
 								%  </br>
 							</div>
 							<br/>

@@ -1,3 +1,7 @@
+function current_format_version() {
+	return 7;
+}
+
 function export_captains() {
 	var export_str = "";
 	for( i in lobby) {
@@ -12,7 +16,7 @@ function export_lobby( format ) {
 	var export_str = "";
 	if ( format == "json" ) {
 		var export_struct = {
-			format_version: 6,
+			format_version: current_format_version(),
 			players: lobby
 			};
 		export_str = JSON.stringify(export_struct, null, ' ');
@@ -299,7 +303,7 @@ function import_lobby( format, import_str ) {
 			var import_struct = JSON.parse(import_str);
 			
 			// check format
-			if ( import_struct.format_version > 6 ) {
+			if ( import_struct.format_version > current_format_version() ) {
 				throw new Error("Unsupported format version");
 			}
 			
@@ -563,9 +567,6 @@ function sanitize_player_struct( player_struct, saved_format ) {
 		if( (player_struct.top_classes[1] == "offence") || (player_struct.top_classes[1] == "defence") ) {
 			player_struct.top_classes[1] = "dps";
 		}
-		if( (player_struct.top_classes[0] == "dps") && (player_struct.top_classes[1] == "dps") ) {
-			player_struct.top_classes.pop();
-		}
 	}
 	
 	if ( saved_format <= 2 ) {
@@ -584,6 +585,16 @@ function sanitize_player_struct( player_struct, saved_format ) {
 		player_struct.twitch_name = "";
 	}
 	
+	if ( saved_format <= 6 ) {
+		// convert tank to offtank
+		if( player_struct.top_classes[0] == "tank" ) {
+			player_struct.top_classes[0] = "offtank";
+		}
+		if( player_struct.top_classes[1] == "tank" ) {
+			player_struct.top_classes[1] = "offtank";
+		}
+	}
+	
 	if ( saved_format >= 3 ) {
 		// restore dates from strings
 		if ( player_struct.last_updated !== undefined ) {
@@ -593,6 +604,10 @@ function sanitize_player_struct( player_struct, saved_format ) {
 		}
 	}
 	
+	// class duplicates
+	if( player_struct.top_classes[0] === player_struct.top_classes[1] ) {
+		player_struct.top_classes.pop();
+	}
 	
 	return player_struct;
 }
@@ -605,5 +620,5 @@ function save_players_list() {
 	// store players to browser local storage
 	localStorage.setItem(storage_prefix+"lobby", JSON.stringify(lobby));
 	localStorage.setItem(storage_prefix+"team_setup", JSON.stringify(teams));
-	localStorage.setItem(storage_prefix+"saved_format", 6);
+	localStorage.setItem(storage_prefix+"saved_format", current_format_version());
 }

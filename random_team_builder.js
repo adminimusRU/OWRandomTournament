@@ -16,7 +16,7 @@ var RandomTeamBuilder = {
 	// rolled team count should be power of 2, for better distribution in single elemination bracked (all teams will be in first round)
 	team_count_power2: false,
 	// while calculating player's SR will be adjusted by given percent, depenging on player's main class
-	// example: adjust_sr_by_class: {'dps':120, 'tank':100, 'support':80},
+	// example: adjust_sr_by_class: {'dps':120, 'maintank':100, 'offtank':100, 'support':80},
 	adjust_sr: false,
 	adjust_sr_by_class: {},
 	// expopentialy increase SR scale by specified amount. 0 = no changes
