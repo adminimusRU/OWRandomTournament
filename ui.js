@@ -800,8 +800,12 @@ function stop_stats_update() {
 }
 
 function test() {
-	document.getElementById("debug_log").innerHTML += "roll debug enabled</br>";
-	roll_debug = true;
+	/*document.getElementById("debug_log").innerHTML += "roll debug enabled</br>";
+	roll_debug = true;*/
+	
+	Twitch.getUserInfoByLogin( "Anakq", function( twitch_user_info ) {
+		document.getElementById("debug_log").innerHTML += twitch_user_info.login+" = "+twitch_user_info.id+"</br>";
+		}, undefined, undefined );
 }
 
 function twitch_signout() {
@@ -1392,6 +1396,8 @@ function on_stats_update_start() {
 function on_twitch_getuser_success() {
 	document.getElementById("twitch_login_name").innerHTML = escapeHtml( Twitch.user_display_name );
 	document.getElementById("twitch_profile_image").src = Twitch.user_profile_image_url;
+	
+	Twitch.getSubscriberIcon( on_twitch_sub_icon_success, undefined, on_twitch_unathorized );
 }
 
 function on_twitch_getuser_fail( error_msg ) {
@@ -1421,13 +1427,22 @@ function on_twitch_logout_fail( error_msg ) {
 	save_checkin_list();
 }*/
 
+function on_twitch_sub_icon_success( icon_src ) {
+	twitch_sub_icon_src = icon_src;
+}
+
 function on_twitch_subs_get_complete( subscibers_map ) {
+	//@ todo alert if there are rolled teams
+	twitch_subs_list = [];
 	for (var i=0; i<lobby.length; i++) {
 		var sub_info = subscibers_map.get( lobby[i].twitch_name );
 		if ( sub_info !== undefined ) {
+			twitch_subs_list.push( lobby[i].id );
 			document.getElementById("debug_log").innerHTML += lobby[i].twitch_name + ' tier ' + sub_info.tier+"</br>";
 		}
 	}
+	// @todo save subs list
+	redraw_lobby();
 }
 
 /*function twitch_sub_check_stage2() {
@@ -1686,6 +1701,16 @@ function draw_player_cell( player_struct, small=false, is_captain=false ) {
 		mark_display.className = "player-checkin-mark";
 		text_node = document.createTextNode( "\u2713" );
 		mark_display.appendChild(text_node);
+		player_name.appendChild(mark_display);
+	}
+	
+	// twitch sub mark
+	if ( (!small) && (twitch_subs_list.indexOf(player_struct.id) !== -1) ) {
+		var mark_display = document.createElement("img");
+		mark_display.src = twitch_sub_icon_src;
+		mark_display.alt = "sub";
+		mark_display.title = "Twitch subsciber";
+		mark_display.className = "player-twitch-sub-mark";
 		player_name.appendChild(mark_display);
 	}
 	

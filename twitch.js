@@ -124,7 +124,7 @@ var Twitch = {
 							}
 						}						
 					} catch (err) {
-						if(typeof callback_faill == "function") {
+						if(typeof callback_fail == "function") {
 							if ( ! is_processed ) {
 								callback_fail.call( Twitch, err.message );
 							}
@@ -258,6 +258,187 @@ var Twitch = {
 		this.processSubsciptions( callback_success, callback_fail, callback_unathorized );
 	},*/
 	
+	// for testing purposes
+	getUserInfoByLogin: function( twitch_login, callback_success, callback_fail, callback_unathorized ) {
+		var is_processed = false;
+		var xhttp = new XMLHttpRequest();
+		xhttp.onload = function() {
+			if (this.readyState == 4 ) {
+				if ( this.status == 200) {
+					try {
+						var response_obj = JSON.parse(this.responseText);
+						if ( response_obj["data"] === null ) {	
+							//OWAPI.can_retry = false;
+							throw new Error("parsing failed (0)");
+						}
+						if ( ! Array.isArray(response_obj["data"]) ) {
+							throw new Error("parsing failed (1)");
+						}
+						if ( response_obj["data"].length == 0 ) {
+							throw new Error("user not found");
+						}
+						
+						var user_data = response_obj["data"];
+						
+						if (typeof callback_success == "function") {
+							if ( ! is_processed ) {
+								is_processed = true;
+								let user_data = response_obj["data"][0];							
+								callback_success.call( Twitch, user_data );
+							}
+						}
+												
+					} catch (err) {
+						if(typeof callback_fail == "function") {
+							if ( ! is_processed ) {
+								callback_fail.call( Twitch, err.message );
+							}
+							is_processed = true;
+						}
+					}
+						
+				} else {
+					var msg = "";
+					switch (this.status) {
+						case 401: msg = "Unauthorized";
+									//OWAPI.can_retry = false;
+									if(typeof callback_unathorized == "function") {
+										if ( ! is_processed ) {
+											callback_unathorized.call( Twitch );
+										}
+										is_processed = true;
+									}
+									break;
+						default: msg = "HTTP "+this.status+": "+this.statusText+"";
+									//OWAPI.can_retry = true;
+					}
+					if(typeof callback_fail == "function") {
+						if ( ! is_processed ) {
+							callback_fail.call( Twitch, msg );
+						}
+						is_processed = true;
+					}
+				}
+			}
+		};
+		xhttp.ontimeout = function() {
+			var msg = "timeout";
+			//OWAPI.can_retry = true;
+			if(typeof callback_fail == "function") {
+				if ( ! is_processed ) {
+					callback_fail.call( Twitch, msg );
+				}
+				is_processed = true;
+			}
+		};
+		
+		xhttp.onerror = function() {
+			var msg = "error - "+this.statusText;
+			if(typeof callback_fail == "function") {
+				if ( ! is_processed ) {
+					callback_fail.call( Twitch, msg );
+				} 
+				is_processed = true;
+			}
+		};
+		
+		var url = "https://api.twitch.tv/helix/users?login="+encodeURIComponent(twitch_login);
+		
+		xhttp.open("GET", url, true);
+		xhttp.setRequestHeader("Authorization", "Bearer "+this.user_access_token);
+		//xhttp.timeout = OWAPI.owapi_timeout;
+		xhttp.send();
+	},
+	
+	// uses old v5 twitch api, not implemented in new
+	getSubscriberIcon: function( callback_success, callback_fail, callback_unathorized ) {
+		var is_processed = false;
+		var xhttp = new XMLHttpRequest();
+		xhttp.onload = function() {
+			if (this.readyState == 4 ) {
+				if ( this.status == 200) {
+					try {
+						var response_obj = JSON.parse(this.responseText);
+						if ( response_obj["subscriber"] === null ) {	
+							//OWAPI.can_retry = false;
+							throw new Error("No subscriber badge in response");
+						}
+						var icon_src = response_obj["subscriber"]["image"];
+						if ( icon_src === null ) {	
+							throw new Error("No subscriber icon src in response");
+						}
+						
+						if ( ! is_processed ) {
+							is_processed = true;
+							if(typeof callback_success == "function") {
+								callback_success.call( Twitch, icon_src );
+							}
+						}
+												
+					} catch (err) {
+						if(typeof callback_fail == "function") {
+							if ( ! is_processed ) {
+								callback_fail.call( Twitch, err.message );
+							}
+							is_processed = true;
+						}
+					}
+						
+				} else {
+					var msg = "";
+					switch (this.status) {
+						case 401: msg = "Unauthorized";
+									//OWAPI.can_retry = false;
+									if(typeof callback_unathorized == "function") {
+										if ( ! is_processed ) {
+											callback_unathorized.call( Twitch );
+										}
+										is_processed = true;
+									}
+									break;
+						default: msg = "HTTP "+this.status+": "+this.statusText+"";
+									//OWAPI.can_retry = true;
+					}
+					if(typeof callback_fail == "function") {
+						if ( ! is_processed ) {
+							callback_fail.call( Twitch, msg );
+						}
+						is_processed = true;
+					}
+				}
+			}
+		};
+		xhttp.ontimeout = function() {
+			var msg = "timeout";
+			//OWAPI.can_retry = true;
+			if(typeof callback_fail == "function") {
+				if ( ! is_processed ) {
+					callback_fail.call( Twitch, msg );
+				}
+				is_processed = true;
+			}
+		};
+		
+		xhttp.onerror = function() {
+			var msg = "error - "+this.statusText;
+			if(typeof callback_fail == "function") {
+				if ( ! is_processed ) {
+					callback_fail.call( Twitch, msg );
+				} 
+				is_processed = true;
+			}
+		};
+		
+		var url = "https://api.twitch.tv/kraken/chat/"+encodeURIComponent(Twitch.user_id)+"/badges";
+		xhttp.open("GET", url, true);
+		xhttp.setRequestHeader("Accept", "application/vnd.twitchtv.v5+json");
+		xhttp.setRequestHeader("Client-ID", this.client_id);
+		
+		//xhttp.setRequestHeader("Authorization", "Bearer "+this.user_access_token);
+		//xhttp.timeout = OWAPI.owapi_timeout;
+		xhttp.send();
+	},
+	
 	
 	// private methods
 	
@@ -304,7 +485,7 @@ var Twitch = {
 						}
 												
 					} catch (err) {
-						if(typeof callback_faill == "function") {
+						if(typeof callback_fail == "function") {
 							if ( ! is_processed ) {
 								callback_fail.call( Twitch, err.message );
 							}
