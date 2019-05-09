@@ -803,6 +803,11 @@ function test() {
 	/*document.getElementById("debug_log").innerHTML += "roll debug enabled</br>";
 	roll_debug = true;*/
 	
+	/*twitch_sub_icon_src = "https://static-cdn.jtvnw.net/badges/v1/e60ff002-31a7-45e7-8a71-4243aa18af1e/1";
+	twitch_subs_list.push("player8-38611");
+	redraw_lobby();
+	return;*/
+	
 	Twitch.getUserInfoByLogin( "bloodghast_zk", function( twitch_user_info ) {
 		document.getElementById("debug_log").innerHTML += twitch_user_info.login+" = "+twitch_user_info.id
 		+", broadcaster_type="+twitch_user_info.broadcaster_type+"</br>";
@@ -814,7 +819,7 @@ function twitch_signout() {
 }
 
 function twitch_sub_check() {
-	Twitch.getAllSubscibers( on_twitch_subs_get_complete, undefined, on_twitch_unathorized );
+	Twitch.getAllSubscibers( on_twitch_subs_get_complete, on_twitch_subs_get_fail, on_twitch_unathorized );
 	
 	
 	// @todo rewrite as generator function. Callback hell becomes real...
@@ -1446,6 +1451,10 @@ function on_twitch_subs_get_complete( subscibers_map ) {
 	redraw_lobby();
 }
 
+function on_twitch_subs_get_fail( error_msg ) {
+	document.getElementById("debug_log").innerHTML += "Twitch error: "+error_msg+"</br>";
+}
+
 /*function twitch_sub_check_stage2() {
 	// all twitch id's grabbed
 	// now check actual subscribtion
@@ -1696,13 +1705,14 @@ function draw_player_cell( player_struct, small=false, is_captain=false ) {
 	name_display.appendChild(text_node);
 	player_name.appendChild(name_display);
 	
-	// check-in mark
-	if ( (!small) && (checkin_list.indexOf(player_struct.id) !== -1) ) {
-		var mark_display = document.createElement("span");
-		mark_display.className = "player-checkin-mark";
-		text_node = document.createTextNode( "\u2713" );
-		mark_display.appendChild(text_node);
-		player_name.appendChild(mark_display);
+	// captain mark
+	if ( is_captain || ( (!small) && player_struct.captain ) ) {
+		var captain_icon = document.createElement("span");
+		captain_icon.className = "captain-mark";
+		captain_icon.title = "team captain";
+		text_node = document.createTextNode( " \u265B" );
+		captain_icon.appendChild(text_node);
+		player_name.appendChild(captain_icon);
 	}
 	
 	// twitch sub mark
@@ -1715,14 +1725,13 @@ function draw_player_cell( player_struct, small=false, is_captain=false ) {
 		player_name.appendChild(mark_display);
 	}
 	
-	// captain mark
-	if ( is_captain || ( (!small) && player_struct.captain ) ) {
-		var captain_icon = document.createElement("span");
-		captain_icon.className = "captain-mark";
-		captain_icon.title = "team captain";
-		text_node = document.createTextNode( " \u265B" );
-		captain_icon.appendChild(text_node);
-		player_name.appendChild(captain_icon);
+	// check-in mark
+	if ( (!small) && (checkin_list.indexOf(player_struct.id) !== -1) ) {
+		var mark_display = document.createElement("span");
+		mark_display.className = "player-checkin-mark";
+		text_node = document.createTextNode( "\u2713" );
+		mark_display.appendChild(text_node);
+		player_name.appendChild(mark_display);
 	}
 	
 	new_player_item.appendChild(player_name);

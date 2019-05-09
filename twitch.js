@@ -675,6 +675,8 @@ var Twitch = {
 		var xhttp = new XMLHttpRequest();
 		xhttp.onload = function() {
 			if (this.readyState == 4 ) {
+				// @todo remove, dbg only
+				document.getElementById("debug_log").innerHTML += this.responseText + "<br/>";
 				if ( this.status == 200) {
 					try {
 						var response_obj = JSON.parse(this.responseText);
@@ -685,9 +687,9 @@ var Twitch = {
 						if ( ! Array.isArray(response_obj["data"]) ) {
 							throw new Error("parsing failed (1)");
 						}
-						if ( response_obj["data"].length == 0 ) {
+						/*if ( response_obj["data"].length == 0 ) {
 							throw new Error("user not found");
-						}
+						}*/
 						
 						var user_data = response_obj["data"];
 						var pagination_data = response_obj["pagination"];						
