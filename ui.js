@@ -221,6 +221,7 @@ function edit_player_ok() {
 	}
 	player_struct.display_name = new_name;
 	
+	// @todo check twitch duplicates here and on import
 	player_struct.twitch_name = document.getElementById("dlg_player_twitch_name").value;
 	
 	var new_sr = Number(document.getElementById("dlg_player_sr").value);
@@ -803,6 +804,25 @@ function test() {
 	roll_debug = true;
 }
 
+function twitch_signout() {
+	Twitch.logout( on_twitch_logout_success, on_twitch_logout_fail );
+}
+
+function twitch_sub_check() {
+	Twitch.getAllSubscibers( on_twitch_subs_get_complete, undefined, on_twitch_unathorized );
+	
+	
+	// @todo rewrite as generator function. Callback hell becomes real...
+	// 1. get twitch user_id for players
+	/*var twitch_logins = [];
+	for (var i=0; i<lobby.length; i++) {
+		if (lobby[i].twitch_name != "") {
+			twitch_logins.push( lobby[i].twitch_name );
+		}
+	}
+	Twitch.getUserIdMap( twitch_logins, twitch_sub_check_stage2, undefined, on_twitch_unathorized );*/
+}
+
 function update_all_stats() {
 	open_dialog("popup_dlg_stats_update_init");
 	on_stats_update_limit_change();
@@ -1367,6 +1387,72 @@ function on_stats_update_start() {
 	document.getElementById("stats_update_progress").style.visibility = "visible";
 	clear_stats_update_log();
 	draw_stats_updater_status();
+}
+
+function on_twitch_getuser_success() {
+	document.getElementById("twitch_login_name").innerHTML = escapeHtml( Twitch.user_display_name );
+	document.getElementById("twitch_profile_image").src = Twitch.user_profile_image_url;
+}
+
+function on_twitch_getuser_fail( error_msg ) {
+	alert("Cant get Twitch user data: "+error_msg);
+}
+
+function on_twitch_logout_success() {
+	document.getElementById("twitch_signin").style.display = "block";
+	document.getElementById("twitch_user_info").style.display = "none";
+	localStorage.removeItem( storage_prefix+"twitch_token" );
+}
+
+function on_twitch_logout_fail( error_msg ) {
+	alert("Twitch logout failed: "+error_msg);
+}
+
+/*function on_twitch_sub_checked( twitch_login, tier ) {
+	document.getElementById("debug_log").innerHTML += twitch_login + ' = ' + tier+"</br>";
+	
+	for (var i=0; i<lobby.length; i++) {
+		if (lobby[i].twitch_name === twitch_login) {
+			checkin_list.push(lobby[i].id);
+			break;
+		}
+	}
+	
+	save_checkin_list();
+}*/
+
+function on_twitch_subs_get_complete( subscibers_map ) {
+	for (var i=0; i<lobby.length; i++) {
+		var sub_info = subscibers_map.get( lobby[i].twitch_name );
+		if ( sub_info !== undefined ) {
+			document.getElementById("debug_log").innerHTML += lobby[i].twitch_name + ' tier ' + sub_info.tier+"</br>";
+		}
+	}
+}
+
+/*function twitch_sub_check_stage2() {
+	// all twitch id's grabbed
+	// now check actual subscribtion
+	var twitch_logins = [];
+	for (var i=0; i<lobby.length; i++) {
+		if (lobby[i].twitch_name != "") {
+			twitch_logins.push( lobby[i].twitch_name );
+		}
+	}
+	Twitch.checkSubscription( twitch_logins, on_twitch_sub_checked, undefined, on_twitch_unathorized );
+	
+	for (var [key, value] of Twitch.id_login_map) {
+		document.getElementById("debug_log").innerHTML += key + ' = ' + value+"</br>";
+	}
+}*/
+
+function on_twitch_unathorized() {
+	// probably token expired
+	document.getElementById("twitch_signin").style.display = "block";
+	document.getElementById("twitch_user_info").style.display = "none";
+	document.getElementById("twitch_sub_check_btn").disabled = true;
+	
+	localStorage.removeItem( storage_prefix+"twitch_token" );
 }
 
 /*

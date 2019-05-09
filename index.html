@@ -13,6 +13,7 @@
 <script src="stats_updater.js"></script>
 <script src="import_export.js"></script>
 <script src="ui.js"></script>
+<script src="twitch.js"></script>
 
 </head>
 
@@ -161,7 +162,26 @@ var balance_priority_canvas_gradient;
 				</fieldset>
 				<br/>
 				<br/>
+				
+				
+				<fieldset style="text-align: center;">
+					<legend>Twitch</legend>
+					
+					<div id="twitch_signin">
+						<a href="" rel="external" target="_self" id="twitch_signin_link" onclick="twitch_signin();">Login</a>
+					</div>
+					<div id="twitch_user_info" style="display:none">
+						<img id="twitch_profile_image" src="" style="height:1.7em; vertical-align: middle;">
+						<span id="twitch_login_name"></span>
+						<button onclick="twitch_signout();" title="logout" style="vertical-align: middle;">&times;</button>
+					</div>
+					
+					<br/>
+					<input class="big-btn" type="button" id="twitch_sub_check_btn" onclick="twitch_sub_check();" value="Check subsribers" title="Mark twitch subscibers in lobby" disabled/>
+				</fieldset>
 				<br/>
+				<br/>
+				
 												
 				<input class="big-btn" type="button" id="settings_btn" onclick="settings_dlg_open();" value="&#9881; Settings" title="Open settings dialog"/>
 				<br/>
@@ -943,6 +963,41 @@ lobby_container.style.paddingRight = ""+get_scrollbar_width()+"px";
 
 // load class and rank icons and convert them to data:uri strings, for team export
 prepare_datauri_icons();
+
+
+
+// twitch api init
+let client_id = "x4ywn8cwvjvvipexitcdidxhoz1kem";
+let	redirect_uri = "https://adminimusru.github.io/OWRandomTournament/index.html";
+let	scope = "channel:read:subscriptions chat:read";
+let twitch_access_token = localStorage.getItem(storage_prefix+"twitch_token");
+Twitch.init( client_id, redirect_uri, scope, twitch_access_token );
+document.getElementById("twitch_signin_link").href = Twitch.getLoginURL();
+
+let url_hash = document.location.hash;
+document.location.hash = "";
+if ( url_hash.startsWith('#') ) {
+	url_hash = url_hash.substring(1);
+}
+if (url_hash != "" ) {
+	// process twitch response after redirect
+	let result = Twitch.authenticate( url_hash );
+	if ( result === true ) {
+		// save token
+		localStorage.setItem( storage_prefix+"twitch_token", Twitch.getToken() );
+	} else if ( typeof result === 'string' ) {
+		alert("Twitch login failed: "+result);
+	}
+}
+
+if ( Twitch.isLoggedIn() ) {
+	// user logged in - show name and icon
+	Twitch.getAuthorizedUserInfo( on_twitch_getuser_success, on_twitch_getuser_fail, on_twitch_unathorized );
+	document.getElementById("twitch_signin").style.display = "none";
+	document.getElementById("twitch_user_info").style.display = "block";
+	// unlock twitch buttons 
+	document.getElementById("twitch_sub_check_btn").disabled = false;
+}
 </script>
 </body>
 </html>
