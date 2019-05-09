@@ -803,8 +803,9 @@ function test() {
 	/*document.getElementById("debug_log").innerHTML += "roll debug enabled</br>";
 	roll_debug = true;*/
 	
-	Twitch.getUserInfoByLogin( "Anakq", function( twitch_user_info ) {
-		document.getElementById("debug_log").innerHTML += twitch_user_info.login+" = "+twitch_user_info.id+"</br>";
+	Twitch.getUserInfoByLogin( "bloodghast_zk", function( twitch_user_info ) {
+		document.getElementById("debug_log").innerHTML += twitch_user_info.login+" = "+twitch_user_info.id
+		+", broadcaster_type="+twitch_user_info.broadcaster_type+"</br>";
 		}, undefined, undefined );
 }
 
