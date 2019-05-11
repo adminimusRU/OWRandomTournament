@@ -201,7 +201,7 @@ span.sr-edited {
 
 .big-btn {
 	font-size: 16pt;
-	line-height: 2em;
+	line-height: 1.5em;
 	vertical-align: middle;
 	width: 100%;
 }
@@ -670,10 +670,13 @@ th.sort-down:after {
 	padding-left: 0.5em;
 	font-size: 90%;
 	font-weight: bold;
+	vertical-align: middle;
 }
 
 .player-twitch-sub-mark {
 	padding-left: 0.5em;
+	max-height: 1em;
+	vertical-align: middle;
 }
 
 .player-roll-allow {

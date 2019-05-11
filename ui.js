@@ -212,8 +212,29 @@ function edit_player_ok() {
 	if (player_being_edited == undefined) {
 		return;
 	}
+		
+	var need_full_lobby_redraw = false;
 	
 	var player_struct = player_being_edited;
+	
+	var twitch_name = document.getElementById("dlg_player_twitch_name").value.trim();
+	// check twitch duplicates
+	if ( twitch_name != "" ) {
+		for( var i=0; i<lobby.length; i++) {
+			if ( (twitch_name.toLowerCase() == lobby[i].twitch_name.toLowerCase()) && (lobby[i].id != player_struct.id) ) {
+				alert("Twitch nickname already used: "+lobby[i].id);
+				return;
+			}
+		}
+		for( var t=0; t<teams.length; t++) {
+			for( var i=0; i<teams[t].players.length; i++) {
+				if ( (twitch_name.toLowerCase() == teams[t].players[i].twitch_name.toLowerCase()) && (teams[t].players[i].id != player_struct.id) ) {
+					alert("Twitch nickname already used: "+teams[t].players[i].id);
+					return;
+				}
+			}
+		}
+	}
 	
 	var new_name = document.getElementById("dlg_player_display_name").value;
 	if ( player_struct.display_name != new_name ) {
@@ -221,8 +242,7 @@ function edit_player_ok() {
 	}
 	player_struct.display_name = new_name;
 	
-	// @todo check twitch duplicates here and on import
-	player_struct.twitch_name = document.getElementById("dlg_player_twitch_name").value;
+	player_struct.twitch_name = twitch_name;
 	
 	var new_sr = Number(document.getElementById("dlg_player_sr").value);
 	if ( player_struct.sr != new_sr ) {
@@ -252,10 +272,30 @@ function edit_player_ok() {
 		top_classes.pop();
 	}
 	player_struct.top_classes = top_classes;
+	
+	// twitch sub
+	if ( document.getElementById("dlg_player_twitch_sub").checked ) {
+		if ( twitch_subs_list.indexOf(player_struct.id) == -1 ){
+			twitch_subs_list.push( player_struct.id );
+			save_twitch_subs_list();
+			need_full_lobby_redraw = true;
+		}
+	} else {
+		var index = twitch_subs_list.indexOf(player_struct.id);
+		if ( index !== -1 ){
+			twitch_subs_list.splice( index, 1 );
+			save_twitch_subs_list();
+			need_full_lobby_redraw = true;
+		}
+	}
 		
 	close_dialog("popup_dlg_edit_player");
 	save_players_list();
-	redraw_player( player_struct );
+	if ( need_full_lobby_redraw ) {
+		redraw_lobby();
+	} else {
+		redraw_player( player_struct );
+	}
 	update_captains_count();
 	
 	player_being_edited = undefined;
@@ -629,6 +669,9 @@ function roll_teams() {
 		roll_debug: roll_debug,
 		
 		checkin_list: checkin_list,
+		
+		twitch_subs_list: checkin_list,
+		exclude_twitch_unsubs: Settings.roll_exclude_twitch_unsubs,
 	}
 		
 	RtbWorker.postMessage(["init", rtb_settings]);
@@ -803,10 +846,12 @@ function test() {
 	/*document.getElementById("debug_log").innerHTML += "roll debug enabled</br>";
 	roll_debug = true;*/
 	
-	/*twitch_sub_icon_src = "https://static-cdn.jtvnw.net/badges/v1/e60ff002-31a7-45e7-8a71-4243aa18af1e/1";
+	twitch_sub_icon_src = "https://static-cdn.jtvnw.net/badges/v1/e60ff002-31a7-45e7-8a71-4243aa18af1e/1";
 	twitch_subs_list.push("player8-38611");
+	twitch_subs_list.push("player10-15135");
+	save_twitch_subs_list();
 	redraw_lobby();
-	return;*/
+	return;
 	
 	Twitch.getUserInfoByLogin( "bloodghast_zk", function( twitch_user_info ) {
 		document.getElementById("debug_log").innerHTML += twitch_user_info.login+" = "+twitch_user_info.id
@@ -814,23 +859,31 @@ function test() {
 		}, undefined, undefined );
 }
 
+function twitch_signin() {
+	localStorage.setItem( storage_prefix+"twitch_state", Twitch.getState() );
+	return true;
+}
+
 function twitch_signout() {
 	Twitch.logout( on_twitch_logout_success, on_twitch_logout_fail );
 }
 
 function twitch_sub_check() {
-	Twitch.getAllSubscibers( on_twitch_subs_get_complete, on_twitch_subs_get_fail, on_twitch_unathorized );
-	
-	
-	// @todo rewrite as generator function. Callback hell becomes real...
-	// 1. get twitch user_id for players
-	/*var twitch_logins = [];
-	for (var i=0; i<lobby.length; i++) {
-		if (lobby[i].twitch_name != "") {
-			twitch_logins.push( lobby[i].twitch_name );
-		}
+	if ( teams.length > 0 ) {
+		alert("Only players in lobby will be checked for twitch subscription!");
 	}
-	Twitch.getUserIdMap( twitch_logins, twitch_sub_check_stage2, undefined, on_twitch_unathorized );*/
+	
+	Twitch.getAllSubscibers( on_twitch_subs_get_complete, on_twitch_subs_get_fail, on_twitch_unathorized );
+}
+
+function twitch_sub_reset() {
+	if( ! confirm("Clear twitch subscribers list?") ) {
+		return;
+	}
+	
+	twitch_subs_list = [];
+	save_twitch_subs_list();
+	redraw_lobby();
 }
 
 function update_all_stats() {
@@ -1414,31 +1467,19 @@ function on_twitch_logout_success() {
 	document.getElementById("twitch_signin").style.display = "block";
 	document.getElementById("twitch_user_info").style.display = "none";
 	localStorage.removeItem( storage_prefix+"twitch_token" );
+	localStorage.setItem( storage_prefix+"twitch_logged_out", true );
+	document.getElementById("twitch_signin_link").href = Twitch.getLoginURL();
 }
 
 function on_twitch_logout_fail( error_msg ) {
 	alert("Twitch logout failed: "+error_msg);
 }
 
-/*function on_twitch_sub_checked( twitch_login, tier ) {
-	document.getElementById("debug_log").innerHTML += twitch_login + ' = ' + tier+"</br>";
-	
-	for (var i=0; i<lobby.length; i++) {
-		if (lobby[i].twitch_name === twitch_login) {
-			checkin_list.push(lobby[i].id);
-			break;
-		}
-	}
-	
-	save_checkin_list();
-}*/
-
 function on_twitch_sub_icon_success( icon_src ) {
 	twitch_sub_icon_src = icon_src;
 }
 
 function on_twitch_subs_get_complete( subscibers_map ) {
-	//@ todo alert if there are rolled teams
 	twitch_subs_list = [];
 	for (var i=0; i<lobby.length; i++) {
 		var sub_info = subscibers_map.get( lobby[i].twitch_name );
@@ -1447,29 +1488,14 @@ function on_twitch_subs_get_complete( subscibers_map ) {
 			document.getElementById("debug_log").innerHTML += lobby[i].twitch_name + ' tier ' + sub_info.tier+"</br>";
 		}
 	}
-	// @todo save subs list
+	
+	save_twitch_subs_list();
 	redraw_lobby();
 }
 
 function on_twitch_subs_get_fail( error_msg ) {
 	document.getElementById("debug_log").innerHTML += "Twitch error: "+error_msg+"</br>";
 }
-
-/*function twitch_sub_check_stage2() {
-	// all twitch id's grabbed
-	// now check actual subscribtion
-	var twitch_logins = [];
-	for (var i=0; i<lobby.length; i++) {
-		if (lobby[i].twitch_name != "") {
-			twitch_logins.push( lobby[i].twitch_name );
-		}
-	}
-	Twitch.checkSubscription( twitch_logins, on_twitch_sub_checked, undefined, on_twitch_unathorized );
-	
-	for (var [key, value] of Twitch.id_login_map) {
-		document.getElementById("debug_log").innerHTML += key + ' = ' + value+"</br>";
-	}
-}*/
 
 function on_twitch_unathorized() {
 	// probably token expired
@@ -1617,13 +1643,22 @@ function draw_player_cell( player_struct, small=false, is_captain=false ) {
 	new_player_item.oncontextmenu = function(event){player_contextmenu(event);};
 	
 	// player background color depending on check-in process (only in lobby)
-	if ( (!small) && (checkin_list.length > 0) ) {
-		var roll_allowed = false;
-		if (checkin_list.indexOf(player_struct.id) !== -1) {
-			new_player_item.title += "\nCheck-in: +";
-			roll_allowed = true;
-		} else {
-			new_player_item.title += "\nCheck-in: -";
+	if ( (!small) && ( (checkin_list.length > 0) || (twitch_subs_list.length > 0) ) ) {
+		var roll_allowed = true;
+		
+		if (checkin_list.length > 0) {
+			if (checkin_list.indexOf(player_struct.id) !== -1) {
+				new_player_item.title += "\nCheck-in: +";				
+			} else {
+				roll_allowed = false;
+				new_player_item.title += "\nCheck-in: -";
+			}
+		}
+		
+		if (twitch_subs_list.length > 0) {
+			if (twitch_subs_list.indexOf(player_struct.id) == -1) {
+				roll_allowed = false;
+			}
 		}
 		
 		if (roll_allowed) {
@@ -1631,8 +1666,6 @@ function draw_player_cell( player_struct, small=false, is_captain=false ) {
 		} else {
 			new_player_item.classList.add("player-roll-deny");
 		}
-		
-		
 	}
 	
 	// rank icon
@@ -1719,7 +1752,7 @@ function draw_player_cell( player_struct, small=false, is_captain=false ) {
 	if ( (!small) && (twitch_subs_list.indexOf(player_struct.id) !== -1) ) {
 		var mark_display = document.createElement("img");
 		mark_display.src = twitch_sub_icon_src;
-		mark_display.alt = "sub";
+		mark_display.alt = "[sub]";
 		mark_display.title = "Twitch subsciber";
 		mark_display.className = "player-twitch-sub-mark";
 		player_name.appendChild(mark_display);
@@ -1823,6 +1856,12 @@ function fill_player_stats_dlg() {
 		document.getElementById("dlg_player_twitch_link").style.display = "none";
 		document.getElementById("dlg_player_twitch_link").href = "";
 		document.getElementById("dlg_player_twitch_link").title = "";
+	}
+	
+	if ( twitch_subs_list.indexOf(player_struct.id) !== -1 ) {
+		document.getElementById("dlg_player_twitch_sub").checked = true;
+	} else {
+		document.getElementById("dlg_player_twitch_sub").checked = false;
 	}
 	
 	
@@ -2045,6 +2084,9 @@ function redraw_lobby() {
 	
 	//check-in counter
 	document.getElementById("checkin_counter").innerHTML = checkin_list.length;
+	
+	// twitch counter
+	document.getElementById("twitch_subs_counter").innerHTML = twitch_subs_list.length;
 }
 
 function redraw_player( player_struct ) {
