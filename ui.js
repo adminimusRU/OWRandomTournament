@@ -879,6 +879,15 @@ function test() {
 	);
 }
 
+function twitch_checkin_open() {
+	open_dialog("popup_dlg_twitch_checkin");
+}
+
+function twitch_checkin_close() {
+	// @todo disconnect
+	close_dialog('popup_dlg_twitch_checkin');
+}
+
 function twitch_signin() {
 	localStorage.setItem( storage_prefix+"twitch_state", Twitch.getState() );
 	return true;
@@ -1543,6 +1552,7 @@ function on_twitch_unathorized() {
 	document.getElementById("twitch_signin").style.display = "block";
 	document.getElementById("twitch_user_info").style.display = "none";
 	document.getElementById("twitch_sub_check_btn").disabled = true;
+	document.getElementById("twitch_checkin_btn").disabled = true;
 	
 	localStorage.removeItem( storage_prefix+"twitch_token" );
 }

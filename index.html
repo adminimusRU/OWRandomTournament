@@ -163,6 +163,9 @@ var balance_priority_canvas_gradient;
 					<br/>
 					<input class="medium-btn" type="button" onclick="import_checkin_open();" value="Import" title="Import list of checked-in players"/>
 					<input class="medium-btn" type="button" onclick="reset_checkin();" value="Reset" title="Clear check-in mark for all players"/>
+					<br/>
+					<br/>
+					<input id="twitch_checkin_btn" disabled class="big-btn" type="button" onclick="twitch_checkin_open();" title="Check-in with twitch chat" value="Twitch check-in"/>
 				</fieldset>
 				<br/>
 				
@@ -965,6 +968,134 @@ var balance_priority_canvas_gradient;
 	</div>
 </div>
 
+
+<div id="popup_dlg_twitch_checkin" class="dlg" style="display:none">
+	<div class="dlg-background"></div>
+	<div class="dlg-container">
+		<div class="dlg-content">
+			<span class="team-title">Twitch check-in</span>
+			<input title="Close" type="button" class="team_btn dlg-close" onclick="twitch_checkin_close();" value="X"/>
+			<br/>
+			<br/>
+			
+			<div style="text-align: left;">
+				<label for="twitch_checkin_keyword">Keyword: </label>
+				<input id="twitch_checkin_keyword" type="text" maxlength="200">
+				
+				<label for="twitch_checkin_channel">Twitch channel: </label>
+				<input id="twitch_checkin_channel" type="text" maxlength="200">
+				<input id="twitch_checkin_connect" type="button" value="connect"/>
+			</div>
+			<br/>
+			
+			<div style="display: flex; flex-wrap: nowrap; width: 40em;">
+				<div style="text-align: left;width: 10em;max-height: 25em;overflow-y: scroll;">
+					<div style="position: sticky;top: 0;background-color: white;">Checked-in:</div>
+					<div id="twitch_checkin_list">
+						<div>player1</div>
+						<div>player1</div>
+						<div>player1</div>
+						<div>player1</div>
+						<div>player1</div>
+						<div>player1</div>
+						<div>player1</div>
+						<div>player1</div>
+						<div>player1</div>
+						<div>player1</div>
+						<div>player1</div>
+						<div>player1</div>
+						<div>player1</div>
+						<div>player1</div>
+						<div>player1</div>
+						<div>player1</div>
+						<div>player1</div>
+						<div>player1</div>
+						<div>player1</div>
+						<div>player1</div>
+						<div>player1</div>
+						<div>player1</div>
+						<div>player1</div>
+						<div>player1</div>
+						<div>player1</div>
+						<div>player1</div>
+						<div>player1</div>
+						<div>player1</div>
+						<div>player1</div>
+						<div>player1</div>
+						<div>player1</div>
+						<div>player1</div>
+						<div>player1</div>
+						<div>player1</div>
+					</div>
+				</div>
+				
+				<div id="twitch_checkin_chat" style="max-height: 25em; overflow-y: scroll; text-align: left; border: 1px solid lightgray; margin-left: 1em;">
+					<div>15:45:23 player1: some short message text</div>
+					<div>15:45:23 player1: some short message text</div>
+					<div>15:45:23 player1: some short message text</div>
+					<div>15:45:23 player1: some short message text</div>
+					<div>15:45:23 player1: some short message text</div>
+					<div>15:45:23 player1: some short message text</div>
+					<div>15:45:23 player1: some short message text</div>
+					<div>15:45:23 player1: some short message text</div>
+					<div>15:45:23 player1: some long message text asdbdsbdhsd dsad asd asd asd asd ad </div>
+					<div>15:45:23 player1: some short message text</div>
+					<div>15:45:23 player1: some short message text</div>
+					<div>15:45:23 player1: some short message text</div>
+					<div>15:45:23 player1: some long message text asdbdsbdhsd dsad asd asd asd asd ad </div>
+					<div>15:45:23 player1: some short message text</div>
+					<div>15:45:23 player1: some short message text</div>
+					<div>15:45:23 player1: some short message text</div>
+					<div>15:45:23 player1: some short message text</div>
+					<div>15:45:23 player1: some short message text</div>
+					<div>15:45:23 player1: some long message text asdbdsbdhsd dsad asd asd asd asd ad </div>
+					<div>15:45:23 player1: some short message text</div>
+					<div>15:45:23 player1: some short message text</div>
+					<div>15:45:23 player1: some short message text</div>
+					<div>15:45:23 player1: some short message text</div>
+					<div>15:45:23 player1: some short message text</div>
+					<div>15:45:23 player1: some short message text</div>
+					<div>15:45:23 player1: some long message text asdbdsbdhsd dsad asd asd asd asd ad </div>
+					<div>15:45:23 player1: some short message text</div>
+					<div>15:45:23 player1: some short message text</div>
+					<div>15:45:23 player1: some short message text</div>
+					<div>15:45:23 player1: some short message text</div>
+					<div>15:45:23 player1: some short message text</div>
+					<div>15:45:23 player1: some short message text</div>
+					<div>15:45:23 player1: some long message text asdbdsbdhsd dsad asd asd asd asd ad </div>
+					<div>15:45:23 player1: some short message text</div>
+					<div>15:45:23 player1: some short message text</div>
+					<div>15:45:23 player1: some short message text</div>
+					<div>15:45:23 player1: some short message text</div>
+					<div>15:45:23 player1: some short message text</div>
+					<div>15:45:23 player1: some short message text</div>
+					<div>15:45:23 player1: some long message text asdbdsbdhsd dsad asd asd asd asd ad </div>
+					<div>15:45:23 player1: some short message text</div>
+					<div>15:45:23 player1: some short message text</div>
+					<div>15:45:23 player1: some short message text</div>
+					<div>15:45:23 player1: some short message text</div>
+					<div>15:45:23 player1: some short message text</div>
+					<div>15:45:23 player1: some short message text</div>
+					<div>15:45:23 player1: some long message text asdbdsbdhsd dsad asd asd asd asd ad </div>
+					<div>15:45:23 player1: some short message text</div>
+					<div>15:45:23 player1: some short message text</div>
+					<div>15:45:23 player1: some short message text</div>
+					<div>15:45:23 player1: some short message text</div>
+					<div>15:45:23 player1: some short message text</div>
+					<div>15:45:23 player1: some short message text</div>
+					<div>15:45:23 player1: some long message text asdbdsbdhsd dsad asd asd asd asd ad </div>
+					<div>15:45:23 player1: some short message text</div>
+					<div>15:45:23 player1: some short message text</div>
+					<div>15:45:23 player1: some short message text</div>
+					<div>15:45:23 player1: some short message text</div>
+					<div>15:45:23 player1: some short message text</div>
+					<div>15:45:23 player1: some short message text</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
 <div id="debug_log"></div>
 
 <script>
@@ -1044,6 +1175,7 @@ if ( Twitch.isLoggedIn() ) {
 	document.getElementById("twitch_user_info").style.display = "block";
 	// unlock twitch buttons 
 	document.getElementById("twitch_sub_check_btn").disabled = false;
+	document.getElementById("twitch_checkin_btn").disabled = false;
 }
 </script>
 </body>
