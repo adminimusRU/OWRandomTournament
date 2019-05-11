@@ -211,7 +211,7 @@ var balance_priority_canvas_gradient;
 				</div>
 				<br/>
 								
-				<div style="display: block;">
+				<div style="display: none;">
 					<!-- test buttons -->
 					<input class="medium-btn" type="button" onclick="generate_random_players();" value="+ random players" />
 									
@@ -934,6 +934,32 @@ var balance_priority_canvas_gradient;
 			
 			<div>
 				<input id="dlg_ok" class="big-btn" type="button" value="OK" onclick="import_checkin_ok();"/>
+			</div>
+		</div>
+	</div>
+</div>
+
+<div id="popup_dlg_pending_action" class="dlg" style="display:none">
+	<div class="dlg-background"></div>
+	<div class="dlg-container">
+		<div class="dlg-content" style="min-width: 20em;">
+			<span id="dlg_pending_action_title" class="team-title">Action title</span>
+			
+			<br/>
+			<br/>
+			
+			<div id="popup_dlg_pending_action_loader" class="loader inline-loader"></div>
+			
+			
+			<div id="dlg_pending_action_message">
+				Some text
+			</div>
+			
+			<br/>
+			<br/>
+			
+			<div>
+				<input id="popup_dlg_pending_action_ok" class="big-btn" type="button" value="OK" disabled onclick="close_dialog('popup_dlg_pending_action');"/>
 			</div>
 		</div>
 	</div>

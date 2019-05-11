@@ -679,6 +679,12 @@ th.sort-down:after {
 	vertical-align: middle;
 }
 
+.player-twitch-sub-mark-default {
+	padding-left: 0.5em;
+	font-size: 70%;
+	vertical-align: middle;
+}
+
 .player-roll-allow {
 	background-color: #d3f8d3;
 }
