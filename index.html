@@ -14,6 +14,7 @@
 <script src="import_export.js"></script>
 <script src="ui.js"></script>
 <script src="twitch.js"></script>
+<script src="twitch_chat.js"></script>
 
 </head>
 
@@ -984,12 +985,13 @@ var balance_priority_canvas_gradient;
 				
 				<label for="twitch_checkin_channel">Twitch channel: </label>
 				<input id="twitch_checkin_channel" type="text" maxlength="200">
-				<input id="twitch_checkin_connect" type="button" value="connect"/>
+				<input id="twitch_checkin_connect" type="button" value="connect" onclick="twitch_chat_connect();"/>
+				<input id="twitch_checkin_disconnect" type="button" value="disconnect" onclick="twitch_chat_disconnect();"/>
 			</div>
 			<br/>
 			
 			<div style="display: flex; flex-wrap: nowrap; width: 40em;">
-				<div style="text-align: left;width: 10em;max-height: 25em;overflow-y: scroll;">
+				<div style="flex: 1 1 10em; text-align: left;max-height: 25em;overflow-y: scroll;">
 					<div style="position: sticky;top: 0;background-color: white;">Checked-in:</div>
 					<div id="twitch_checkin_list">
 						<div>player1</div>
@@ -1029,7 +1031,7 @@ var balance_priority_canvas_gradient;
 					</div>
 				</div>
 				
-				<div id="twitch_checkin_chat" style="max-height: 25em; overflow-y: scroll; text-align: left; border: 1px solid lightgray; margin-left: 1em;">
+				<div id="twitch_checkin_chat" style="flex: 4 1 40em; max-height: 25em; overflow-y: scroll; text-align: left; border: 1px solid lightgray; margin-left: 1em;">
 					<div>15:45:23 player1: some short message text</div>
 					<div>15:45:23 player1: some short message text</div>
 					<div>15:45:23 player1: some short message text</div>

@@ -879,6 +879,20 @@ function test() {
 	);
 }
 
+function twitch_chat_connect() {
+	TwitchChat.init( Twitch.user_login, Twitch.getToken() );
+	TwitchChat.message_callback = on_twitch_chat_message;
+	var channel_name = document.getElementById("twitch_checkin_channel").value.trim();
+	TwitchChat.connect( channel_name );
+	// @todo maybe callback?
+	document.getElementById("twitch_checkin_chat").innerHTML = "";
+}
+
+function twitch_chat_disconnect() {
+	TwitchChat.disconnect();
+	twitch_chat_system_msg("disconnected");
+}
+
 function twitch_checkin_open() {
 	open_dialog("popup_dlg_twitch_checkin");
 }
@@ -1486,6 +1500,18 @@ function on_stats_update_start() {
 	document.getElementById("stats_update_progress").style.visibility = "visible";
 	clear_stats_update_log();
 	draw_stats_updater_status();
+}
+
+function on_twitch_chat_message( msg ) {
+	var chat_container = document.getElementById("twitch_checkin_chat");
+	
+	var msg_container = document.createElement("div");
+	msg_container.className = "twitch-chat-msg";
+	text_node = document.createTextNode( msg );
+	msg_container.appendChild(text_node);
+	chat_container.appendChild(msg_container);
+	
+	msg_container.scrollIntoView({behavior: "smooth", block: "end", inline: "nearest"});
 }
 
 function on_twitch_getuser_success() {
@@ -2303,6 +2329,16 @@ function select_html( html_container ) {
 		selection.removeAllRanges();
 		selection.addRange(range);
 	}
+}
+
+function twitch_chat_system_msg( msg ) {
+	var chat_container = document.getElementById("twitch_checkin_chat");
+	
+	var msg_container = document.createElement("div");
+	msg_container.className = "twitch-chat-system-msg";
+	text_node = document.createTextNode( msg );
+	msg_container.appendChild(text_node);
+	chat_container.appendChild(msg_container);
 }
 
 function update_captains_count() {
