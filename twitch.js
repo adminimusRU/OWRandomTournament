@@ -2,7 +2,7 @@
 // API docs: https://dev.twitch.tv/docs/api/
 // usage: 
 //	1. call init(). Optionally pass saved auth token
-//	2. use getLoginURL() to get twitch auth page link
+//	2. use getLoginURL() to get twitch auth page link. Use getState() and save state when user clicks link (optional)
 //	3. if document.location.hash is not empty (user redirected back from twitch auth page) - pass it to authenticate()
 //	4. check successfull auth with Twitch.isLoggedIn()
 //	5. call getAuthorizedUserInfo() to get user data
@@ -117,7 +117,31 @@ var Twitch = {
 	},
 	
 	getAuthorizedUserInfo: function( callback_success, callback_fail, callback_unathorized ) {
-		var is_processed = false;
+		//callback_success, callback_fail, callback_unathorized, pagination_cursor="" 
+		this.apiRequest( 
+			"https://api.twitch.tv/helix/users", 
+			//success
+			function( user_data, pagination_cursor ) {
+				if ( user_data.length == 0 ) {
+					if(typeof callback_fail == "function") {
+						callback_fail.call( Twitch, "user not found" );
+						return;
+					}
+				}
+				Twitch.user_login = user_data[0]["login"];
+				Twitch.user_display_name = user_data[0]["display_name"];
+				Twitch.user_id = user_data[0]["id"];
+				Twitch.user_profile_image_url = user_data[0]["profile_image_url"];
+				if (typeof callback_success == "function") {
+					callback_success.call( Twitch );
+				}
+			},
+			// fail
+			callback_fail,
+			// unathorized
+			callback_unathorized );
+		
+		/*var is_processed = false;
 		var xhttp = new XMLHttpRequest();
 		xhttp.onload = function() {
 			if (this.readyState == 4 ) {
@@ -199,7 +223,7 @@ var Twitch = {
 		
 		xhttp.open("GET", "https://api.twitch.tv/helix/users", true);
 		xhttp.setRequestHeader("Authorization", "Bearer "+this.user_access_token);
-		xhttp.send();
+		xhttp.send();*/
 	},
 	
 	// revoke access token
@@ -429,8 +453,141 @@ var Twitch = {
 	
 	// private methods
 	
-	processSubrsciberListBatch: function( pagination_cursor="", callback_complete, callback_fail, callback_unathorized ) {
+	apiRequest: function( url, callback_success, callback_fail, callback_unathorized, pagination_cursor="" ) {
 		var is_processed = false;
+		var xhttp = new XMLHttpRequest();
+		xhttp.onload = function() {
+			if (this.readyState == 4 ) {
+				// @todo remove, dbg only
+				//document.getElementById("debug_log").innerHTML += this.responseText + "<br/>";
+				if ( this.status == 200) {
+					try {
+						var response_obj = JSON.parse(this.responseText);
+						if ( response_obj["data"] === null ) {	
+							throw new Error("parsing failed (0)");
+						}
+						if ( ! Array.isArray(response_obj["data"]) ) {
+							throw new Error("parsing failed (1)");
+						}
+						
+						var user_data = response_obj["data"];
+						var pagination_data = response_obj["pagination"];
+						var pagination_cursor = "";
+						if ( pagination_data !== undefined ) {
+							pagination_cursor = pagination_data["cursor"];
+						}
+						
+						if ( ! is_processed ) {
+							is_processed = true;
+							if(typeof callback_success == "function") {
+								callback_success.call( Twitch, user_data, pagination_cursor );
+							}
+						}
+												
+					} catch (err) {
+						if(typeof callback_fail == "function") {
+							if ( ! is_processed ) {
+								callback_fail.call( Twitch, err.message );
+							}
+							is_processed = true;
+						}
+					}
+						
+				} else {
+					var msg = "";
+					switch (this.status) {
+						case 401: msg = "Unauthorized";
+									if(typeof callback_unathorized == "function") {
+										if ( ! is_processed ) {
+											callback_unathorized.call( Twitch );
+										}
+										is_processed = true;
+									}
+									break;
+						default: msg = "HTTP "+this.status+": "+this.statusText+"";
+					}
+					if(typeof callback_fail == "function") {
+						if ( ! is_processed ) {
+							callback_fail.call( Twitch, msg );
+						}
+						is_processed = true;
+					}
+				}
+			}
+		};
+		xhttp.ontimeout = function() {
+			var msg = "timeout";
+			if(typeof callback_fail == "function") {
+				if ( ! is_processed ) {
+					callback_fail.call( Twitch, msg );
+				}
+				is_processed = true;
+			}
+		};
+		
+		xhttp.onerror = function() {
+			var msg = "error - "+this.statusText;
+			if(typeof callback_fail == "function") {
+				if ( ! is_processed ) {
+					callback_fail.call( Twitch, msg );
+				} 
+				is_processed = true;
+			}
+		};
+		
+		/*var url = "https://api.twitch.tv/helix/subscriptions?broadcaster_id="+encodeURIComponent(Twitch.user_id);
+		if ( pagination_cursor != "" ) {
+			url += "&after="+encodeURIComponent(pagination_cursor);
+		}*/
+		
+		xhttp.open("GET", url, true);
+		xhttp.setRequestHeader("Authorization", "Bearer "+Twitch.user_access_token);
+		xhttp.send();
+	},
+	
+	processSubrsciberListBatch: function( pagination_cursor="", callback_complete, callback_fail, callback_unathorized ) {
+		var url = "https://api.twitch.tv/helix/subscriptions?broadcaster_id="+encodeURIComponent(Twitch.user_id);
+		if ( pagination_cursor != "" ) {
+			url += "&after="+encodeURIComponent(pagination_cursor);
+		}
+		
+		this.apiRequest( 
+			url,
+			//success
+			function( user_data, pagination_cursor ) {
+				// @todo remove, dbg only
+				document.getElementById("debug_log").innerHTML += JSON.stringify(user_data, null, ' ') + "<br/>";
+				document.getElementById("debug_log").innerHTML += "pagination = " + pagination_cursor + "<br/>";
+				
+				if ( user_data.length == 0 ) {
+					// all data grabbed
+					if(typeof callback_complete == "function") {
+						callback_complete.call( Twitch, Twitch.subscibers_map );
+						return;
+					}
+				}
+				
+				for ( var i=0; i<user_data.length; i++) {
+					let user_name = user_data[i]["user_name"];
+					let user_id = user_data[i]["id"];
+					let sub_tier = user_data[i]["tier"];
+					let sub_info_obj = {
+						"user_id": user_id,
+						"tier": sub_tier,
+					}
+					
+					Twitch.subscibers_map.set( user_name, sub_info_obj );
+				}
+				
+				// process next batch
+				Twitch.processSubrsciberListBatch( pagination_cursor, callback_complete, callback_fail, callback_unathorized );
+			},
+			// fail
+			callback_fail,
+			// unathorized
+			callback_unathorized );
+		
+		/*var is_processed = false;
 		var xhttp = new XMLHttpRequest();
 		xhttp.onload = function() {
 			if (this.readyState == 4 ) {
@@ -473,7 +630,7 @@ var Twitch = {
 							}
 							
 							// process next batch
-							let pagination_cursor = pagination_data["cursor"];							
+							let pagination_cursor = pagination_data["cursor"];
 							Twitch.processSubrsciberListBatch( pagination_cursor, callback_complete, callback_fail, callback_unathorized );
 						}
 												
@@ -535,6 +692,6 @@ var Twitch = {
 		
 		xhttp.open("GET", url, true);
 		xhttp.setRequestHeader("Authorization", "Bearer "+this.user_access_token);
-		xhttp.send();
+		xhttp.send();*/
 	},
 }
