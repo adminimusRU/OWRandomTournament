@@ -13,6 +13,7 @@
 <script src="stats_updater.js"></script>
 <script src="import_export.js"></script>
 <script src="ui.js"></script>
+<script src="twitch.js"></script>
 
 </head>
 
@@ -22,6 +23,9 @@ var lobby = [];
 var teams = [];
 
 var checkin_list = []; //id's of checked-in players
+
+var twitch_subs_list = []; //id's of twitch subscribers
+var twitch_sub_icon_src = "";
 
 var player_being_added;
 var player_being_edited;
@@ -102,6 +106,7 @@ var balance_priority_canvas_gradient;
 						<div onclick="sort_lobby('class', this);">by class</div>
 						<div onclick="sort_lobby('level', this);">by level</div>
 						<div onclick="sort_lobby('checkin', this);">by check-in</div>
+						<div onclick="sort_lobby('twitch_sub', this);">by twitch sub</div>
 						<div onclick="shuffle_lobby();">shuffle</div>
 					</div>
 				</div>
@@ -146,13 +151,13 @@ var balance_priority_canvas_gradient;
 				<input class="big-btn" type="button" onclick="export_teams_dlg_open();" value="Export teams"/>
 				<br/>
 				<br/>
-				<br/>
 				
 				<fieldset style="text-align: center;">
 					<legend>Check-in</legend>
 					
-					<span id="checkin_counter">0</span> checked-in
-					<br/>
+					<div style="padding-bottom: 0.5em;">
+						<span id="checkin_counter">0</span> checked-in
+					</div>
 					<input class="big-btn" type="button" onclick="manual_checkin_open();" value="Manual check-in"/>
 					<br/>
 					<br/>
@@ -160,11 +165,31 @@ var balance_priority_canvas_gradient;
 					<input class="medium-btn" type="button" onclick="reset_checkin();" value="Reset" title="Clear check-in mark for all players"/>
 				</fieldset>
 				<br/>
+				
+				<fieldset style="text-align: center;">
+					<legend>Twitch</legend>
+					
+					<div id="twitch_signin" style="padding-bottom: 0.5em;">
+						<a href="" rel="external" target="_self" id="twitch_signin_link" onclick="twitch_signin();">Login</a>
+					</div>
+					<div id="twitch_user_info" style="display:none; padding-bottom: 0.5em;">
+						<img id="twitch_profile_image" src="" style="height:1.7em; vertical-align: middle;">
+						<span id="twitch_login_name"></span>
+						<button onclick="twitch_signout();" title="logout" style="vertical-align: middle;">&times;</button>
+					</div>
+					
+					<div style="padding-bottom: 0.5em;">
+						<span id="twitch_subs_counter">0</span> subscibers
+					</div>
+					
+					<input class="big-btn" type="button" id="twitch_sub_check_btn" onclick="twitch_sub_check();" value="Check subsribers" title="Mark twitch subscibers in lobby. Players without subscription will be excluded from roll." disabled/>
+					<br/>
+					<br/>
+					<input class="big-btn" type="button" id="twitch_sub_clear_btn" onclick="twitch_sub_reset();" value="Reset subsribers" title="Clear twitch subsciber mark for all players"/>
+				</fieldset>
 				<br/>
-				<br/>
-												
+				
 				<input class="big-btn" type="button" id="settings_btn" onclick="settings_dlg_open();" value="&#9881; Settings" title="Open settings dialog"/>
-				<br/>
 				<br/>
 				<br/>
 				
@@ -397,6 +422,12 @@ var balance_priority_canvas_gradient;
 					</div>
 				</div>
 				<div class="row">
+					<div class="cell"><label for="dlg_player_twitch_sub" title="">Twitch subscriber:</label></div>
+					<div class="cell">
+						<input type="checkbox" id="dlg_player_twitch_sub">
+					</div>
+				</div>
+				<div class="row">
 					<div class="cell"><label for="dlg_player_display_name">Name:</label></div>
 					<div class="cell">
 						<input id="dlg_player_display_name" type="text">
@@ -564,6 +595,10 @@ var balance_priority_canvas_gradient;
 							
 							<input type="checkbox" id="roll_separate_otps">
 							<label for="roll_separate_otps">Do not place similar one-trick ponies into same team</label>
+							</br>
+							
+							<input type="checkbox" id="roll_exclude_twitch_unsubs">
+							<label for="roll_exclude_twitch_unsubs">Exclude players without Twitch subscription</label>
 							</br>
 							
 							<label for="roll_min_level" style="width: 7em;display: inline-block;">
@@ -904,6 +939,32 @@ var balance_priority_canvas_gradient;
 	</div>
 </div>
 
+<div id="popup_dlg_pending_action" class="dlg" style="display:none">
+	<div class="dlg-background"></div>
+	<div class="dlg-container">
+		<div class="dlg-content" style="min-width: 20em;">
+			<span id="dlg_pending_action_title" class="team-title">Action title</span>
+			
+			<br/>
+			<br/>
+			
+			<div id="popup_dlg_pending_action_loader" class="loader inline-loader"></div>
+			
+			
+			<div id="dlg_pending_action_message">
+				Some text
+			</div>
+			
+			<br/>
+			<br/>
+			
+			<div>
+				<input id="popup_dlg_pending_action_ok" class="big-btn" type="button" value="OK" disabled onclick="close_dialog('popup_dlg_pending_action');"/>
+			</div>
+		</div>
+	</div>
+</div>
+
 <div id="debug_log"></div>
 
 <script>
@@ -932,6 +993,7 @@ if ( saved_settings_json != null ) {
 restore_saved_teams();
 
 restore_checkin_list();
+restore_twitch_subs_list();
 redraw_lobby();
 
 apply_stats_updater_settings();
@@ -943,6 +1005,46 @@ lobby_container.style.paddingRight = ""+get_scrollbar_width()+"px";
 
 // load class and rank icons and convert them to data:uri strings, for team export
 prepare_datauri_icons();
+
+
+
+// twitch api init
+let client_id = "x4ywn8cwvjvvipexitcdidxhoz1kem";
+let	redirect_uri = "https://adminimusru.github.io/OWRandomTournament/index.html";
+let	scope = "channel:read:subscriptions chat:read";
+let twitch_access_token = localStorage.getItem(storage_prefix+"twitch_token");
+let twitch_state = localStorage.getItem(storage_prefix+"twitch_state");
+localStorage.removeItem( storage_prefix+"twitch_state" );
+let twitch_logged_out = ( localStorage.getItem(storage_prefix+"twitch_logged_out") === 'true' );
+
+Twitch.init( client_id, redirect_uri, scope, twitch_access_token, twitch_state, twitch_logged_out );
+document.getElementById("twitch_signin_link").href = Twitch.getLoginURL();
+
+let url_hash = document.location.hash;
+document.location.hash = "";
+if ( url_hash.startsWith('#') ) {
+	url_hash = url_hash.substring(1);
+}
+if (url_hash != "" ) {
+	// process twitch response after redirect
+	let result = Twitch.authenticate( url_hash );
+	if ( result === true ) {
+		// save token
+		localStorage.setItem( storage_prefix+"twitch_token", Twitch.getToken() );
+		localStorage.setItem( storage_prefix+"twitch_logged_out", false );
+	} else if ( typeof result === 'string' ) {
+		alert("Twitch login failed: "+result);
+	}
+}
+
+if ( Twitch.isLoggedIn() ) {
+	// user logged in - show name and icon
+	Twitch.getAuthorizedUserInfo( on_twitch_getuser_success, on_twitch_getuser_fail, on_twitch_unathorized );
+	document.getElementById("twitch_signin").style.display = "none";
+	document.getElementById("twitch_user_info").style.display = "block";
+	// unlock twitch buttons 
+	document.getElementById("twitch_sub_check_btn").disabled = false;
+}
 </script>
 </body>
 </html>

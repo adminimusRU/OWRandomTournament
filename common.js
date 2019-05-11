@@ -100,7 +100,7 @@ function escapeHtml(html){
 	return p.innerHTML;
 }
 
-function find_player_by_id(player_id) {
+function find_player_by_id(player_id, additional_player_array=[]) {
 	for( var i=0; i<lobby.length; i++) {
 		if ( player_id == lobby[i].id) {
 			return lobby[i];
@@ -111,6 +111,33 @@ function find_player_by_id(player_id) {
 			if ( player_id == teams[t].players[i].id) {
 				return teams[t].players[i];
 			}
+		}
+	}
+	for( var i=0; i<additional_player_array.length; i++) {
+		if ( player_id == additional_player_array[i].id) {
+			return additional_player_array[i];
+		}
+	}
+	return undefined;
+}
+
+function find_player_by_twitch_name( twitch_name, additional_player_array=[] ) {
+	twitch_name = twitch_name.toLowerCase();
+	for( var i=0; i<lobby.length; i++) {
+		if ( twitch_name == lobby[i].twitch_name.toLowerCase()) {
+			return lobby[i];
+		}
+	}
+	for( var t=0; t<teams.length; t++) {
+		for( var i=0; i<teams[t].players.length; i++) {
+			if ( twitch_name == teams[t].players[i].twitch_name.toLowerCase()) {
+				return teams[t].players[i];
+			}
+		}
+	}
+	for( var i=0; i<additional_player_array.length; i++) {
+		if ( twitch_name == additional_player_array[i].twitch_name.toLowerCase()) {
+			return additional_player_array[i];
 		}
 	}
 	return undefined;
@@ -145,6 +172,7 @@ function get_default_settings() {
 		roll_team_count_power2: false,
 		roll_min_level: 0,
 		roll_captains: "highest-ranked",
+		roll_exclude_twitch_unsubs: true,
 		
 		region: "eu",
 		update_class: true,
@@ -274,6 +302,12 @@ function sort_players( team, sort_field = 'sr', order_asc=false ) {
 		team.sort( function(player1, player2){
 				var val1 = checkin_list.indexOf(player1.id) ;
 				var val2 = checkin_list.indexOf(player2.id) ;
+				return order * (val1 - val2);
+			} );
+	} else if ( sort_field == 'twitch_sub' ) {
+		team.sort( function(player1, player2){
+				var val1 = twitch_subs_list.indexOf(player1.id) ;
+				var val2 = twitch_subs_list.indexOf(player2.id) ;
 				return order * (val1 - val2);
 			} );
 	} else {

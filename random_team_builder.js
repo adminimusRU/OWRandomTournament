@@ -5,7 +5,12 @@ var RandomTeamBuilder = {
 	// id's of checked-in players. 
 	// not checked-in will be excluded from roll
 	// if empty - ignored
-	checkin_list: [], 
+	checkin_list: [],
+	
+	// id's of twitch subscribers. 
+	// non-subs will be excluded from roll if exclude_twitch_unsubs=true
+	// if empty - ignored
+	twitch_subs_list: [],
 	
 	// callbacks
 	onProgressChange: undefined,
@@ -32,6 +37,8 @@ var RandomTeamBuilder = {
 	separate_otps: true,
 	// minimum level requirement (anti-smurf)
 	min_level: 0,
+	// see twitch_subs_list
+	exclude_twitch_unsubs: true,
 	// auto assign captains for rolled teams. Possible values: "highest-ranked", "disabled"
 	assign_captains: "highest-ranked",
 	// maximum number of combinations checked to find balanced team.
@@ -119,6 +126,15 @@ var RandomTeamBuilder = {
 		if ( this.checkin_list.length > 0 ) {
 			for ( var i=this.players.length-1; i>=0; i-- ) {
 				if ( this.checkin_list.indexOf(this.players[i].id) == -1 ) {
+					this.filtered_players.push( this.players.splice(i, 1)[0] );
+				}
+			}
+		}
+				
+		// filter by twitch subscription
+		if ( (this.twitch_subs_list.length > 0) && this.exclude_twitch_unsubs ) {
+			for ( var i=this.players.length-1; i>=0; i-- ) {
+				if ( this.twitch_subs_list.indexOf(this.players[i].id) == -1 ) {
 					this.filtered_players.push( this.players.splice(i, 1)[0] );
 				}
 			}

@@ -313,11 +313,18 @@ function import_lobby( format, import_str ) {
 				var imported_player = import_struct.players[i];
 				
 				// check duplicates
-				if (find_player_by_id(imported_player.id) !== undefined ) {
+				if (find_player_by_id(imported_player.id, added_players) !== undefined ) {
 					continue;
 				}
 				
 				imported_player = sanitize_player_struct( imported_player, import_struct.format_version );
+				
+				// check twitch duplicates
+				if ( imported_player["twitch_name"] != "" ) {
+					if (find_player_by_twitch_name(imported_player["twitch_name"], added_players) !== undefined ) {
+						throw new Error("Twitch name duplicate: "+imported_player["twitch_name"]);
+					}
+				}
 				
 				if ( imported_player.order <= 0 ) {
 					order_base++;
@@ -385,6 +392,13 @@ function import_lobby( format, import_str ) {
 					}
 				}
 				
+				// check twitch duplicates
+				if ( new_player.twitch_name != "" ) {
+					if (find_player_by_twitch_name(new_player.twitch_name, added_players) !== undefined ) {
+						throw new Error("Twitch name duplicate: "+new_player.twitch_name);
+					}
+				}
+				
 				if ( fields.length < 3 ) {
 					players_for_update.push( new_player );
 				}
@@ -408,7 +422,7 @@ function import_lobby( format, import_str ) {
 	for( var p in added_players ) {
 		lobby.push( added_players[p] );
 	}
-		
+	
 	redraw_lobby();
 	save_players_list();
 	
@@ -547,6 +561,20 @@ function restore_saved_teams() {
 	redraw_teams();
 }
 
+function restore_twitch_subs_list() {
+	var saved_twitch_subs_json = localStorage.getItem( storage_prefix+"twitch_subs" );
+	if ( saved_twitch_subs_json != null ) {
+		var saved_twitch_subs = JSON.parse(saved_twitch_subs_json);
+		
+		// restore only existing players
+		for ( var i in saved_twitch_subs ) {
+			if ( find_player_by_id(saved_twitch_subs[i]) !== undefined ) {
+				twitch_subs_list.push(saved_twitch_subs[i]);
+			}
+		}
+	}
+}
+
 function sanitize_player_struct( player_struct, saved_format ) {	
 	if ( ! Array.isArray(player_struct.top_classes) ) {
 		player_struct.top_classes = [];
@@ -621,4 +649,8 @@ function save_players_list() {
 	localStorage.setItem(storage_prefix+"lobby", JSON.stringify(lobby));
 	localStorage.setItem(storage_prefix+"team_setup", JSON.stringify(teams));
 	localStorage.setItem(storage_prefix+"saved_format", current_format_version());
+}
+
+function save_twitch_subs_list() {
+	localStorage.setItem(storage_prefix+"twitch_subs", JSON.stringify(twitch_subs_list));
 }
