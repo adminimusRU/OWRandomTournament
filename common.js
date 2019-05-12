@@ -271,6 +271,20 @@ function print_date( date_value ) {
 	}
 }
 
+function print_time( date_value ) {
+	var hr = date_value.getHours();
+	var min = date_value.getMinutes();
+	if (min < 10) {
+		min = "0" + min;
+	}
+	var sec = date_value.getSeconds();
+	if (sec < 10) {
+		sec = "0" + sec;
+	}
+	var result = hr+":"+min+":"+sec;
+	return result;
+}
+
 function round_to( value, precision ) {
 	return Math.round(value * Math.pow(10, precision)) / Math.pow(10, precision);
 }

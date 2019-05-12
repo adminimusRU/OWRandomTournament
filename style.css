@@ -692,3 +692,29 @@ th.sort-down:after {
 .player-roll-deny {
 	background-color: #ffd4cc;
 }
+
+.twitch-chat-msg {
+	font-family: sans-serif;
+	font-size: 10pt;
+	margin-bottom: 0.4em;
+}
+
+.twitch-chat-system-msg {
+	font-style: italic;
+	color: gray;
+	margin-bottom: 0.4em;
+}
+
+.twitch-chat-username {
+	font-weight: bold;
+}
+
+.twitch-chat-timestamp {
+	color: gray;
+	margin-right: 0.2em;
+	font-size: 8pt;
+}
+
+.twitch-chat-keyword {
+	background-color: yellow;
+}

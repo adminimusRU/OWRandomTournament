@@ -28,6 +28,10 @@ var checkin_list = []; //id's of checked-in players
 var twitch_subs_list = []; //id's of twitch subscribers
 var twitch_sub_icon_src = "";
 
+var twitch_checkin_keyword = "";
+var twitch_chat_max_messages = 200;
+var twitch_chat_debug = false;
+
 var player_being_added;
 var player_being_edited;
 var team_being_edited;
@@ -166,7 +170,7 @@ var balance_priority_canvas_gradient;
 					<input class="medium-btn" type="button" onclick="reset_checkin();" value="Reset" title="Clear check-in mark for all players"/>
 					<br/>
 					<br/>
-					<input id="twitch_checkin_btn" disabled class="big-btn" type="button" onclick="twitch_checkin_open();" title="Check-in with twitch chat" value="Twitch check-in"/>
+					<input id="twitch_checkin_btn" disabled class="big-btn" type="button" onclick="twitch_checkin_open();" title="Check-in with twitch chat" value="Twitch check-in" autocomplete="off"/>
 				</fieldset>
 				<br/>
 				
@@ -186,7 +190,7 @@ var balance_priority_canvas_gradient;
 						<span id="twitch_subs_counter">0</span> subscibers
 					</div>
 					
-					<input class="big-btn" type="button" id="twitch_sub_check_btn" onclick="twitch_sub_check();" value="Check subsribers" title="Mark twitch subscibers in lobby. Players without subscription will be excluded from roll." disabled/>
+					<input class="big-btn" type="button" id="twitch_sub_check_btn" onclick="twitch_sub_check();" value="Check subsribers" title="Mark twitch subscibers in lobby. Players without subscription will be excluded from roll." disabled autocomplete="off"/>
 					<br/>
 					<br/>
 					<input class="big-btn" type="button" id="twitch_sub_clear_btn" onclick="twitch_sub_reset();" value="Reset subsribers" title="Clear twitch subsciber mark for all players"/>
@@ -220,6 +224,12 @@ var balance_priority_canvas_gradient;
 					<input class="medium-btn" type="button" onclick="generate_random_players();" value="+ random players" />
 									
 					<input class="medium-btn" type="button" onclick="generate_random_teams();" value="+ random teams" />
+					<br/>
+					<br/>
+					
+					<input class="medium-btn" type="button" onclick="dbg_roll();" value="dbg roll" />
+									
+					<input class="medium-btn" type="button" onclick="dbg_twitch_chat();" value="dbg twitch chat" />
 					<br/>
 					<br/>
 					
@@ -981,17 +991,18 @@ var balance_priority_canvas_gradient;
 			
 			<div style="text-align: left;">
 				<label for="twitch_checkin_keyword">Keyword: </label>
-				<input id="twitch_checkin_keyword" type="text" maxlength="200">
+				<input id="twitch_checkin_keyword" type="text" maxlength="200" onchange="twitch_checkin_keyword_change();" placeholder="<any message counts>">
 				
 				<label for="twitch_checkin_channel">Twitch channel: </label>
 				<input id="twitch_checkin_channel" type="text" maxlength="200">
+				
 				<input id="twitch_checkin_connect" type="button" value="connect" onclick="twitch_chat_connect();"/>
 				<input id="twitch_checkin_disconnect" type="button" value="disconnect" onclick="twitch_chat_disconnect();"/>
 			</div>
 			<br/>
 			
 			<div style="display: flex; flex-wrap: nowrap; width: 40em;">
-				<div style="flex: 1 1 10em; text-align: left;max-height: 25em;overflow-y: scroll;">
+				<div style="flex: 1 1 10em; text-align: left;max-height: 35em;overflow-y: scroll;">
 					<div style="position: sticky;top: 0;background-color: white;">Checked-in:</div>
 					<div id="twitch_checkin_list">
 						<div>player1</div>
@@ -1031,8 +1042,8 @@ var balance_priority_canvas_gradient;
 					</div>
 				</div>
 				
-				<div id="twitch_checkin_chat" style="flex: 4 1 40em; max-height: 25em; overflow-y: scroll; text-align: left; border: 1px solid lightgray; margin-left: 1em;">
-					<div>15:45:23 player1: some short message text</div>
+				<div id="twitch_checkin_chat" style="flex: 4 1 40em; max-height: 35em; overflow-y: scroll; text-align: left; border: 1px solid lightgray; margin-left: 1em;">
+					<!--<div>15:45:23 player1: some short message text</div>
 					<div>15:45:23 player1: some short message text</div>
 					<div>15:45:23 player1: some short message text</div>
 					<div>15:45:23 player1: some short message text</div>
@@ -1091,7 +1102,7 @@ var balance_priority_canvas_gradient;
 					<div>15:45:23 player1: some short message text</div>
 					<div>15:45:23 player1: some short message text</div>
 					<div>15:45:23 player1: some short message text</div>
-					<div>15:45:23 player1: some short message text</div>
+					<div>15:45:23 player1: some short message text</div>-->
 				</div>
 			</div>
 		</div>
@@ -1175,9 +1186,6 @@ if ( Twitch.isLoggedIn() ) {
 	Twitch.getAuthorizedUserInfo( on_twitch_getuser_success, on_twitch_getuser_fail, on_twitch_unathorized );
 	document.getElementById("twitch_signin").style.display = "none";
 	document.getElementById("twitch_user_info").style.display = "block";
-	// unlock twitch buttons 
-	document.getElementById("twitch_sub_check_btn").disabled = false;
-	document.getElementById("twitch_checkin_btn").disabled = false;
 }
 </script>
 </body>

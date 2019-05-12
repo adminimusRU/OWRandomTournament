@@ -197,6 +197,16 @@ function close_dialog( dialog_id ) {
 	document.getElementById( dialog_id ).style.display = "none";
 }
 
+function dbg_roll() {
+	document.getElementById("debug_log").innerHTML += "roll debug enabled</br>";
+	roll_debug = true;
+}
+
+function dbg_twitch_chat() {
+	document.getElementById("debug_log").innerHTML += "twitch chat debug enabled</br>";
+	twitch_chat_debug = true;
+}
+
 function delete_team( team_index ) {
 	if ( ! confirm("Delete team?") ) {
 		return;
@@ -880,26 +890,45 @@ function test() {
 }
 
 function twitch_chat_connect() {
+	document.getElementById("twitch_checkin_connect").disabled = true;
+	
+	twitch_checkin_keyword = document.getElementById("twitch_checkin_keyword").value;
+	
 	TwitchChat.init( Twitch.user_login, Twitch.getToken() );
+	
 	TwitchChat.message_callback = on_twitch_chat_message;
+	TwitchChat.connect_callback = on_twitch_chat_connect;
+	TwitchChat.disconnect_callback = on_twitch_chat_disconnect;
+	TwitchChat.system_message_callback = on_twitch_chat_sysmessage;
+	TwitchChat.error_callback = on_twitch_chat_error;
+	TwitchChat.debug_callback = on_twitch_chat_debug;
+		
 	var channel_name = document.getElementById("twitch_checkin_channel").value.trim();
+	
 	TwitchChat.connect( channel_name );
-	// @todo maybe callback?
-	document.getElementById("twitch_checkin_chat").innerHTML = "";
 }
 
 function twitch_chat_disconnect() {
+	document.getElementById("twitch_checkin_disconnect").disabled = true;
 	TwitchChat.disconnect();
-	twitch_chat_system_msg("disconnected");
+	//twitch_chat_print_sysmessage("disconnected"); - not needed, do on callback
 }
 
 function twitch_checkin_open() {
+	document.getElementById("twitch_checkin_chat").innerHTML = "";
+	document.getElementById("twitch_checkin_connect").style.display = "inline";
+	document.getElementById("twitch_checkin_connect").disabled = false;
+	document.getElementById("twitch_checkin_disconnect").style.display = "none";
+	document.getElementById("twitch_checkin_channel").value = Twitch.user_login;
 	open_dialog("popup_dlg_twitch_checkin");
 }
 
 function twitch_checkin_close() {
-	// @todo disconnect
 	close_dialog('popup_dlg_twitch_checkin');
+	
+	if ( TwitchChat.isConnected() ) {
+		TwitchChat.disconnect();
+	}
 }
 
 function twitch_signin() {
@@ -1345,6 +1374,11 @@ function team_contextmenu(ev) {
 	edit_team(team_index);
 }
 
+function twitch_checkin_keyword_change() {
+	twitch_checkin_keyword = document.getElementById("twitch_checkin_keyword").value;
+	// @todo maybe remember?
+}
+
 /*
 *		Other events
 */
@@ -1502,21 +1536,123 @@ function on_stats_update_start() {
 	draw_stats_updater_status();
 }
 
-function on_twitch_chat_message( msg ) {
+function on_twitch_chat_connect() {
+	document.getElementById("twitch_checkin_connect").style.display = "none";
+	document.getElementById("twitch_checkin_disconnect").style.display = "inline";
+	document.getElementById("twitch_checkin_disconnect").disabled = false;
+	twitch_chat_print_sysmessage( "connected "+TwitchChat.channel_name );
+}
+
+function on_twitch_chat_debug( msg_struct ) {
+	if ( ! twitch_chat_debug ) {
+		return;
+	}
+	document.getElementById("debug_log").innerHTML += "raw: " 		+ msg_struct.raw_msg + "<br/>";
+	document.getElementById("debug_log").innerHTML += "prefix: " 	+ msg_struct.prefix + "<br/>";
+	document.getElementById("debug_log").innerHTML += "command: " 	+ msg_struct.command + "<br/>";
+	document.getElementById("debug_log").innerHTML += "params: " 	+ msg_struct.params + "<br/>";
+	document.getElementById("debug_log").innerHTML += "params array: " 	+ JSON.stringify(msg_struct.params_array, null, ' ') + "<br/>";
+	document.getElementById("debug_log").innerHTML += "<br/><br/>";
+}
+
+function on_twitch_chat_disconnect() {
+	document.getElementById("twitch_checkin_connect").style.display = "inline";
+	document.getElementById("twitch_checkin_connect").disabled = false;
+	document.getElementById("twitch_checkin_disconnect").style.display = "none";
+	twitch_chat_print_sysmessage( "disconnected "+TwitchChat.channel_name );
+}
+
+function on_twitch_chat_error( msg_text ) {
+	twitch_chat_print_sysmessage( "Error:" + msg_text );
+}
+
+function on_twitch_chat_message( message_username, message_text ) {
 	var chat_container = document.getElementById("twitch_checkin_chat");
+	
+	if ( chat_container.childElementCount >= twitch_chat_max_messages ) {
+		// remove oldest message
+		let oldest_message = chat_container.children[0];
+		oldest_message.parentNode.removeChild(oldest_message);
+	}
 	
 	var msg_container = document.createElement("div");
 	msg_container.className = "twitch-chat-msg";
-	text_node = document.createTextNode( msg );
-	msg_container.appendChild(text_node);
-	chat_container.appendChild(msg_container);
 	
-	msg_container.scrollIntoView({behavior: "smooth", block: "end", inline: "nearest"});
+	// timestamp
+	var span = document.createElement("span");
+	span.className = "twitch-chat-timestamp";
+	var text_node = document.createTextNode( print_time( new Date() ) );
+	span.appendChild(text_node);
+	msg_container.appendChild(span);
+	
+	// user name
+	var span = document.createElement("span");
+	span.className = "twitch-chat-username";
+	var text_node = document.createTextNode( message_username );
+	span.appendChild(text_node);
+	msg_container.appendChild(span);
+	
+	// separator
+	var text_node = document.createTextNode( ": " );
+	msg_container.appendChild(text_node);
+	
+	// message text
+	// split message text by keyword for highlighting
+	var current_pos = 0;
+	if ( twitch_checkin_keyword != "" ) {
+		var keyword_pos = message_text.indexOf(twitch_checkin_keyword);
+		while ( keyword_pos != -1 ) {
+			var text_part = message_text.slice( current_pos, keyword_pos );
+			
+			var span = document.createElement("span");
+			var text_node = document.createTextNode( text_part );
+			span.appendChild(text_node);
+			msg_container.appendChild(span);
+			
+			text_part = message_text.slice( keyword_pos, keyword_pos+twitch_checkin_keyword.length );
+			
+			var span = document.createElement("span");
+			span.className = "twitch-chat-keyword";
+			var text_node = document.createTextNode( text_part );
+			span.appendChild(text_node);
+			msg_container.appendChild(span);
+			
+			current_pos += keyword_pos+twitch_checkin_keyword.length;
+			
+			keyword_pos = message_text.indexOf(twitch_checkin_keyword, current_pos);
+		}
+	}
+	
+	if ( current_pos < message_text.length ) {
+		var text_part = message_text.slice( current_pos );
+		
+		var span = document.createElement("span");
+		var text_node = document.createTextNode( text_part );
+		span.appendChild(text_node);
+		msg_container.appendChild(span);
+	}
+	
+	// autoscroll if at end
+	var shouldScroll = chat_container.scrollTop + chat_container.clientHeight + 20 >= chat_container.scrollHeight;
+	
+	chat_container.appendChild(msg_container);
+		
+	if ( shouldScroll ) {
+		msg_container.scrollIntoView({behavior: "auto", block: "end", inline: "nearest"});
+	}
+}
+
+function on_twitch_chat_sysmessage( msg_text ) {
+	twitch_chat_print_sysmessage( msg_text );
 }
 
 function on_twitch_getuser_success() {
 	document.getElementById("twitch_login_name").innerHTML = escapeHtml( Twitch.user_display_name );
 	document.getElementById("twitch_profile_image").src = Twitch.user_profile_image_url;
+	
+	// unlock twitch buttons
+	document.getElementById("twitch_sub_check_btn").disabled = false;
+	document.getElementById("twitch_checkin_btn").disabled = false;
 	
 	Twitch.getSubscriberIcon( on_twitch_sub_icon_success, undefined, on_twitch_unathorized );
 }
@@ -1531,6 +1667,10 @@ function on_twitch_logout_success() {
 	localStorage.removeItem( storage_prefix+"twitch_token" );
 	localStorage.setItem( storage_prefix+"twitch_logged_out", true );
 	document.getElementById("twitch_signin_link").href = Twitch.getLoginURL();
+	
+	// lock actions with auth requirement
+	document.getElementById("twitch_sub_check_btn").disabled = true;
+	document.getElementById("twitch_checkin_btn").disabled = true;
 }
 
 function on_twitch_logout_fail( error_msg ) {
@@ -2331,14 +2471,25 @@ function select_html( html_container ) {
 	}
 }
 
-function twitch_chat_system_msg( msg ) {
+function twitch_chat_print_sysmessage( msg ) {
 	var chat_container = document.getElementById("twitch_checkin_chat");
 	
 	var msg_container = document.createElement("div");
 	msg_container.className = "twitch-chat-system-msg";
+	
+	// timestamp
+	var span = document.createElement("span");
+	span.className = "twitch-chat-timestamp";
+	var text_node = document.createTextNode( print_time( new Date() ) );
+	span.appendChild(text_node);
+	msg_container.appendChild(span);
+	
 	text_node = document.createTextNode( msg );
 	msg_container.appendChild(text_node);
+	
 	chat_container.appendChild(msg_container);
+	
+	msg_container.scrollIntoView({behavior: "smooth", block: "end", inline: "nearest"});
 }
 
 function update_captains_count() {
