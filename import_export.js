@@ -345,7 +345,8 @@ function import_lobby( format, import_str ) {
 			var battletag_list = import_str.trim().split("\n");
 			for( i in battletag_list ) {
 				// split string to fields (btag, twitch, SR, class, offclass)
-				var fields = battletag_list[i].split(/[ \t.,;|]/);
+				// @todo gluing separators can cause fails on pasting from table if some cells are empty
+				var fields = battletag_list[i].split(/[ \t.,;|]+/);
 				
 				// check battletag format
 				if ( /^[^#]+[-#]\d+$/.test(fields[0]) == false ) {

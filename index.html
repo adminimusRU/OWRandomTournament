@@ -166,11 +166,11 @@ var balance_priority_canvas_gradient;
 					<input class="big-btn" type="button" onclick="manual_checkin_open();" value="Manual check-in"/>
 					<br/>
 					<br/>
+					<input id="twitch_checkin_btn" disabled class="big-btn" type="button" onclick="twitch_checkin_open();" title="Check-in with twitch chat" value="Twitch check-in" autocomplete="off"/>
+					<br/>
+					<br/>
 					<input class="medium-btn" type="button" onclick="import_checkin_open();" value="Import" title="Import list of checked-in players"/>
 					<input class="medium-btn" type="button" onclick="reset_checkin();" value="Reset" title="Clear check-in mark for all players"/>
-					<br/>
-					<br/>
-					<input id="twitch_checkin_btn" disabled class="big-btn" type="button" onclick="twitch_checkin_open();" title="Check-in with twitch chat" value="Twitch check-in" autocomplete="off"/>
 				</fieldset>
 				<br/>
 				
@@ -991,10 +991,10 @@ var balance_priority_canvas_gradient;
 			
 			<div style="text-align: left;">
 				<label for="twitch_checkin_keyword">Keyword: </label>
-				<input id="twitch_checkin_keyword" type="text" maxlength="200" onchange="twitch_checkin_keyword_change();" placeholder="<any message counts>">
+				<input id="twitch_checkin_keyword" type="text" maxlength="200" onchange="twitch_checkin_keyword_change();" onkeyup="twitch_checkin_keyword_keyup(event);" placeholder="<any message counts>">
 				
 				<label for="twitch_checkin_channel">Twitch channel: </label>
-				<input id="twitch_checkin_channel" type="text" maxlength="200">
+				<input id="twitch_checkin_channel" type="text" maxlength="200" onkeyup="twitch_checkin_channel_keyup(event);">
 				
 				<input id="twitch_checkin_connect" type="button" value="connect" onclick="twitch_chat_connect();"/>
 				<input id="twitch_checkin_disconnect" type="button" value="disconnect" onclick="twitch_chat_disconnect();"/>
@@ -1002,107 +1002,18 @@ var balance_priority_canvas_gradient;
 			<br/>
 			
 			<div style="display: flex; flex-wrap: nowrap; width: 40em;">
-				<div style="flex: 1 1 10em; text-align: left;max-height: 35em;overflow-y: scroll;">
-					<div style="position: sticky;top: 0;background-color: white;">Checked-in:</div>
+				<div style="flex: 1 1 10em; text-align: left;max-height: 35em;overflow-y: scroll; overflow-x: hidden;">
+					<div style="position: sticky;top: 0; background-color: lightgray; font-weight: bold;">Checked-in:</div>
 					<div id="twitch_checkin_list">
-						<div>player1</div>
-						<div>player1</div>
-						<div>player1</div>
-						<div>player1</div>
-						<div>player1</div>
-						<div>player1</div>
-						<div>player1</div>
-						<div>player1</div>
-						<div>player1</div>
-						<div>player1</div>
-						<div>player1</div>
-						<div>player1</div>
-						<div>player1</div>
-						<div>player1</div>
-						<div>player1</div>
-						<div>player1</div>
-						<div>player1</div>
-						<div>player1</div>
-						<div>player1</div>
-						<div>player1</div>
-						<div>player1</div>
-						<div>player1</div>
-						<div>player1</div>
-						<div>player1</div>
-						<div>player1</div>
-						<div>player1</div>
-						<div>player1</div>
-						<div>player1</div>
-						<div>player1</div>
-						<div>player1</div>
-						<div>player1</div>
-						<div>player1</div>
-						<div>player1</div>
-						<div>player1</div>
+						
+					</div>
+					<div style="position: sticky; bottom: 0; background-color: lightgray; font-weight: bold;">
+						Total: <span id="twitch_checkin_total">0</span>
 					</div>
 				</div>
 				
-				<div id="twitch_checkin_chat" style="flex: 4 1 40em; max-height: 35em; overflow-y: scroll; text-align: left; border: 1px solid lightgray; margin-left: 1em;">
-					<!--<div>15:45:23 player1: some short message text</div>
-					<div>15:45:23 player1: some short message text</div>
-					<div>15:45:23 player1: some short message text</div>
-					<div>15:45:23 player1: some short message text</div>
-					<div>15:45:23 player1: some short message text</div>
-					<div>15:45:23 player1: some short message text</div>
-					<div>15:45:23 player1: some short message text</div>
-					<div>15:45:23 player1: some short message text</div>
-					<div>15:45:23 player1: some long message text asdbdsbdhsd dsad asd asd asd asd ad </div>
-					<div>15:45:23 player1: some short message text</div>
-					<div>15:45:23 player1: some short message text</div>
-					<div>15:45:23 player1: some short message text</div>
-					<div>15:45:23 player1: some long message text asdbdsbdhsd dsad asd asd asd asd ad </div>
-					<div>15:45:23 player1: some short message text</div>
-					<div>15:45:23 player1: some short message text</div>
-					<div>15:45:23 player1: some short message text</div>
-					<div>15:45:23 player1: some short message text</div>
-					<div>15:45:23 player1: some short message text</div>
-					<div>15:45:23 player1: some long message text asdbdsbdhsd dsad asd asd asd asd ad </div>
-					<div>15:45:23 player1: some short message text</div>
-					<div>15:45:23 player1: some short message text</div>
-					<div>15:45:23 player1: some short message text</div>
-					<div>15:45:23 player1: some short message text</div>
-					<div>15:45:23 player1: some short message text</div>
-					<div>15:45:23 player1: some short message text</div>
-					<div>15:45:23 player1: some long message text asdbdsbdhsd dsad asd asd asd asd ad </div>
-					<div>15:45:23 player1: some short message text</div>
-					<div>15:45:23 player1: some short message text</div>
-					<div>15:45:23 player1: some short message text</div>
-					<div>15:45:23 player1: some short message text</div>
-					<div>15:45:23 player1: some short message text</div>
-					<div>15:45:23 player1: some short message text</div>
-					<div>15:45:23 player1: some long message text asdbdsbdhsd dsad asd asd asd asd ad </div>
-					<div>15:45:23 player1: some short message text</div>
-					<div>15:45:23 player1: some short message text</div>
-					<div>15:45:23 player1: some short message text</div>
-					<div>15:45:23 player1: some short message text</div>
-					<div>15:45:23 player1: some short message text</div>
-					<div>15:45:23 player1: some short message text</div>
-					<div>15:45:23 player1: some long message text asdbdsbdhsd dsad asd asd asd asd ad </div>
-					<div>15:45:23 player1: some short message text</div>
-					<div>15:45:23 player1: some short message text</div>
-					<div>15:45:23 player1: some short message text</div>
-					<div>15:45:23 player1: some short message text</div>
-					<div>15:45:23 player1: some short message text</div>
-					<div>15:45:23 player1: some short message text</div>
-					<div>15:45:23 player1: some long message text asdbdsbdhsd dsad asd asd asd asd ad </div>
-					<div>15:45:23 player1: some short message text</div>
-					<div>15:45:23 player1: some short message text</div>
-					<div>15:45:23 player1: some short message text</div>
-					<div>15:45:23 player1: some short message text</div>
-					<div>15:45:23 player1: some short message text</div>
-					<div>15:45:23 player1: some short message text</div>
-					<div>15:45:23 player1: some long message text asdbdsbdhsd dsad asd asd asd asd ad </div>
-					<div>15:45:23 player1: some short message text</div>
-					<div>15:45:23 player1: some short message text</div>
-					<div>15:45:23 player1: some short message text</div>
-					<div>15:45:23 player1: some short message text</div>
-					<div>15:45:23 player1: some short message text</div>
-					<div>15:45:23 player1: some short message text</div>-->
+				<div id="twitch_checkin_chat" style="flex: 3 1 30em; height: 35em; overflow-y: scroll; text-align: left; border: 1px solid lightgray; margin-left: 1em;">
+					
 				</div>
 			</div>
 		</div>

@@ -186,7 +186,7 @@ function get_new_player_order() {
 	for (var i=0; i<lobby.length; i++){
 		max_order = Math.max( max_order, lobby[i].order );
 	}
-	for( var t=0; i<teams.length; t++) {
+	for( var t=0; t<teams.length; t++) {
 		for( var i=0; i<teams[t].players.length; i++) {
 			max_order = Math.max( max_order, teams[t].players[i].order );
 		}

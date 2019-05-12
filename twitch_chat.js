@@ -58,7 +58,7 @@ var TwitchChat = {
 			TwitchChat.socket = undefined;
 			if (typeof TwitchChat.disconnect_callback == "function") {
 				TwitchChat.disconnect_callback.call( TwitchChat );
-			}			
+			}
 		};
 		this.socket.close();
 	},
@@ -123,7 +123,7 @@ var TwitchChat = {
 						// just some default server flood
 						break;
 
-					// twitch specific commands
+					// useful server messages
 					case "NOTICE":			// moderator actions
 					case "USERNOTICE":		// user resub
 					case "HOSTTARGET":		// twitch host
@@ -165,6 +165,14 @@ var TwitchChat = {
 					case "JOIN": // someone joined chat
 						break;
 					case "PART": // someone left chat
+						// check if it was we :)
+						var message_username = msg_struct.prefix.split("!")[0];
+						if ( message_username == TwitchChat.user_login ) {
+							TwitchChat.is_joined = false;
+							if (typeof TwitchChat.disconnect_callback == "function") {
+								TwitchChat.disconnect_callback.call( TwitchChat );
+							}
+						}
 						break;
 					case "WHISPER": // whispers
 						break;
