@@ -38,6 +38,13 @@ var TwitchChat = {
 			this.channel_name = channel_name;
 		}
 		
+		if ( this.channel_name == "" ) {
+			if (typeof TwitchChat.error_callback == "function") {
+				TwitchChat.error_callback.call( TwitchChat, "channel name is empty" );
+			}
+			return;
+		}
+		
 		this.socket = new WebSocket('wss://irc-ws.chat.twitch.tv:443');
 		
 		this.socket.addEventListener('open', function (event) {
@@ -60,7 +67,21 @@ var TwitchChat = {
 				TwitchChat.disconnect_callback.call( TwitchChat );
 			}
 		};
-		this.socket.close();
+		this.socket.close( 1000 );
+	},
+	
+	reconnect: function() {
+		this.socket.onclose = function(event) {
+			TwitchChat.is_connected = false;
+			TwitchChat.is_joined = false;
+			TwitchChat.socket = undefined;
+			if (typeof TwitchChat.disconnect_callback == "function") {
+				TwitchChat.disconnect_callback.call( TwitchChat );
+			}
+			
+			TwitchChat.connect();
+		};
+		this.socket.close( 1000 );
 	},
 	
 	// private methods
@@ -142,9 +163,9 @@ var TwitchChat = {
 					case "RECONNECT":
 						// reconnect request from server
 						if (typeof TwitchChat.system_message_callback == "function") {
-							TwitchChat.system_message_callback.call( TwitchChat, "reconnecting..." );
+							TwitchChat.system_message_callback.call( TwitchChat, "server requested reconnect" );
 						}
-						// @todo make actual reconnect
+						TwitchChat.reconnect();
 						break;
 					default:
 						if (typeof TwitchChat.error_callback == "function") {
