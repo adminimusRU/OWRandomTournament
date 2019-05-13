@@ -946,7 +946,6 @@ function twitch_chat_connect() {
 function twitch_chat_disconnect() {
 	document.getElementById("twitch_checkin_disconnect").disabled = true;
 	TwitchChat.disconnect();
-	//twitch_chat_print_sysmessage("disconnected"); - not needed, do on callback
 }
 
 function twitch_checkin_open() {
@@ -1661,10 +1660,9 @@ function on_twitch_chat_message( message_username, message_text ) {
 	// message text
 	// search keyword and split message text for highlighting
 	var keyword_found = false;
-	// @todo case-insensetive?
 	var current_pos = 0;
 	if ( twitch_checkin_keyword != "" ) {
-		var keyword_pos = message_text.indexOf(twitch_checkin_keyword);
+		var keyword_pos = message_text.toLowerCase().indexOf(twitch_checkin_keyword.toLowerCase());
 		while ( keyword_pos != -1 ) {
 			var keyword_found = true;
 			var text_part = message_text.slice( current_pos, keyword_pos );
@@ -1684,7 +1682,7 @@ function on_twitch_chat_message( message_username, message_text ) {
 			
 			current_pos += keyword_pos+twitch_checkin_keyword.length;
 			
-			keyword_pos = message_text.indexOf(twitch_checkin_keyword, current_pos);
+			keyword_pos = message_text.toLowerCase().indexOf(twitch_checkin_keyword.toLowerCase(), current_pos);
 		}
 	} else {
 		keyword_found = true;
@@ -1758,7 +1756,6 @@ function on_twitch_subs_get_complete( subscibers_map ) {
 		var sub_info = subscibers_map.get( lobby[i].twitch_name );
 		if ( sub_info !== undefined ) {
 			twitch_subs_list.push( lobby[i].id );
-			//document.getElementById("debug_log").innerHTML += lobby[i].twitch_name + ' tier ' + sub_info.tier+"</br>";
 		}
 	}
 	
@@ -2043,6 +2040,7 @@ function draw_player_cell( player_struct, small=false, is_captain=false ) {
 	if ( (!small) && (checkin_list.indexOf(player_struct.id) !== -1) ) {
 		var mark_display = document.createElement("span");
 		mark_display.className = "player-checkin-mark";
+		mark_display.title = "Checked-in";
 		text_node = document.createTextNode( "\u2713" );
 		mark_display.appendChild(text_node);
 		player_name.appendChild(mark_display);
