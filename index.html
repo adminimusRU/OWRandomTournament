@@ -14,6 +14,7 @@
 <script src="import_export.js"></script>
 <script src="ui.js"></script>
 <script src="twitch.js"></script>
+<script src="twitch_chat.js"></script>
 
 </head>
 
@@ -26,6 +27,10 @@ var checkin_list = []; //id's of checked-in players
 
 var twitch_subs_list = []; //id's of twitch subscribers
 var twitch_sub_icon_src = "";
+
+var twitch_checkin_keyword = "";
+var twitch_chat_max_messages = 200;
+var twitch_chat_debug = false;
 
 var player_being_added;
 var player_being_edited;
@@ -113,7 +118,10 @@ var balance_priority_canvas_gradient;
 			</div>
 			<br/>
 					
-			<span id="lobby_count">0</span> players, <span id="lobby_captain_count">0</span> captains<br/>
+			<span id="lobby_count">0</span> players, 
+			<span id="lobby_captain_count">0</span> captains
+			<span id="lobby_active_count" title="excluding players without twitch sub or not checked-in">0</span> active
+			<br/>
 			
 			<div style="display: flex; align-items: baseline">
 				<label for="lobby_filter">Filter: &nbsp;</label>
@@ -161,6 +169,9 @@ var balance_priority_canvas_gradient;
 					<input class="big-btn" type="button" onclick="manual_checkin_open();" value="Manual check-in"/>
 					<br/>
 					<br/>
+					<input id="twitch_checkin_btn" disabled class="big-btn" type="button" onclick="twitch_checkin_open();" title="Check-in with twitch chat" value="Twitch check-in" autocomplete="off"/>
+					<br/>
+					<br/>
 					<input class="medium-btn" type="button" onclick="import_checkin_open();" value="Import" title="Import list of checked-in players"/>
 					<input class="medium-btn" type="button" onclick="reset_checkin();" value="Reset" title="Clear check-in mark for all players"/>
 				</fieldset>
@@ -182,7 +193,7 @@ var balance_priority_canvas_gradient;
 						<span id="twitch_subs_counter">0</span> subscibers
 					</div>
 					
-					<input class="big-btn" type="button" id="twitch_sub_check_btn" onclick="twitch_sub_check();" value="Check subsribers" title="Mark twitch subscibers in lobby. Players without subscription will be excluded from roll." disabled/>
+					<input class="big-btn" type="button" id="twitch_sub_check_btn" onclick="twitch_sub_check();" value="Check subsribers" title="Mark twitch subscibers in lobby. Players without subscription will be excluded from roll." disabled autocomplete="off"/>
 					<br/>
 					<br/>
 					<input class="big-btn" type="button" id="twitch_sub_clear_btn" onclick="twitch_sub_reset();" value="Reset subsribers" title="Clear twitch subsciber mark for all players"/>
@@ -216,6 +227,12 @@ var balance_priority_canvas_gradient;
 					<input class="medium-btn" type="button" onclick="generate_random_players();" value="+ random players" />
 									
 					<input class="medium-btn" type="button" onclick="generate_random_teams();" value="+ random teams" />
+					<br/>
+					<br/>
+					
+					<input class="medium-btn" type="button" onclick="dbg_roll();" value="dbg roll" />
+									
+					<input class="medium-btn" type="button" onclick="dbg_twitch_chat();" value="dbg twitch chat" />
 					<br/>
 					<br/>
 					
@@ -425,6 +442,12 @@ var balance_priority_canvas_gradient;
 					<div class="cell"><label for="dlg_player_twitch_sub" title="">Twitch subscriber:</label></div>
 					<div class="cell">
 						<input type="checkbox" id="dlg_player_twitch_sub">
+					</div>
+				</div>
+				<div class="row">
+					<div class="cell"><label for="dlg_player_checkin" title="">Checked-in:</label></div>
+					<div class="cell">
+						<input type="checkbox" id="dlg_player_checkin">
 					</div>
 				</div>
 				<div class="row">
@@ -895,8 +918,9 @@ var balance_priority_canvas_gradient;
 					<thead>
 						<tr>
 							<th onclick="sort_manual_chekin_table(0);" title="click to sort">&#9745;</th>
-							<th onclick="sort_manual_chekin_table(1);" title="click to sort">Battletag</th>
-							<th onclick="sort_manual_chekin_table(2);" title="click to sort">Twitch name</th>
+							<th onclick="sort_manual_chekin_table(1);" title="click to sort">Order</th>
+							<th onclick="sort_manual_chekin_table(2);" title="click to sort">Battletag</th>
+							<th onclick="sort_manual_chekin_table(3);" title="click to sort">Twitch name</th>
 						</tr>
 					</thead>
 					<tbody>
@@ -905,6 +929,7 @@ var balance_priority_canvas_gradient;
 					<tfoot>
 						<tr>
 							<td title="Total checked-in">0</td>
+							<td></td>
 							<td title="Total players">0</td>
 							<td></td>
 						</tr>
@@ -960,6 +985,47 @@ var balance_priority_canvas_gradient;
 			
 			<div>
 				<input id="popup_dlg_pending_action_ok" class="big-btn" type="button" value="OK" disabled onclick="close_dialog('popup_dlg_pending_action');"/>
+			</div>
+		</div>
+	</div>
+</div>
+
+
+<div id="popup_dlg_twitch_checkin" class="dlg" style="display:none">
+	<div class="dlg-background"></div>
+	<div class="dlg-container">
+		<div class="dlg-content">
+			<span class="team-title">Twitch check-in</span>
+			<input title="Close" type="button" class="team_btn dlg-close" onclick="twitch_checkin_close();" value="X"/>
+			<br/>
+			<br/>
+			
+			<div style="text-align: left;">
+				<label for="twitch_checkin_channel">Twitch channel: </label>
+				<input id="twitch_checkin_channel" type="text" maxlength="200" required onkeyup="twitch_checkin_channel_keyup(event);" autocomplete="off">
+				
+				<input id="twitch_checkin_connect" type="button" value="connect" onclick="twitch_chat_connect();"/>
+				<input id="twitch_checkin_disconnect" type="button" value="disconnect" onclick="twitch_chat_disconnect();"/>
+				
+				<label for="twitch_checkin_keyword">Keyword: </label>
+				<input id="twitch_checkin_keyword" type="text" maxlength="200" onchange="twitch_checkin_keyword_change();" placeholder="<any message counts>" autocomplete="off">
+			</div>
+			<br/>
+			
+			<div style="display: flex; flex-wrap: nowrap; width: 40em;">
+				<div style="flex: 1 1 10em; text-align: left;max-height: 35em;overflow-y: scroll; overflow-x: hidden;">
+					<div style="position: sticky;top: 0; background-color: lightgray; font-weight: bold;">Checked-in:</div>
+					<div id="twitch_checkin_list">
+						
+					</div>
+					<div style="position: sticky; bottom: 0; background-color: lightgray; font-weight: bold;">
+						Total: <span id="twitch_checkin_total">0</span>
+					</div>
+				</div>
+				
+				<div id="twitch_checkin_chat" style="flex: 3 1 30em; height: 35em; overflow-y: scroll; text-align: left; border: 1px solid lightgray; margin-left: 1em;">
+					
+				</div>
 			</div>
 		</div>
 	</div>
@@ -1042,8 +1108,6 @@ if ( Twitch.isLoggedIn() ) {
 	Twitch.getAuthorizedUserInfo( on_twitch_getuser_success, on_twitch_getuser_fail, on_twitch_unathorized );
 	document.getElementById("twitch_signin").style.display = "none";
 	document.getElementById("twitch_user_info").style.display = "block";
-	// unlock twitch buttons 
-	document.getElementById("twitch_sub_check_btn").disabled = false;
 }
 </script>
 </body>

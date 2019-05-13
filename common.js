@@ -186,7 +186,7 @@ function get_new_player_order() {
 	for (var i=0; i<lobby.length; i++){
 		max_order = Math.max( max_order, lobby[i].order );
 	}
-	for( var t=0; i<teams.length; t++) {
+	for( var t=0; t<teams.length; t++) {
 		for( var i=0; i<teams[t].players.length; i++) {
 			max_order = Math.max( max_order, teams[t].players[i].order );
 		}
@@ -253,12 +253,35 @@ function get_scrollbar_width() {
 	return widthNoScroll - widthWithScroll;
 }
 
+function is_active_player( player_struct ) {
+	var roll_allowed = true;
+	if (twitch_subs_list.length > 0) {
+		if (twitch_subs_list.indexOf(player_struct.id) == -1) {
+			roll_allowed = false;
+		}
+	}
+	if (checkin_list.length > 0) {
+		if (checkin_list.indexOf(player_struct.id) == -1) {
+			roll_allowed = false;
+		}
+	}
+	return roll_allowed;
+}
+
 function is_undefined( expr, if_undefined ) {
 	if( typeof expr === "undefined" ) {
 		return if_undefined;
 	} else {
 		return expr;
 	}
+}
+
+// returns true if val is number or a valid number string
+function is_number_string( val ) {
+	if( typeof val !== "string" ) {
+		return false;
+	}
+	return (+val === +val);
 }
 
 function print_date( date_value ) {
@@ -269,6 +292,20 @@ function print_date( date_value ) {
 	} else {
 		return date_value.toLocaleString();
 	}
+}
+
+function print_time( date_value ) {
+	var hr = date_value.getHours();
+	var min = date_value.getMinutes();
+	if (min < 10) {
+		min = "0" + min;
+	}
+	var sec = date_value.getSeconds();
+	if (sec < 10) {
+		sec = "0" + sec;
+	}
+	var result = hr+":"+min+":"+sec;
+	return result;
 }
 
 function round_to( value, precision ) {
