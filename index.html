@@ -118,7 +118,10 @@ var balance_priority_canvas_gradient;
 			</div>
 			<br/>
 					
-			<span id="lobby_count">0</span> players, <span id="lobby_captain_count">0</span> captains<br/>
+			<span id="lobby_count">0</span> players, 
+			<span id="lobby_captain_count">0</span> captains
+			<span id="lobby_active_count" title="excluding players without twitch sub or not checked-in">0</span> active
+			<br/>
 			
 			<div style="display: flex; align-items: baseline">
 				<label for="lobby_filter">Filter: &nbsp;</label>
@@ -439,6 +442,12 @@ var balance_priority_canvas_gradient;
 					<div class="cell"><label for="dlg_player_twitch_sub" title="">Twitch subscriber:</label></div>
 					<div class="cell">
 						<input type="checkbox" id="dlg_player_twitch_sub">
+					</div>
+				</div>
+				<div class="row">
+					<div class="cell"><label for="dlg_player_checkin" title="">Checked-in:</label></div>
+					<div class="cell">
+						<input type="checkbox" id="dlg_player_checkin">
 					</div>
 				</div>
 				<div class="row">
@@ -909,8 +918,9 @@ var balance_priority_canvas_gradient;
 					<thead>
 						<tr>
 							<th onclick="sort_manual_chekin_table(0);" title="click to sort">&#9745;</th>
-							<th onclick="sort_manual_chekin_table(1);" title="click to sort">Battletag</th>
-							<th onclick="sort_manual_chekin_table(2);" title="click to sort">Twitch name</th>
+							<th onclick="sort_manual_chekin_table(1);" title="click to sort">Order</th>
+							<th onclick="sort_manual_chekin_table(2);" title="click to sort">Battletag</th>
+							<th onclick="sort_manual_chekin_table(3);" title="click to sort">Twitch name</th>
 						</tr>
 					</thead>
 					<tbody>
@@ -919,6 +929,7 @@ var balance_priority_canvas_gradient;
 					<tfoot>
 						<tr>
 							<td title="Total checked-in">0</td>
+							<td></td>
 							<td title="Total players">0</td>
 							<td></td>
 						</tr>
@@ -991,10 +1002,10 @@ var balance_priority_canvas_gradient;
 			
 			<div style="text-align: left;">
 				<label for="twitch_checkin_keyword">Keyword: </label>
-				<input id="twitch_checkin_keyword" type="text" maxlength="200" onchange="twitch_checkin_keyword_change();" onkeyup="twitch_checkin_keyword_keyup(event);" placeholder="<any message counts>">
+				<input id="twitch_checkin_keyword" type="text" maxlength="200" onchange="twitch_checkin_keyword_change();" placeholder="<any message counts>" autocomplete="off">
 				
 				<label for="twitch_checkin_channel">Twitch channel: </label>
-				<input id="twitch_checkin_channel" type="text" maxlength="200" onkeyup="twitch_checkin_channel_keyup(event);">
+				<input id="twitch_checkin_channel" type="text" maxlength="200" onkeyup="twitch_checkin_channel_keyup(event);" autocomplete="off">
 				
 				<input id="twitch_checkin_connect" type="button" value="connect" onclick="twitch_chat_connect();"/>
 				<input id="twitch_checkin_disconnect" type="button" value="disconnect" onclick="twitch_chat_disconnect();"/>
