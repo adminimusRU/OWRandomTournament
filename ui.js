@@ -298,6 +298,22 @@ function edit_player_ok() {
 			need_full_lobby_redraw = true;
 		}
 	}
+	
+	// check-in
+	if ( document.getElementById("dlg_player_checkin").checked ) {
+		if ( checkin_list.indexOf(player_struct.id) == -1 ){
+			checkin_list.push( player_struct.id );
+			save_checkin_list();
+			need_full_lobby_redraw = true;
+		}
+	} else {
+		var index = checkin_list.indexOf(player_struct.id);
+		if ( index !== -1 ){
+			checkin_list.splice( index, 1 );
+			save_checkin_list();
+			need_full_lobby_redraw = true;
+		}
+	}
 		
 	close_dialog("popup_dlg_edit_player");
 	save_players_list();
@@ -585,6 +601,11 @@ function manual_checkin_open() {
 		row.appendChild(cell);
 		
 		cell = document.createElement("td");
+		var cellText = document.createTextNode( lobby[i].order );
+		cell.appendChild(cellText);
+		row.appendChild(cell);
+		
+		cell = document.createElement("td");
 		var cellText = document.createTextNode(lobby[i].id.replace("-", "#"));
 		cell.appendChild(cellText);
 		row.appendChild(cell);
@@ -601,10 +622,10 @@ function manual_checkin_open() {
 	for ( var i=0; i<thead.rows[0].cells.length; i++ ) {
 		thead.rows[0].cells[i].removeAttribute("order_inverse");
 	}
-	sort_manual_chekin_table( 1 );
+	sort_manual_chekin_table( 2 );
 	
 	tfoot.getElementsByTagName("td")[0].innerHTML = checkin_list.length;
-	tfoot.getElementsByTagName("td")[1].innerHTML = lobby.length;
+	tfoot.getElementsByTagName("td")[2].innerHTML = lobby.length;
 }
 
 function open_stats_update_log() {
@@ -753,6 +774,14 @@ function sort_manual_chekin_table( sort_column_index ) {
 				var next_row_calue = row2.cells[sort_column_index].innerText.toLowerCase();
 			}
 			
+			// convert to number if possible
+			if ( is_number_string(this_row_calue) ) {
+				this_row_calue = Number(this_row_calue);
+			}
+			if ( is_number_string(next_row_calue) ) {
+				next_row_calue = Number(next_row_calue);
+			}
+			
 			return order * ( this_row_calue<next_row_calue ? -1 : (this_row_calue>next_row_calue?1:0) );
 			} 
 		);
@@ -876,7 +905,7 @@ function test() {
 		undefined
 		);*/
 		
-	Twitch.getStreamsByGameId(
+	/*Twitch.getStreamsByGameId(
 		"488552",
 		"fr",
 		function( streams_list ) {
@@ -886,7 +915,12 @@ function test() {
 		},
 		undefined, 
 		undefined
-	);
+	);*/
+	
+	var str = "123.45.5465";
+	document.getElementById("debug_log").innerHTML += is_number_string( str ) + "<br/>";
+	document.getElementById("debug_log").innerHTML += ( str ) + "<br/>";
+	
 }
 
 function twitch_chat_connect() {
@@ -904,6 +938,7 @@ function twitch_chat_connect() {
 	TwitchChat.debug_callback = on_twitch_chat_debug;
 		
 	var channel_name = document.getElementById("twitch_checkin_channel").value.trim();
+	localStorage.setItem( storage_prefix+"twitch_checkin_channel", channel_name );
 	
 	TwitchChat.connect( channel_name );
 }
@@ -919,7 +954,18 @@ function twitch_checkin_open() {
 	document.getElementById("twitch_checkin_connect").style.display = "inline";
 	document.getElementById("twitch_checkin_connect").disabled = false;
 	document.getElementById("twitch_checkin_disconnect").style.display = "none";
-	document.getElementById("twitch_checkin_channel").value = Twitch.user_login;
+	
+	var twitch_checkin_channel = localStorage.getItem( storage_prefix+"twitch_checkin_channel" );
+	if ( twitch_checkin_channel !== null ) {
+		twitch_checkin_channel = Twitch.user_login;
+	}
+	document.getElementById("twitch_checkin_channel").value = twitch_checkin_channel;
+	
+	var twitch_checkin_keyword = localStorage.getItem( storage_prefix+"twitch_checkin_keyword" );
+	if ( twitch_checkin_keyword !== null ) {
+		document.getElementById("twitch_checkin_keyword").value = twitch_checkin_keyword;
+	}
+	
 	open_dialog("popup_dlg_twitch_checkin");
 	
 	// show already checked-in players
@@ -1391,16 +1437,8 @@ function twitch_checkin_channel_keyup(ev) {
 function twitch_checkin_keyword_change() {
 	twitch_checkin_keyword = document.getElementById("twitch_checkin_keyword").value;
 	twitch_chat_print_sysmessage( "keyword changed to '"+twitch_checkin_keyword+"'" );
-	// @todo maybe remember?
-}
-
-function twitch_checkin_keyword_keyup(ev) {
-	// @todo not needed?
-	return;
-	ev.preventDefault();
-    if (ev.keyCode == 13) { //enter pressed
-		twitch_checkin_keyword_change();
-    }
+	
+	localStorage.setItem( storage_prefix+"twitch_checkin_keyword", twitch_checkin_keyword );
 }
 
 /*
@@ -1893,25 +1931,8 @@ function draw_player_cell( player_struct, small=false, is_captain=false ) {
 	new_player_item.oncontextmenu = function(event){player_contextmenu(event);};
 	
 	// player background color depending on check-in process (only in lobby)
-	if ( (!small) && ( (checkin_list.length > 0) || (twitch_subs_list.length > 0) ) ) {
-		var roll_allowed = true;
-		
-		if (checkin_list.length > 0) {
-			if (checkin_list.indexOf(player_struct.id) !== -1) {
-				new_player_item.title += "\nCheck-in: +";				
-			} else {
-				roll_allowed = false;
-				new_player_item.title += "\nCheck-in: -";
-			}
-		}
-		
-		if (twitch_subs_list.length > 0) {
-			if (twitch_subs_list.indexOf(player_struct.id) == -1) {
-				roll_allowed = false;
-			}
-		}
-		
-		if (roll_allowed) {
+	if ( (!small) && ( (checkin_list.length > 0) || (twitch_subs_list.length > 0) ) ) {	
+		if ( is_active_player(player_struct) ) {
 			new_player_item.classList.add("player-roll-allow");
 		} else {
 			new_player_item.classList.add("player-roll-deny");
@@ -2103,7 +2124,7 @@ function fill_player_stats_dlg() {
 	
 	document.getElementById("dlg_title_edit_player").innerHTML = escapeHtml( player_struct.display_name );
 	
-	document.getElementById("dlg_player_id").innerHTML = player_struct.id;
+	document.getElementById("dlg_player_id").innerHTML = player_struct.id.replace("-","#");
 	document.getElementById("dlg_player_id_link").href = "https://playoverwatch.com/en-us/career/pc/"+player_struct.id;
 	document.getElementById("dlg_player_id_link").title = "https://playoverwatch.com/en-us/career/pc/"+player_struct.id;
 	
@@ -2124,6 +2145,11 @@ function fill_player_stats_dlg() {
 		document.getElementById("dlg_player_twitch_sub").checked = false;
 	}
 	
+	if ( checkin_list.indexOf(player_struct.id) !== -1 ) {
+		document.getElementById("dlg_player_checkin").checked = true;
+	} else {
+		document.getElementById("dlg_player_checkin").checked = false;
+	}
 	
 	document.getElementById("dlg_player_display_name").value = player_struct.display_name;
 	if( player_struct.ne === true )  {
@@ -2323,11 +2349,17 @@ function read_balance_prority_input(ev) {
 }
 
 function redraw_lobby() {
+	var count_active = 0; // checked-in && twitch subs
+	
 	var team_container = document.getElementById("lobby");
 	team_container.innerHTML = "";
 	for( var i=0; i<lobby.length; i++) {
 		var player_widget = draw_player( lobby[i] );
 		team_container.appendChild(player_widget);
+		
+		if ( is_active_player(lobby[i]) ) {
+			count_active++;
+		}
 	}
 	for( i=lobby.length; i<Settings.team_size; i++) {
 		var player_widget = draw_player( create_empty_player() );
@@ -2347,6 +2379,8 @@ function redraw_lobby() {
 	
 	// twitch counter
 	document.getElementById("twitch_subs_counter").innerHTML = twitch_subs_list.length;
+	
+	document.getElementById("lobby_active_count").innerHTML = count_active;
 }
 
 function redraw_player( player_struct ) {
