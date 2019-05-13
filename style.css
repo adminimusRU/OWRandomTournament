@@ -719,3 +719,7 @@ th.sort-down:after {
 .twitch-chat-keyword {
 	background-color: yellow;
 }
+
+input:required:invalid {
+  outline: 1px solid red;
+}
