@@ -1682,13 +1682,13 @@ function on_twitch_chat_message( message_username, message_text ) {
 			
 			text_part = message_text.slice( keyword_pos, keyword_pos+twitch_checkin_keyword.length );
 			
-			var span = document.createElement("span");
+			span = document.createElement("span");
 			span.className = "twitch-chat-keyword";
-			var text_node = document.createTextNode( text_part );
+			text_node = document.createTextNode( text_part );
 			span.appendChild(text_node);
 			msg_container.appendChild(span);
 			
-			current_pos += keyword_pos+twitch_checkin_keyword.length;
+			current_pos = keyword_pos+twitch_checkin_keyword.length;
 			
 			keyword_pos = message_text.toLowerCase().indexOf(twitch_checkin_keyword.toLowerCase(), current_pos);
 		}
