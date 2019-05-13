@@ -79,7 +79,11 @@ function apply_settings() {
 }
 
 function assign_captains() {
-	var min_captain_sr = parseInt(prompt("Minimum captain SR", "3600"), 10);
+	var result = prompt("Minimum captain SR", "3600");
+	if ( result === null ) {
+		return;
+	}
+	var min_captain_sr = parseInt(result, 10);
 	if ( isNaN(min_captain_sr) || (min_captain_sr>5000) || (min_captain_sr<1)) {
 		alert("SR must be between 1 and 5000");
 		return;
@@ -959,7 +963,7 @@ function twitch_checkin_open() {
 	document.getElementById("twitch_checkin_disconnect").style.display = "none";
 	
 	var twitch_checkin_channel = localStorage.getItem( storage_prefix+"twitch_checkin_channel" );
-	if ( twitch_checkin_channel !== null ) {
+	if ( (twitch_checkin_channel === null) || (twitch_checkin_channel == "") ) {
 		twitch_checkin_channel = Twitch.user_login;
 	}
 	document.getElementById("twitch_checkin_channel").value = twitch_checkin_channel;
@@ -1079,7 +1083,7 @@ function manual_checkin_row_click(ev) {
 	var tr = ev.currentTarget;
 	var cbox = tr.cells[0].getElementsByTagName("input")[0];
 	
-	if (ev.originalTarget.tagName.toLowerCase() != "input") {
+	if (ev.target.tagName.toLowerCase() != "input") {
 		cbox.checked = ! cbox.checked;
 	}
 	

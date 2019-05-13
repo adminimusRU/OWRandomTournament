@@ -629,7 +629,7 @@ a.action-href:visited {
 	padding: 0.2em 1em 0.2em 1em;
 }
 
-.manual-checkin-table th,tfoot {
+.manual-checkin-table th,tfoot td {
 	text-align: center;
 	font-weight: bold;
 	background-color: lightgray;
@@ -649,7 +649,7 @@ a.action-href:visited {
 	background-color: PaleGoldenRod;
 }
 
-.manual-checkin-table tfoot {
+.manual-checkin-table tfoot td {
 	position: sticky;
 	bottom: 0;
 }

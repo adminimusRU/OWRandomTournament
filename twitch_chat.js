@@ -37,6 +37,9 @@ var TwitchChat = {
 		if ( channel_name != "" ) {
 			this.channel_name = channel_name;
 		}
+		// make sure channel name is lower case. 
+		// Twitch display namas can have capital letters, but logins and channel names are always in lower case
+		this.channel_name = this.channel_name.toLowerCase();
 		
 		if ( this.channel_name == "" ) {
 			if (typeof TwitchChat.error_callback == "function") {
@@ -133,7 +136,7 @@ var TwitchChat = {
 					case "372":
 						// actually successfull connection. Join specified channel
 						TwitchChat.is_joined = true;
-						TwitchChat.socket.send("JOIN #"+TwitchChat.channel_name);
+						TwitchChat.socket.send("JOIN #"+TwitchChat.channel_name.toLowerCase());
 						if (typeof TwitchChat.connect_callback == "function") {
 							TwitchChat.connect_callback.call( TwitchChat );
 						}
