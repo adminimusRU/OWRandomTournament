@@ -924,6 +924,13 @@ function test() {
 }
 
 function twitch_chat_connect() {
+	var channel_name = document.getElementById("twitch_checkin_channel").value.trim();
+	localStorage.setItem( storage_prefix+"twitch_checkin_channel", channel_name );
+	
+	if ( channel_name.trim() == "" ) {
+		return;
+	}
+	
 	document.getElementById("twitch_checkin_connect").disabled = true;
 	
 	twitch_checkin_keyword = document.getElementById("twitch_checkin_keyword").value;
@@ -936,10 +943,7 @@ function twitch_chat_connect() {
 	TwitchChat.system_message_callback = on_twitch_chat_sysmessage;
 	TwitchChat.error_callback = on_twitch_chat_error;
 	TwitchChat.debug_callback = on_twitch_chat_debug;
-		
-	var channel_name = document.getElementById("twitch_checkin_channel").value.trim();
-	localStorage.setItem( storage_prefix+"twitch_checkin_channel", channel_name );
-	
+
 	TwitchChat.connect( channel_name );
 }
 
