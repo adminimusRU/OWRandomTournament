@@ -253,12 +253,35 @@ function get_scrollbar_width() {
 	return widthNoScroll - widthWithScroll;
 }
 
+function is_active_player( player_struct ) {
+	var roll_allowed = true;
+	if (twitch_subs_list.length > 0) {
+		if (twitch_subs_list.indexOf(player_struct.id) == -1) {
+			roll_allowed = false;
+		}
+	}
+	if (checkin_list.length > 0) {
+		if (checkin_list.indexOf(player_struct.id) == -1) {
+			roll_allowed = false;
+		}
+	}
+	return roll_allowed;
+}
+
 function is_undefined( expr, if_undefined ) {
 	if( typeof expr === "undefined" ) {
 		return if_undefined;
 	} else {
 		return expr;
 	}
+}
+
+// returns true if val is number or a valid number string
+function is_number_string( val ) {
+	if( typeof val !== "string" ) {
+		return false;
+	}
+	return (+val === +val);
 }
 
 function print_date( date_value ) {
