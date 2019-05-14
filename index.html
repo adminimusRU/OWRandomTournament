@@ -421,109 +421,119 @@ var balance_priority_canvas_gradient;
 			<span id="dlg_title_edit_player" class="team-title">Player name</span>
 			<input id="dlg_close" title="Close" type="button" class="team_btn dlg-close" onclick="close_dialog('popup_dlg_edit_player'); player_being_edited=undefined;" value="X"/>
 			<br/>
-			<br/>
 			
-			<div id="dlg_player_edit" class="dlg_options table">
-				<div class="row">
-					<div class="cell">BattleTag:</div>
-					<div class="cell">
-						<span id="dlg_player_id"></span>
-						<a id="dlg_player_id_link" rel="external" target="_blank" href="" title="">&#x29c9;</a>
+			<fieldset class="edit-player-fieldset">
+				<legend>Identity</legend>
+				<div class="dlg_options table">
+					<div class="row">
+						<div class="cell">BattleTag:</div>
+						<div class="cell">
+							<span id="dlg_player_id"></span>
+							<a id="dlg_player_id_link" rel="external" target="_blank" href="" title="">&#x29c9;</a>
+						</div>
+					</div>
+					<div class="row">
+						<div class="cell"><label for="dlg_player_display_name">Display name:</label></div>
+						<div class="cell">
+							<input id="dlg_player_display_name" type="text">
+							<span id="dlg_player_name_edited" class="dlg-edited-mark" title="Name was manually edited" onclick="clear_edited_mark('ne');">&#9997;</span>
+						</div>
+					</div>
+					<div class="row">
+						<div class="cell"><label for="dlg_player_twitch_name">Twitch nickname:</label></div>
+						<div class="cell">
+							<input id="dlg_player_twitch_name" type="text">
+							<a id="dlg_player_twitch_link" rel="external" target="_blank" href="" title="">&#x29c9;</a>
+						</div>
 					</div>
 				</div>
-				<div class="row">
-					<div class="cell"><label for="dlg_player_twitch_name">Twitch nickname:</label></div>
-					<div class="cell">
-						<input id="dlg_player_twitch_name" type="text">
-						<a id="dlg_player_twitch_link" rel="external" target="_blank" href="" title="">&#x29c9;</a>
+			</fieldset>
+			<fieldset class="edit-player-fieldset">
+				<legend>Roll checks</legend>
+				<div class="dlg_options table">
+					<div class="row">
+						<div class="cell"><label for="dlg_player_twitch_sub" title="">Twitch subscriber:</label></div>
+						<div class="cell">
+							<input type="checkbox" id="dlg_player_twitch_sub">
+						</div>
+					</div>
+					<div class="row">
+						<div class="cell"><label for="dlg_player_checkin" title="">Checked-in:</label></div>
+						<div class="cell">
+							<input type="checkbox" id="dlg_player_checkin">
+						</div>
+					</div>
+					<div class="row">
+						<div class="cell"><label for="dlg_player_captain" title="Will be assigned as team captain in roll (ignoring SR). Each team can only have one predefined captain.">Predefined captain:</label></div>
+						<div class="cell">
+							<input type="checkbox" id="dlg_player_captain">
+						</div>
 					</div>
 				</div>
-				<div class="row">
-					<div class="cell"><label for="dlg_player_twitch_sub" title="">Twitch subscriber:</label></div>
-					<div class="cell">
-						<input type="checkbox" id="dlg_player_twitch_sub">
+			</fieldset>
+			<fieldset class="edit-player-fieldset">
+				<legend>Stats</legend>
+				<div class="dlg_options table">
+					<div class="row">
+						<div class="cell"><label for="dlg_player_level">Level:</label></div>
+						<div class="cell"><input id="dlg_player_level" type="text" readonly></div>
 					</div>
-				</div>
-				<div class="row">
-					<div class="cell"><label for="dlg_player_checkin" title="">Checked-in:</label></div>
-					<div class="cell">
-						<input type="checkbox" id="dlg_player_checkin">
+					<div class="row">
+						<div class="cell"><label for="dlg_player_sr">SR:</label></div>
+						<div class="cell">
+							<input id="dlg_player_sr" type="number" min=0 max=5000 style="width: 4em;" onchange="on_player_edit_sr_change();">
+							<img id="dlg_player_sr_icon" style="width: 24px; vertical-align: text-bottom;">
+							<span id="dlg_player_sr_edited" class="dlg-edited-mark" title="SR was manually edited" onclick="clear_edited_mark('se');">&#9997;</span>
+						</div>
 					</div>
-				</div>
-				<div class="row">
-					<div class="cell"><label for="dlg_player_display_name">Name:</label></div>
-					<div class="cell">
-						<input id="dlg_player_display_name" type="text">
-						<span id="dlg_player_name_edited" class="dlg-edited-mark" title="Name was manually edited" onclick="clear_edited_mark('ne');">&#9997;</span>
+					<div class="row">
+						<div class="cell">Main class: </div>
+						<div class="cell">
+							<select id="dlg_main_class" autocomplete="off" onchange="on_player_edit_main_class_change();">
+								<option value="maintank">main tank</option>
+								<option value="offtank">off tank</option>
+								<option value="dps" selected>dps</option>
+								<option value="support">support</option>
+							</select>
+							<img id="dlg_player_main_class_icon" style="width: 1em; vertical-align: text-bottom;">
+							<span id="dlg_player_class1_edited" class="dlg-edited-mark" title="Classes were manually edited" onclick="clear_edited_mark('ce');">&#9997;</span>
+						</div>
 					</div>
+					<div class="row">
+						<div class="cell">Secondary class: </div>
+						<div class="cell">
+							<select id="dlg_secondary_class" onchange="on_player_edit_secondary_class_change();">
+								<option value="">-</option>							
+								<option value="maintank">main tank</option>
+								<option value="offtank">off tank</option>
+								<option value="dps">dps</option>
+								<option value="support">support</option>
+							</select>
+							<img id="dlg_player_secondary_class_icon" style="width: 1em; vertical-align: text-bottom;">
+							<span id="dlg_player_class2_edited" class="dlg-edited-mark" title="Classes were manually edited" onclick="clear_edited_mark('ce');">&#9997;</span>
+						</div>
+					</div>	
 				</div>
-				<div class="row">
-					<div class="cell"><label for="dlg_player_level">Level:</label></div>
-					<div class="cell"><input id="dlg_player_level" type="text" readonly></div>
+				<div id="dlg_top_heroes">
+					<span>Top heroes:</span>
+					<br/>
+					<div id="dlg_top_heroes_icons" class="hero-icon-list"></div>
 				</div>
-				<div class="row">
-					<div class="cell"><label for="dlg_player_sr">SR:</label></div>
-					<div class="cell">
-						<input id="dlg_player_sr" type="number" min=0 max=5000>
-						<span id="dlg_player_sr_edited" class="dlg-edited-mark" title="SR was manually edited" onclick="clear_edited_mark('se');">&#9997;</span>
-					</div>
+				
+				<div style="text-align: left;">
+					<br/>
+					Stats last updated: <span id="dlg_edit_player_last_updated"></span>
+					<br/>
+					<input id="dlg_update_player_stats" class="big-btn" type="button" value="&#8635; Update stats" onclick="update_current_player_stats();"/>
+					<br/>
 				</div>
-				<div class="row">
-					<div class="cell"><label for="dlg_player_captain" title="Will be assigned as team captain in roll (ignoring SR). Each team can only have one predefined captain.">Predefined captain:</label></div>
-					<div class="cell">
-						<input type="checkbox" id="dlg_player_captain">
-					</div>
-				</div>
-			</div>
-			<div id="dlg_class_select" class="dlg_options table">
-				<div class="row">
-					<div class="cell">Main class: </div>
-					<div class="cell">
-						<select id="dlg_main_class" autocomplete="off">
-							<option value="maintank">main tank</option>
-							<option value="offtank">off tank</option>
-							<option value="dps" selected>dps</option>
-							<option value="support">support</option>
-						</select>
-						<span id="dlg_player_class1_edited" class="dlg-edited-mark" title="Classes were manually edited" onclick="clear_edited_mark('ce');">&#9997;</span>
-					</div>
-				</div>
-				<div class="row">
-					<div class="cell">Secondary class: </div>
-					<div class="cell">
-						<select id="dlg_secondary_class">
-							<option value="">-</option>							
-							<option value="maintank">main tank</option>
-							<option value="offtank">off tank</option>
-							<option value="dps">dps</option>
-							<option value="support">support</option>
-						</select>
-						<span id="dlg_player_class2_edited" class="dlg-edited-mark" title="Classes were manually edited" onclick="clear_edited_mark('ce');">&#9997;</span>
-					</div>
-				</div>	
-			</div>
-			<div id="dlg_top_heroes">
 				<br/>
-				<span>Top heroes:</span>
-				<br/>
-				<div id="dlg_top_heroes_icons" class="hero-icon-list"></div>
-			</div>
-			
-			<div style="text-align: left;">
-				<br/>
-				Stats last updated: <span id="dlg_edit_player_last_updated"></span>
-				<br/>
-				<input id="dlg_update_player_stats" class="big-btn" type="button" value="&#8635; Update stats" onclick="update_current_player_stats();"/>
-				<br/>
-			</div>
-			<br/>
-			
-			<div style="height: 2em; vertical-align: middle; text-align: center;">
-				<div id="dlg_update_player_stats_loader" class="loader inline-loader" style="display: none;"></div>
-				<div id="dlg_edit_player_update_result" style="display: none;"></div>
-			</div>
-			
-			<br/>
+				
+				<div style="height: 2em; vertical-align: middle; text-align: center;">
+					<div id="dlg_update_player_stats_loader" class="loader inline-loader" style="display: none;"></div>
+					<div id="dlg_edit_player_update_result" style="display: none;"></div>
+				</div>
+			</fieldset>
 
 			<div>
 				<input id="dlg_ok" class="big-btn" type="button" value="OK" onclick="edit_player_ok();"/>

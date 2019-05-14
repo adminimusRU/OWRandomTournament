@@ -723,3 +723,9 @@ th.sort-down:after {
 input:required:invalid {
   outline: 1px solid red;
 }
+
+fieldset.edit-player-fieldset {
+	margin-bottom: 0.5em;
+	padding-top: 0;
+	padding-bottom: 0.2em;
+}

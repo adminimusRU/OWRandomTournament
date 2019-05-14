@@ -272,6 +272,12 @@ function edit_player_ok() {
 	if ( player_struct.sr != new_sr ) {
 		player_struct.se = true; // sr edited
 	}
+	if ( new_sr < 0 ) {
+		new_sr = 0;
+	}
+	if ( new_sr > 5000 ) {
+		new_sr = 5000;
+	}
 	player_struct.sr = new_sr;
 	
 	player_struct.captain = document.getElementById("dlg_player_captain").checked;
@@ -1075,6 +1081,32 @@ function update_stats_ok() {
 function on_lobby_filter_change() {
 	clearTimeout( lobby_filter_timer );
 	lobby_filter_timer = setTimeout( apply_lobby_filter, 400 );
+}
+
+function on_player_edit_main_class_change() {
+	var new_class = document.getElementById("dlg_main_class").value;
+	var icon_src = "class_icons/"+new_class+".png";
+	if (new_class == "" ) {
+		icon_src = "";
+	}
+	document.getElementById("dlg_player_main_class_icon").src = icon_src;
+}
+
+function on_player_edit_secondary_class_change() {
+	var new_class = document.getElementById("dlg_secondary_class").value;
+	var icon_src = "class_icons/"+new_class+".png";
+	if (new_class == "" ) {
+		icon_src = "";
+	}
+	document.getElementById("dlg_player_secondary_class_icon").src = icon_src;
+}
+
+function on_player_edit_sr_change() {
+	var new_sr = Number(document.getElementById("dlg_player_sr").value);
+	var rank_name = get_rank_name(new_sr);
+	var rank_icon = document.getElementById("dlg_player_sr_icon");
+	rank_icon.src = get_rank_icon_src( rank_name );
+	rank_icon.title = rank_name;
 }
 
 function on_stats_update_limit_change() {
@@ -2194,6 +2226,8 @@ function fill_player_stats_dlg() {
 	if ( Array.isArray(player_struct.top_classes) ) {
 		if ( player_struct.top_classes.length > 0 ) {
 			document.getElementById("dlg_main_class").value = player_struct.top_classes[0];
+		} else {
+			document.getElementById("dlg_main_class").value = "dps";
 		}
 		
 		if ( player_struct.top_classes.length > 1 ) {
@@ -2237,6 +2271,11 @@ function fill_player_stats_dlg() {
 	document.getElementById("dlg_update_player_stats_loader").style.display = "none";
 	document.getElementById("dlg_edit_player_update_result").style.display = "none";
 	document.getElementById("dlg_edit_player_update_result").innerHTML = "";
+	
+	// icons
+	on_player_edit_sr_change();
+	on_player_edit_main_class_change();
+	on_player_edit_secondary_class_change();
 }
 
 function fill_settings_dlg( settings_obj ) {
