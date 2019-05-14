@@ -38,6 +38,8 @@ function add_player_click() {
 
 function apply_settings() {
 	var need_redraw_teams = false;
+	var need_redraw_lobby = false;
+	
 	// check if team size changed
 	if ( (Settings["team_size"] != Number(document.getElementById("team_size").value)) && (teams.length > 0) ) {
 		if ( ! confirm("Team size setting changed. All teams will be deleted!") ) {
@@ -47,7 +49,11 @@ function apply_settings() {
 	}
 	
 	if ( Settings["show_numeric_sr"] != (document.getElementById("show_numeric_sr").value) ) {
-		need_redraw_teams = true;	
+		need_redraw_teams = true;
+	}
+	
+	if ( Settings["roll_exclude_twitch_unsubs"] != (document.getElementById("roll_exclude_twitch_unsubs").checked) ) {
+		need_redraw_lobby = true;
 	}
 	
 	for ( setting_name in Settings ) {
@@ -75,6 +81,10 @@ function apply_settings() {
 	
 	if (need_redraw_teams) {
 		redraw_teams();
+	}
+	
+	if (need_redraw_lobby) {
+		redraw_lobby();
 	}
 }
 
@@ -919,12 +929,16 @@ function test() {
 		},
 		undefined, 
 		undefined
-	);*/
+	);
+	return;*/
 	
-	var str = "123.45.5465";
-	document.getElementById("debug_log").innerHTML += is_number_string( str ) + "<br/>";
-	document.getElementById("debug_log").innerHTML += ( str ) + "<br/>";
+	var test_map = new Map();
+	test_map.set("abc", 111);
+	test_map.set("def", 222);
+	test_map.set("ghi", 333);
 	
+	document.getElementById("debug_log").innerHTML += test_map.get("def") + "<br/>";
+	document.getElementById("debug_log").innerHTML += test_map.get("Def") + "<br/>";
 }
 
 function twitch_chat_connect() {
@@ -1761,7 +1775,8 @@ function on_twitch_sub_icon_success( icon_src ) {
 function on_twitch_subs_get_complete( subscibers_map ) {
 	twitch_subs_list = [];
 	for (var i=0; i<lobby.length; i++) {
-		var sub_info = subscibers_map.get( lobby[i].twitch_name );
+		// twitch logins are lower case
+		var sub_info = subscibers_map.get( lobby[i].twitch_name.toLowerCase() );
 		if ( sub_info !== undefined ) {
 			twitch_subs_list.push( lobby[i].id );
 		}
@@ -1906,6 +1921,7 @@ function draw_player_cell( player_struct, small=false, is_captain=false ) {
 	new_player_item.id = player_struct.id;
 	if( ! player_struct.empty) {
 		new_player_item.title = player_struct.id.replace("-", "#");
+		new_player_item.title += "\nTwitch name: " + player_struct.twitch_name;
 		new_player_item.title += "\nSR: " + player_struct.sr;
 		new_player_item.title += "\nLevel: " + player_struct.level;
 		new_player_item.title += "\nMain class: " + is_undefined(player_struct.top_classes[0], "-");
@@ -1936,7 +1952,7 @@ function draw_player_cell( player_struct, small=false, is_captain=false ) {
 	new_player_item.oncontextmenu = function(event){player_contextmenu(event);};
 	
 	// player background color depending on check-in process (only in lobby)
-	if ( (!small) && ( (checkin_list.length > 0) || (twitch_subs_list.length > 0) ) ) {	
+	if ( !small ) {	
 		if ( is_active_player(player_struct) ) {
 			new_player_item.classList.add("player-roll-allow");
 		} else {

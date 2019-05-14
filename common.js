@@ -255,9 +255,11 @@ function get_scrollbar_width() {
 
 function is_active_player( player_struct ) {
 	var roll_allowed = true;
-	if (twitch_subs_list.length > 0) {
-		if (twitch_subs_list.indexOf(player_struct.id) == -1) {
-			roll_allowed = false;
+	if ( Settings.roll_exclude_twitch_unsubs ) {
+		if (twitch_subs_list.length > 0) {
+			if (twitch_subs_list.indexOf(player_struct.id) == -1) {
+				roll_allowed = false;
+			}
 		}
 	}
 	if (checkin_list.length > 0) {
