@@ -477,33 +477,39 @@ var balance_priority_canvas_gradient;
 				<legend>Stats</legend>
 				<div class="dlg_options table">
 					<div class="row">
-						<div class="cell"><label for="dlg_player_level">Level:</label></div>
-						<div class="cell"><input id="dlg_player_level" type="text" readonly></div>
+						<div class="cell">
+							<label for="dlg_player_level">Level:</label>
+						</div>
+						<div class="cell">
+							<div style="display:inline-block; width: 24px;"></div>
+							<input id="dlg_player_level" type="text" readonly>
+						</div>
 					</div>
 					<div class="row">
 						<div class="cell"><label for="dlg_player_sr">SR:</label></div>
 						<div class="cell">
-							<input id="dlg_player_sr" type="number" min=0 max=5000 style="width: 4em;" onchange="on_player_edit_sr_change();">
 							<img id="dlg_player_sr_icon" style="width: 24px; vertical-align: text-bottom;">
+							<input id="dlg_player_sr" type="number" min=0 max=5000 style="width: 4em;" onchange="on_player_edit_sr_change();">
 							<span id="dlg_player_sr_edited" class="dlg-edited-mark" title="SR was manually edited" onclick="clear_edited_mark('se');">&#9997;</span>
 						</div>
 					</div>
 					<div class="row">
 						<div class="cell">Main class: </div>
 						<div class="cell">
+							<img id="dlg_player_main_class_icon" style="width: 24px; vertical-align: text-bottom;">
 							<select id="dlg_main_class" autocomplete="off" onchange="on_player_edit_main_class_change();">
 								<option value="maintank">main tank</option>
 								<option value="offtank">off tank</option>
 								<option value="dps" selected>dps</option>
 								<option value="support">support</option>
 							</select>
-							<img id="dlg_player_main_class_icon" style="width: 1em; vertical-align: text-bottom;">
 							<span id="dlg_player_class1_edited" class="dlg-edited-mark" title="Classes were manually edited" onclick="clear_edited_mark('ce');">&#9997;</span>
 						</div>
 					</div>
 					<div class="row">
 						<div class="cell">Secondary class: </div>
 						<div class="cell">
+							<img id="dlg_player_secondary_class_icon" style="width: 24px; vertical-align: text-bottom;">
 							<select id="dlg_secondary_class" onchange="on_player_edit_secondary_class_change();">
 								<option value="">-</option>							
 								<option value="maintank">main tank</option>
@@ -511,7 +517,6 @@ var balance_priority_canvas_gradient;
 								<option value="dps">dps</option>
 								<option value="support">support</option>
 							</select>
-							<img id="dlg_player_secondary_class_icon" style="width: 1em; vertical-align: text-bottom;">
 							<span id="dlg_player_class2_edited" class="dlg-edited-mark" title="Classes were manually edited" onclick="clear_edited_mark('ce');">&#9997;</span>
 						</div>
 					</div>	

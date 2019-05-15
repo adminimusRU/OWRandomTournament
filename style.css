@@ -729,3 +729,7 @@ fieldset.edit-player-fieldset {
 	padding-top: 0;
 	padding-bottom: 0.2em;
 }
+
+fieldset.edit-player-fieldset input,select {
+	vertical-align: text-bottom;
+}	

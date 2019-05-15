@@ -1087,7 +1087,8 @@ function on_player_edit_main_class_change() {
 	var new_class = document.getElementById("dlg_main_class").value;
 	var icon_src = "class_icons/"+new_class+".png";
 	if (new_class == "" ) {
-		icon_src = "";
+		// 1px image. Empty src causes image to collapse in chrome
+		icon_src = "data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs%3D";
 	}
 	document.getElementById("dlg_player_main_class_icon").src = icon_src;
 }
@@ -1096,7 +1097,7 @@ function on_player_edit_secondary_class_change() {
 	var new_class = document.getElementById("dlg_secondary_class").value;
 	var icon_src = "class_icons/"+new_class+".png";
 	if (new_class == "" ) {
-		icon_src = "";
+		icon_src = "data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs%3D";
 	}
 	document.getElementById("dlg_player_secondary_class_icon").src = icon_src;
 }
