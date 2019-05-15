@@ -286,13 +286,17 @@ function is_number_string( val ) {
 	return (+val === +val);
 }
 
-function print_date( date_value ) {
-	if( typeof date_value === "undefined" ) {
+function print_date( date_value, without_time=false ) {
+	if( typeof date_value !== "object" ) {
 		return "-";
 	} else if (date_value.getTime() == 0) {
 		return "-";
 	} else {
-		return date_value.toLocaleString();
+		if (without_time) {
+			return date_value.toLocaleDateString();
+		} else {
+			return date_value.toLocaleString();
+		}
 	}
 }
 

@@ -1805,17 +1805,26 @@ function on_twitch_sub_icon_success( icon_src ) {
 }
 
 function on_twitch_subs_get_complete( subscibers_map ) {
+	let twitch_subs_last_checked = new Date();
+	localStorage.setItem( storage_prefix+"twitch_subs_last_checked", twitch_subs_last_checked.toJSON() );
+	document.getElementById("twitch_subs_last_checked_date").innerHTML = print_date( twitch_subs_last_checked, true );
+	
 	twitch_subs_list = [];
+	var players_with_twitch_accs = 0;
 	for (var i=0; i<lobby.length; i++) {
 		// twitch logins are lower case
-		var sub_info = subscibers_map.get( lobby[i].twitch_name.toLowerCase() );
-		if ( sub_info !== undefined ) {
-			twitch_subs_list.push( lobby[i].id );
+		if ( lobby[i].twitch_name.trim() != "" ) {
+			players_with_twitch_accs++;
+			var sub_info = subscibers_map.get( lobby[i].twitch_name.toLowerCase() );
+			if ( sub_info !== undefined ) {
+				twitch_subs_list.push( lobby[i].id );
+			}
 		}
 	}
 	
 	document.getElementById("popup_dlg_pending_action_loader").style.display = "none";
 	document.getElementById("dlg_pending_action_message").innerHTML = "Total subscribers: "+subscibers_map.size;
+	document.getElementById("dlg_pending_action_message").innerHTML += "<br/>Players with Twitch names: "+players_with_twitch_accs;
 	document.getElementById("dlg_pending_action_message").innerHTML += "<br/>Players with subscription: "+twitch_subs_list.length;
 	document.getElementById("popup_dlg_pending_action_ok").disabled = false;
 	
