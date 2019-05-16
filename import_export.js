@@ -339,21 +339,38 @@ function import_lobby( format, import_str ) {
 			alert("Incorrect import format: "+err.message);
 			return false;
 		}
-	} else if( format == "text") {
+	} else if( (format == "csv") || (format == "csv-tab") ) {
 		var order_base = get_new_player_order();
 		try {
 			var battletag_list = import_str.trim().split("\n");
 			for( i in battletag_list ) {
 				// split string to fields (btag, twitch, SR, class, offclass)
-				// @todo gluing separators can cause fails on pasting from table if some cells are empty
-				var fields = battletag_list[i].split(/[ \t.,;|]+/);
+				var separator_regex = /[ \t.,;|]/;
+				if (format == "csv-tab") {
+					separator_regex = /\t/;
+				}
+				var fields = battletag_list[i].split( separator_regex );
 				
-				// check battletag format
-				if ( /^[^#]+[-#]\d+$/.test(fields[0]) == false ) {
-					throw new Error("Incorrect battletag "+fields[0]);
+				// try to guess if field order is [btag,twitch] or [twitch,btag] 
+				var btag = undefined;
+				var twitch_name = "";
+				var field_index = 0;
+				if ( is_battletag(fields[0]) ) {
+					btag = fields[0];
+					field_index = 1;
+					if ( fields.length >= 2 ) {
+						twitch_name = ( fields[1] );
+						field_index = 2;
+					}					
+				} else if ( (fields.length >= 2) && is_battletag(fields[1]) ) {
+					twitch_name = fields[0];
+					btag = fields[1];
+					field_index = 2;
+				} else {
+					throw new Error("Can't find battletag on row #"+String(Number(i)+1));
 				}
 				
-				var player_id = format_player_id(fields[0]);
+				var player_id = format_player_id(btag);
 
 				// check duplicates
 				if (find_player_by_id(player_id) !== undefined ) {
@@ -365,32 +382,32 @@ function import_lobby( format, import_str ) {
 				delete new_player.empty;
 				new_player.id = player_id;
 				new_player.display_name = player_name;
+				new_player.twitch_name = twitch_name;
 				
 				new_player.order = order_base;
 				order_base++;
 				
 				// additional fields
-				if ( fields.length >= 2 ) {
-					new_player.twitch_name = ( fields[1] );
-				}
-				if ( fields.length >= 3 ) {
-					new_player.sr = Number( fields[2] );
+				if ( field_index < fields.length ) {
+					new_player.sr = Number( fields[field_index] );
 					if ( Number.isNaN(new_player.sr) ) {
-						throw new Error("Incorrect SR number '"+fields[2]+"' on row #"+String(Number(i)+1));
+						throw new Error("Incorrect SR number '"+fields[field_index]+"' on row #"+String(Number(i)+1));
 					}
 					if ( new_player.sr < 0 || new_player.sr > 5000 ) {
-						throw new Error("Incorrect SR value '"+fields[2]+"' on row #"+String(Number(i)+1));
+						throw new Error("Incorrect SR value '"+fields[field_index]+"' on row #"+String(Number(i)+1));
 					}
 					new_player.last_updated = new Date;
+					field_index++;
 				}
-				if ( fields.length >= 4 ) {
-					for ( var c = 3; c < Math.min(fields.length, 5); c++ ) {
+				if ( field_index < fields.length ) {
+					for ( var c = field_index; c < Math.min(fields.length, field_index+2); c++ ) {
 						if (fields[c] == "") continue;
 						if (class_names.indexOf(fields[c]) == -1) {
 							throw new Error("Incorrect class name '"+fields[c]+"' on row #"+String(Number(i)+1));
 						}
 						new_player.top_classes.push( fields[c] );
 					}
+					field_index+=2;
 				}
 				
 				// check twitch duplicates
@@ -400,7 +417,7 @@ function import_lobby( format, import_str ) {
 					}
 				}
 				
-				if ( fields.length < 3 ) {
+				if ( new_player.sr == 0 ) {
 					players_for_update.push( new_player );
 				}
 				added_players.push( new_player );
@@ -415,7 +432,7 @@ function import_lobby( format, import_str ) {
 		if (players_for_update.length > 0) {
 			StatsUpdater.addToQueue( players_for_update );
 		}
-	} else {
+	}  else {
 		alert("Unknown import format: "+format);
 		return false;
 	}

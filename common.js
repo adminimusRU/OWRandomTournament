@@ -270,6 +270,14 @@ function is_active_player( player_struct ) {
 	return roll_allowed;
 }
 
+// checks battletag format
+function is_battletag( str ) {
+	if ( typeof str !== "string" ) {
+		return false;
+	}
+	return /^[^#\t\s]+[-#]\d+$/.test(str);
+}
+
 function is_undefined( expr, if_undefined ) {
 	if( typeof expr === "undefined" ) {
 		return if_undefined;

@@ -2264,6 +2264,7 @@ function fill_player_stats_dlg() {
 			img_node.className = "hero-icon";
 			img_node.src = "https://blzgdapipro-a.akamaihd.net/hero/"+hero_id+"/hero-select-portrait.png";
 			img_node.title = hero_id + "\nPlayed: " + player_struct.top_heroes[i].playtime+" h";
+			img_node.alt = hero_id;
 			document.getElementById("dlg_top_heroes_icons").appendChild(img_node);
 		}
 	}
