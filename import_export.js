@@ -402,10 +402,33 @@ function import_lobby( format, import_str ) {
 				if ( field_index < fields.length ) {
 					for ( var c = field_index; c < Math.min(fields.length, field_index+2); c++ ) {
 						if (fields[c] == "") continue;
-						if (class_names.indexOf(fields[c]) == -1) {
+						
+						var class_name = undefined;
+						switch (fields[c].toLowerCase()) {
+							case "tank":
+							case "offtank":
+							case "off tank":
+								class_name = "offtank";
+								break;
+							case "maintank":
+							case "main tank":
+								class_name = "maintank";
+								break;
+							case "dps":
+							case "damage":
+							case "dd":
+								class_name = "dps";
+								break;
+							case "support":
+							case "sup":
+							case "healer":
+								class_name = "support";
+								break;
+						}
+						if (class_names.indexOf(class_name) == -1) {
 							throw new Error("Incorrect class name '"+fields[c]+"' on row #"+String(Number(i)+1));
 						}
-						new_player.top_classes.push( fields[c] );
+						new_player.top_classes.push( class_name );
 					}
 					field_index+=2;
 				}
