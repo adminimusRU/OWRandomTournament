@@ -27,7 +27,7 @@ Tool for building balanced teams of random players for tournaments.
   
 ## Tournament bracket
 
-Currently there is no built-in bracket generator. Export created teams to external tools like [Challonge](https://challonge.com).
+Currently there is no built-in bracket generator. Export list of created teams and use external tools like [Challonge](https://challonge.com).
 
 ## Installation
 
