@@ -21,7 +21,8 @@ Tool for building balanced teams of random players for tournaments.
   * Batch stats updating;
   * Adjustable team size;
   * Created teams can be exported in text, HTML and image format;
-  * Check-in feature (manual or by importing list);
+  * Check-in feature (manual / importing list / Twitch chat);
+  * Twitch integration: Twitch subscribers icons, chat bot for automated check-in;
   
 ## Tournament bracket
 
