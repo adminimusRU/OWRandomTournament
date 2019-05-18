@@ -491,7 +491,8 @@ var balance_priority_canvas_gradient;
 						</div>
 						<div class="cell">
 							<div style="display:inline-block; width: 24px;"></div>
-							<input id="dlg_player_level" type="text" readonly>
+							<input id="dlg_player_level" type="number" min=0 style="width: 4em;">
+							<span id="dlg_player_level_edited" class="dlg-edited-mark" title="Level was manually edited" onclick="clear_edited_mark('le');">&#9997;</span>
 						</div>
 					</div>
 					<div class="row">
@@ -747,8 +748,11 @@ var balance_priority_canvas_gradient;
 							<input type="checkbox" id="update_class" checked>
 							<label for="update_class">Update player class</label>
 							</br>
+							<input type="checkbox" id="update_level" checked>
+							<label for="update_level">Update player level</label>
+							</br>
 							<input type="checkbox" id="update_edited_fields">
-							<label for="update_edited_fields">Force update manually edited fields (name, SR, class)</label>
+							<label for="update_edited_fields">Force update manually edited fields</label>
 						</div>
 					</div>
 					

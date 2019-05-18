@@ -20,6 +20,7 @@ var StatsUpdater = {
 	update_edited_fields: true,
 	update_sr: true,
 	update_class: true,
+	update_level: true,
 	region: "eu",
 	//stats_max_age: 0, // moved to addToQueue parameter
 	
@@ -190,7 +191,12 @@ var StatsUpdater = {
 	onOWAPISuccess: function() {
 		var player = this.queue.shift();
 		
-		player.level = OWAPI.level;
+		if (this.update_level ) {
+			if ( (player.le !== true) || this.update_edited_fields ) {
+				player.level = OWAPI.level;
+				player.le = false;
+			}
+		}
 	
 		// check if name was manually edited
 		if ( (player.ne !== true) || this.update_edited_fields ) {

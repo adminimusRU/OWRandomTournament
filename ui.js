@@ -196,6 +196,10 @@ function clear_edited_mark( field_name ) {
 			document.getElementById("dlg_player_class1_edited").style.visibility = "";
 			document.getElementById("dlg_player_class2_edited").style.visibility = "";
 			break;
+		case 'le': 
+			player_struct.le = false;
+			document.getElementById("dlg_player_level_edited").style.visibility = "";
+			break;
 	}
 	
 	redraw_player( player_struct );
@@ -269,18 +273,25 @@ function edit_player_ok() {
 	player_struct.twitch_name = twitch_name;
 	
 	var new_sr = Number(document.getElementById("dlg_player_sr").value);
-	if ( player_struct.sr != new_sr ) {
-		player_struct.se = true; // sr edited
-	}
 	if ( new_sr < 0 ) {
 		new_sr = 0;
 	}
 	if ( new_sr > 5000 ) {
 		new_sr = 5000;
 	}
+	if ( player_struct.sr != new_sr ) {
+		player_struct.se = true; // sr edited
+	}
 	player_struct.sr = new_sr;
 	
-	player_struct.captain = document.getElementById("dlg_player_captain").checked;
+	var new_level = Number(document.getElementById("dlg_player_level").value);
+	if ( new_level < 0 ) {
+		new_level = 0;
+	}
+	if ( player_struct.level != new_level ) {
+		player_struct.le = true; // sr edited
+	}
+	player_struct.level = new_level;
 	
 	var top_classes = [];
 	top_classes.push( document.getElementById("dlg_main_class").value );
@@ -302,6 +313,8 @@ function edit_player_ok() {
 		top_classes.pop();
 	}
 	player_struct.top_classes = top_classes;
+	
+	player_struct.captain = document.getElementById("dlg_player_captain").checked;
 	
 	// twitch sub
 	if ( document.getElementById("dlg_player_twitch_sub").checked ) {
@@ -1052,6 +1065,7 @@ function update_current_player_stats() {
 	// forcing update of manually edited fields
 	delete player_being_edited.se;
 	delete player_being_edited.ce;
+	delete player_being_edited.le;
 	
 	StatsUpdater.addToQueue( player_being_edited, 0, true );
 	
@@ -2203,6 +2217,8 @@ function fill_player_stats_dlg() {
 		document.getElementById("dlg_player_twitch_link").title = "";
 	}
 	
+	document.getElementById("dlg_player_captain").checked = player_struct.captain;
+	
 	if ( twitch_subs_list.indexOf(player_struct.id) !== -1 ) {
 		document.getElementById("dlg_player_twitch_sub").checked = true;
 	} else {
@@ -2229,9 +2245,12 @@ function fill_player_stats_dlg() {
 		document.getElementById("dlg_player_sr_edited").style.visibility = "";
 	}
 	
-	document.getElementById("dlg_player_captain").checked = player_struct.captain;
-	
 	document.getElementById("dlg_player_level").value = player_struct.level;
+	if( player_struct.le === true )  {
+		document.getElementById("dlg_player_level_edited").style.visibility = "visible";
+	} else {
+		document.getElementById("dlg_player_level_edited").style.visibility = "";
+	}
 	
 	if ( Array.isArray(player_struct.top_classes) ) {
 		if ( player_struct.top_classes.length > 0 ) {

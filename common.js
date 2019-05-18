@@ -13,6 +13,7 @@ function apply_stats_updater_settings() {
 	StatsUpdater.update_edited_fields = Settings.update_edited_fields;
 	StatsUpdater.update_sr = Settings.update_sr;
 	StatsUpdater.update_class = Settings.update_class;
+	StatsUpdater.update_level = Settings.update_level;
 	StatsUpdater.region = Settings.region;
 }
 
@@ -177,6 +178,7 @@ function get_default_settings() {
 		region: "eu",
 		update_class: true,
 		update_sr: true,
+		update_level: true,
 		update_edited_fields: false,
 	};
 }

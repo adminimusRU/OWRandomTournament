@@ -1,5 +1,13 @@
 function current_format_version() {
-	return 7;
+	return 8;
+	// format version history:
+	// 2: removed 'current_sr', 'max_sr fields'. Offence and defence class merged to dps;
+	// 3: added 'last_updated' field ( stats last updated Date ) [Date];
+	// 4: added 'captain' field (predefined captain mark) [Boolean];
+	// 5: added 'order' field (order of addition) [Number];
+	// 6: added 'twitch_name' field [String];
+	// 7: tank role splitted to maintank and offtank. Tank converted to offtank by default;
+	// 8: added 'le' field (level manually edited) [Boolean];
 }
 
 function export_captains() {
