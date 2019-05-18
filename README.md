@@ -22,7 +22,17 @@ Tool for building balanced teams of random players for tournaments.
   * Adjustable team size;
   * Created teams can be exported in text, HTML and image format;
   * Check-in feature (manual or by importing list);
+  * Optional restrictions for partipiation: minimum level, Twitch subscription, check-in;
   
 ## Tournament bracket
 
 Currently there is no built-in bracket generator. Export created teams to external tools like [Challonge](https://challonge.com).
+
+## Installation
+
+No installation or build required, just open index.html with browser as file or setup any local HTTP server.
+
+In file mode all features except Twitch integration will work in Firefox. For Chrome use --allow-access-from-files flag.
+
+Twitch integration requires web server and registration on Twitch developer dashboard. Twitch AppID hardcoded in index.html is bound to GitHub Pages domain.
+After [registering app on Twitch](https://dev.twitch.tv/docs/authentication/#registration), change client_id and redirect_uri in index.html (registering for localhost should work too).
