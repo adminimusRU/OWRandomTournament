@@ -7,11 +7,12 @@
 var OWAPI = {
 	id: "", // player battletag
 	display_name: "", // first part of battletag before '#'
-	sr: 0,
 	level: 0,
 	time_played: 0,
-	top_classes: [],
+	sr_by_class: {},
+	playtime_by_class: {},
 	top_heroes: [],
+	private_profile: false,
 	
 	onSuccess: undefined, // Set to actual callback function before use
 	onFail: undefined, // Set to actual callback function before use
@@ -20,9 +21,8 @@ var OWAPI = {
 	
 	// settings
 	owapi_timeout: 15000, // 15 sec timeout for OWAPI requests
-	top_class_min_fraction: 0.25, // fraction of overall time played
 	top_hero_max_ratio: 4.0, // ratio of hero playtime to detect top heroes
-	region: "eu", // us, kr
+	region: "eu", // eu, us, kr
 	
 	// internal
 	is_processed: false, // to prevent multiple callback on single request
@@ -31,11 +31,13 @@ var OWAPI = {
 	
 	getStats: function() {
 		// reset
-		this.sr = 0;
+		this.sr_by_class = {};
 		this.level = 0;
 		this.time_played = 0;
-		this.top_classes = [];
+		this.sr_by_class = {};
+		this.playtime_by_class = {};
 		this.top_heroes = [];
+		this.private_profile = false;
 		
 		this.id = format_player_id( this.id );
 		this.display_name = format_player_name( this.id );
@@ -57,13 +59,25 @@ var OWAPI = {
 								OWAPI.can_retry = false;
 								throw new Error("Player has no stats in region "+OWAPI.region.toUpperCase());
 							}
-							OWAPI.sr = Number(stats_obj[OWAPI.region].stats.competitive.overall_stats.comprank);
+							
+							var sr_value = stats_obj[OWAPI.region].stats.competitive.overall_stats.tank_comprank;
+							if ( (sr_value !== undefined) && (sr_value !== null) ) {
+								OWAPI.sr_by_class["tank"] = Number(sr_value);
+							}
+							sr_value = stats_obj[OWAPI.region].stats.competitive.overall_stats.damage_comprank;
+							if ( (sr_value !== undefined) && (sr_value !== null) ) {
+								OWAPI.sr_by_class["dps"] = Number(sr_value);
+							}
+							sr_value = stats_obj[OWAPI.region].stats.competitive.overall_stats.support_comprank;
+							if ( (sr_value !== undefined) && (sr_value !== null) ) {
+								OWAPI.sr_by_class["support"] = Number(sr_value);
+							}
 							
 							OWAPI.level = stats_obj[OWAPI.region].stats.competitive.overall_stats.prestige*100 + stats_obj[OWAPI.region].stats.competitive.overall_stats.level,
 							OWAPI.time_played = Number(stats_obj[OWAPI.region].stats.competitive.game_stats.time_played);
 							
 							var hero_stats = OWAPI.parseHeroStats( stats_obj[OWAPI.region].heroes );
-							OWAPI.top_classes = OWAPI.calculateTopClasses( hero_stats );
+							OWAPI.playtime_by_class = OWAPI.calculatePlaytimeByClass( hero_stats );
 							OWAPI.top_heroes = OWAPI.calculateTopHeroes( hero_stats );
 						} 
 						
@@ -94,6 +108,7 @@ var OWAPI = {
 									break;
 						case 403: msg = "Player has private profile";
 									OWAPI.can_retry = false;
+									OWAPI.private_profile = true;
 									break;
 						default: msg = "Can't get player stats (HTTP "+this.status+": "+this.statusText+")";
 									OWAPI.can_retry = true;
@@ -154,14 +169,24 @@ var OWAPI = {
 	
 	// returns top 2 hero classes
 	calculateTopClasses: function calculate_top_classes( hero_playtime ) {
-		var class_playtime = {};
-		for( c in hero_classes ) {
-			class_playtime[ hero_classes[c] ] = 0;
-		}
+		var class_playtime = {
+			dps: 0,
+			tank: 0,
+			support: 0
+			};
 		
+		var total_hero_playtime = 0;
 		for ( i=0; i<hero_playtime.length; i++ ) {
 			var hero_class = hero_classes[hero_playtime[i].hero];
+			if ( hero_class === undefined ) {
+				throw new Error("Unknown hero: "+hero_playtime[i].hero);
+			}
 			class_playtime[hero_class] += hero_playtime[i].playtime;
+			total_hero_playtime += hero_playtime[i].playtime;
+		}
+		
+		if ( total_hero_playtime == 0 ) {
+			return [];
 		}
 		
 		var class_playtime_arr = Object.entries(class_playtime);
@@ -204,5 +229,23 @@ var OWAPI = {
 		}
 		
 		return top_heroes;
+	},
+	
+	calculatePlaytimeByClass: function ( hero_playtime ) {
+		var class_playtime = {
+			dps: 0,
+			tank: 0,
+			support: 0
+			};
+				
+		for ( i=0; i<hero_playtime.length; i++ ) {
+			var hero_class = hero_classes[hero_playtime[i].hero];
+			if ( hero_class === undefined ) {
+				throw new Error("Unknown hero: "+hero_playtime[i].hero);
+			}
+			class_playtime[hero_class] += hero_playtime[i].playtime;			
+		}
+		
+		return class_playtime;
 	}
 }
