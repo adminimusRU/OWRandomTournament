@@ -189,12 +189,14 @@ function clear_edited_mark( field_name ) {
 			break;
 		case 'se': 
 			player_struct.se = false;
-			document.getElementById("dlg_player_sr_edited").style.visibility = "";
+			var marks = document.getElementById("dlg_player_class_table").getElementsByClassName("dlg-edited-mark-sr");
+			for( i=0; i<marks.length; i++ ) {
+				marks[i].style.visibility = "hidden";
+			}
 			break;
 		case 'ce': 
 			player_struct.ce = false;
-			document.getElementById("dlg_player_class1_edited").style.visibility = "";
-			document.getElementById("dlg_player_class2_edited").style.visibility = "";
+			document.getElementById("dlg_player_class1_edited").style.visibility = "";			
 			break;
 		case 'le': 
 			player_struct.le = false;
@@ -272,17 +274,76 @@ function edit_player_ok() {
 	
 	player_struct.twitch_name = twitch_name;
 	
-	var new_sr = Number(document.getElementById("dlg_player_sr").value);
-	if ( new_sr < 0 ) {
-		new_sr = 0;
+	var class_rows = document.getElementById("dlg_player_class_table").rows;
+	// check if SR was edited
+	for ( var i=0; i<class_rows.length; i++ ) {
+		var class_row = class_rows[i];
+		var class_title = class_row.getElementsByClassName("dlg-class-name")[0];
+		var class_name = class_title.innerHTML;
+
+		var sr_edit = class_row.getElementsByClassName("dlg-sr-by-class")[0];
+		var new_sr = Number(sr_edit.value);
+
+		var old_sr = player_struct.sr_by_class[class_name];
+		if ( old_sr == undefined ) {
+			old_sr = 0;
+		}
+
+		if ( old_sr != new_sr ) {
+			player_struct.se = true; // sr edited mark
+			break;
+		}
 	}
-	if ( new_sr > 5000 ) {
-		new_sr = 5000;
+	
+	// check if class order was edited
+	var new_classes = [];
+	for ( var i=0; i<class_rows.length; i++ ) {
+		var class_row = class_rows[i];
+		var class_title = class_row.getElementsByClassName("dlg-class-name")[0];
+		var class_name = class_title.innerHTML;
+		
+		var class_checkbox = class_row.getElementsByClassName("dlg-class-enabled-checkbox")[0];
+		if ( class_checkbox.checked ) {
+			new_classes.push( class_name );
+		}
 	}
-	if ( player_struct.sr != new_sr ) {
-		player_struct.se = true; // sr edited
+	for ( var i=0; i<new_classes.length; i++ ) {
+		var old_index = player_struct.classes.indexOf( new_classes[i] );
+		if ( old_index != i ) {
+			player_struct.ce = true;
+			break;
+		}
 	}
-	player_struct.sr = new_sr;
+	for ( var i=0; i<player_struct.classes.length; i++ ) {
+		var new_index = new_classes.indexOf( player_struct.classes[i] );
+		if ( new_index != i ) {
+			player_struct.ce = true;
+			break;
+		}
+	}
+	
+	// save class order and sr to player
+	player_struct.sr_by_class = {};
+	player_struct.classes = [];
+	for ( var i=0; i<class_rows.length; i++ ) {
+		var class_row = class_rows[i];
+		var class_title = class_row.getElementsByClassName("dlg-class-name")[0];
+		var class_name = class_title.innerHTML;
+		
+		if ( class_names.indexOf(class_name) == -1 ) {
+			continue;
+		}
+		
+		var sr_edit = class_row.getElementsByClassName("dlg-sr-by-class")[0];
+		var new_sr = Number(sr_edit.value);
+		
+		player_struct.sr_by_class[class_name] = new_sr;
+		
+		var class_checkbox = class_row.getElementsByClassName("dlg-class-enabled-checkbox")[0];
+		if ( class_checkbox.checked && (new_sr > 0) ) {
+			player_struct.classes.push( class_name );
+		}
+	}
 	
 	var new_level = Number(document.getElementById("dlg_player_level").value);
 	if ( new_level < 0 ) {
@@ -292,27 +353,6 @@ function edit_player_ok() {
 		player_struct.le = true; // sr edited
 	}
 	player_struct.level = new_level;
-	
-	var top_classes = [];
-	top_classes.push( document.getElementById("dlg_main_class").value );
-	if ( document.getElementById("dlg_secondary_class").value !== "" ) {
-		top_classes.push( document.getElementById("dlg_secondary_class").value );
-	}
-	if ( player_struct.top_classes.length != top_classes.length ) {
-		player_struct.ce = true; // class edited
-	} else {
-		for (i in top_classes) {
-			if ( top_classes[i] != player_struct.top_classes[i] ) {
-				player_struct.ce = true;
-				break;
-			}
-		}
-	}
-	// class duplicates
-	if( top_classes[0] === top_classes[1] ) {
-		top_classes.pop();
-	}
-	player_struct.top_classes = top_classes;
 	
 	player_struct.captain = document.getElementById("dlg_player_captain").checked;
 	
@@ -372,7 +412,7 @@ function edit_team_ok() {
 	}
 	
 	team_being_edited.name = document.getElementById("dlg_edit_team_name").value;
-	team_being_edited.captain_index = Number(document.getElementById("dlg_edit_team_captain").value);
+	team_being_edited.captain_id = document.getElementById("dlg_edit_team_captain").value;
 	
 	team_being_edited = undefined;
 	close_dialog("popup_dlg_edit_team");
@@ -546,12 +586,14 @@ function generate_random_teams() {
 		var new_team = create_empty_team();
 		new_team.name = "Test team #"+i;
 		
-		for (var p=0; p<=Settings.team_size; p++) {
-			var new_player = create_random_player(player_counter);
-			new_player.order = order_base;
-			order_base++;
-			new_team.players.push( new_player );
-			player_counter++;
+		for ( var class_name in Settings.slots_count ) {
+			for (var ci=0; ci<Settings.slots_count[class_name]; ci++) {
+				var new_player = create_random_player(player_counter);
+				new_player.order = order_base;
+				order_base++;
+				new_team.slots[class_name].push( new_player );
+				player_counter++;
+			}
 		}
 		
 		teams.push( new_team );
@@ -663,6 +705,30 @@ function manual_checkin_open() {
 
 function open_stats_update_log() {
 	open_dialog("popup_dlg_stats_log");
+}
+
+function player_class_row_movedown(ev) {
+	var current_row = get_parent_element( ev.currentTarget, "TR" );
+	
+	var rows = document.getElementById("dlg_player_class_table").rows;
+	var row_index = current_row.rowIndex;
+	if ( row_index == (rows.length-1) ) {
+		return;
+	}
+	
+	rows[row_index].parentNode.insertBefore(rows[row_index + 1], rows[row_index]);
+}
+
+function player_class_row_moveup(ev) {
+	var current_row = get_parent_element( ev.currentTarget, "TR" );
+	
+	var rows = document.getElementById("dlg_player_class_table").rows;
+	var row_index = current_row.rowIndex;
+	if ( row_index == 0 ) {
+		return;
+	}
+	
+	rows[row_index].parentNode.insertBefore(rows[row_index], rows[row_index - 1]);
 }
 
 function reset_checkin() {
@@ -1124,6 +1190,25 @@ function on_player_edit_sr_change() {
 	rank_icon.title = rank_name;
 }
 
+function on_player_class_sr_changed(ev) {
+	var sr_edit = ev.currentTarget;
+	var rank_name = get_rank_name( sr_edit.value );
+	var sr_img = sr_edit.parentElement.getElementsByClassName("rank-icon-dlg")[0];	
+	sr_img.src = "rank_icons/"+rank_name+"_small.png";
+	sr_img.title = rank_name;
+}
+
+function on_player_edit_class_toggled(ev) {
+	var class_checkbox = ev.currentTarget;
+	var current_row = get_parent_element( class_checkbox, "TR" );
+
+	if ( class_checkbox.checked ) {
+		current_row.classList.remove("class-disabled");
+	} else {
+		current_row.classList.add("class-disabled");
+	}
+}
+
 function on_stats_update_limit_change() {
 	// convert from log scale
 	var raw_value = Number(document.getElementById("stats_update_limit").value);
@@ -1211,10 +1296,12 @@ function player_dblClick(ev) {
 		selected_team = lobby;
 	} else {
 		for( var t=0; t<teams.length; t++ ) {
-			for( var i=0; i<teams[t].players.length; i++) {
-				if ( selected_id == teams[t].players[i].id) {
-					selected_team = teams[t].players;
-					selected_team_struct = teams[t];
+			for ( let class_name in teams[t].slots ) {
+				for( var i=0; i<teams[t].slots[class_name].length; i++) {
+					if ( selected_id == teams[t].slots[class_name][i].id) {
+						selected_team = teams[t].slots[class_name];
+						selected_team_struct = teams[t];
+					}
 				}
 			}
 		}
@@ -1224,29 +1311,24 @@ function player_dblClick(ev) {
 	var selected_index = get_player_index( selected_id, selected_team );
 	var selected_player = selected_team[selected_index];
 	
-	// update captain_index
+	// update captain_id
 	if ( selected_team_struct !== undefined ) {
-		if ( selected_team_struct.captain_index == selected_index ) {
-			selected_team_struct.captain_index = -1;
+		if ( selected_team_struct.captain_id == selected_id ) {
+			selected_team_struct.captain_id = "";
 		}
 	}
 	
 	// detect target team
 	var new_team;
 	if (selected_team == lobby) {
-		// find team with empty slot
-		for( var t=0; t<teams.length; t++ ) {
-			if ( teams[t].players.length < Settings.team_size ) {
-				new_team = teams[t].players;
-				break;
-			}
-		}
+		new_team = find_team_with_free_slot( selected_player );
+		
 		// if all teams are full - create new
 		if ( new_team === undefined ) {
 			var new_team_struct = create_empty_team();
 			new_team_struct.name = "New team";
 			teams.push( new_team_struct );
-			new_team = new_team_struct.players;
+			new_team = new_team_struct.slots[ selected_player.classes[0] ];
 		}
 	} else {
 		new_team = lobby;
@@ -1307,41 +1389,37 @@ function player_drop(ev) {
 		}
 	}
 	for( var t=0; t<teams.length; t++ ) {
-		for( var i=0; i<teams[t].players.length; i++) {
-			if ( dragged_id == teams[t].players[i].id) {
-				dragged_team = teams[t].players;
-				dragged_team_struct = teams[t];
-				dragged_index = i;
-				dragged_player = teams[t].players[i];
-			}
-			if ( target_id == teams[t].players[i].id) {
-				target_team = teams[t].players;
-				target_team_struct = teams[t];
-				target_index = i;
-				target_player = teams[t].players[i];
+		for ( let class_name in teams[t].slots ) {
+			for( var i=0; i<teams[t].slots[class_name].length; i++) {
+				if ( dragged_id == teams[t].slots[class_name][i].id) {
+					dragged_team = teams[t].slots[class_name];
+					dragged_team_struct = teams[t];
+					dragged_index = i;
+					dragged_player = teams[t].slots[class_name][i];
+				}
+				if ( target_id == teams[t].slots[class_name][i].id) {
+					target_team = teams[t].slots[class_name];
+					target_team_struct = teams[t];
+					target_index = i;
+					target_player = teams[t].slots[class_name][i];
+				}
 			}
 		}
 	}
 	
-	// update captain_index
+	// update captain_id
 	if ( dragged_team_struct !== undefined ) {
 		// captain moved out of team
-		if ( (dragged_team_struct.captain_index == dragged_index) && ( dragged_team !== target_team ) ) {
-			dragged_team_struct.captain_index = -1;
+		if ( (dragged_team_struct.captain_id == dragged_id) && ( dragged_team !== target_team ) ) {
+			dragged_team_struct.captain_id = "";
 		}
 		
-		// captain swapped with another player within team
-		if ( dragged_team === target_team ) {
-			if (dragged_team_struct.captain_index == dragged_index) {
-				dragged_team_struct.captain_index = target_index;
-			} else if (dragged_team_struct.captain_index == target_index) {
-				dragged_team_struct.captain_index = dragged_index;
-			}
-		}
+		// if captain swapped with another player within team - no need to update captain_id
 	}
 	if ( target_team_struct !== undefined ) {
-		if ( (target_team_struct.captain_index == target_index) && ( dragged_team !== target_team ) ) {
-			target_team_struct.captain_index = -1;
+		// player replaces captain of new team
+		if ( (target_team_struct.captain_id == target_id) && ( dragged_team !== target_team ) ) {
+			target_team_struct.captain_id = "";
 		}
 	}
 	
@@ -1355,8 +1433,11 @@ function player_drop(ev) {
 			var team_node = ev.currentTarget.parentElement.parentElement.parentElement.parentElement;
 			var team_index = Array.prototype.indexOf.call( document.getElementById("teams_container").children , team_node);
 			if ( team_index !== -1 ) {
-				target_team = teams[team_index].players;
-				target_index = target_team.length;
+				target_team = teams[team_index][ ev.currentTarget.getAttribute("slotClass") ];
+				target_index = teams[team_index][ ev.currentTarget.getAttribute("slotClass") ].length;
+			} else {
+				// wtf?
+				return false;
 			}
 		}
 		
@@ -1531,7 +1612,7 @@ function on_player_stats_updated( player_id ) {
 		if ( player_being_edited !== undefined  ) {
 			if ( player_id == player_being_edited.id ) {
 				// redraw edit dialog
-				fill_player_stats_dlg();
+				fill_player_stats_dlg(false);
 				
 				// hide loader
 				document.getElementById("dlg_update_player_stats_loader").style.display = "none";
@@ -1955,17 +2036,30 @@ function balance_priority_draw_canvas( pointer_x, pointer_y ) {
 	}
 }
 
-function draw_player( player_struct, small=false, is_captain=false ) {
+function draw_player( player_struct, small=false, is_captain=false, slot_class=undefined ) {
 	var new_player_item_row = document.createElement("div");
 	new_player_item_row.className = "row";
 	
-	var new_player_cell = draw_player_cell( player_struct, small, is_captain );
+	if ( slot_class != undefined ) {
+		var class_cell = document.createElement("div");
+		class_cell.className = "cell class-cell";
+		
+		var class_icon = document.createElement("img");
+		class_icon.className = "class-icon-slot";
+		class_icon.src = "class_icons/"+slot_class+".png";
+		class_icon.title = slot_class;
+		class_cell.appendChild(class_icon);
+		
+		new_player_item_row.appendChild(class_cell);
+	}
+	
+	var new_player_cell = draw_player_cell( player_struct, small, is_captain, slot_class );
 	new_player_item_row.appendChild(new_player_cell);
 	
 	return new_player_item_row;
 }
 
-function draw_player_cell( player_struct, small=false, is_captain=false ) {
+function draw_player_cell( player_struct, small=false, is_captain=false, slot_class=undefined ) {
 	var text_node;
 	var br_node;
 	
@@ -1977,12 +2071,12 @@ function draw_player_cell( player_struct, small=false, is_captain=false ) {
 	new_player_item.id = player_struct.id;
 	if( ! player_struct.empty) {
 		new_player_item.title = player_struct.id.replace("-", "#");
-		new_player_item.title += "\nTwitch name: " + player_struct.twitch_name;
-		new_player_item.title += "\nSR: " + player_struct.sr;
+		new_player_item.title += "\nTwitch name: " + player_struct.twitch_name;		
 		new_player_item.title += "\nLevel: " + player_struct.level;
-		new_player_item.title += "\nMain class: " + is_undefined(player_struct.top_classes[0], "-");
-		new_player_item.title += "\nSecondary class: " + is_undefined(player_struct.top_classes[1], "-");
 		new_player_item.title += "\nOrder added: #" + player_struct.order;
+		for( let class_name of player_struct.classes ) {
+			new_player_item.title += "\n"+class_name+": "+is_undefined(player_struct.sr_by_class[class_name],0)+" sr";
+		}
 	}
 	if ( Array.isArray(player_struct.top_heroes) ) {
 		new_player_item.title += "\nTop heroes: ";
@@ -2006,6 +2100,10 @@ function draw_player_cell( player_struct, small=false, is_captain=false ) {
 	new_player_item.ondragover = function(event){player_allowDrop(event);};
 	new_player_item.ondblclick = function(event){player_dblClick(event);};
 	new_player_item.oncontextmenu = function(event){player_contextmenu(event);};
+	
+	if( slot_class != undefined ) {
+		new_player_item.setAttribute( "slotClass", slot_class );
+	}
 	
 	// player background color depending on check-in process (only in lobby)
 	if ( !small ) {	
@@ -2031,7 +2129,8 @@ function draw_player_cell( player_struct, small=false, is_captain=false ) {
 	if ( small ) {
 		img_node.classList.add("rank-icon-small");
 	}
-	var rank_name = get_rank_name(player_struct.sr);
+	var player_sr = get_player_sr( player_struct, slot_class );
+	var rank_name = get_rank_name( player_sr );
 	img_node.src = get_rank_icon_src( rank_name, player_struct.id );
 	img_node.title = rank_name;
 	icon_image.appendChild(img_node);
@@ -2049,7 +2148,7 @@ function draw_player_cell( player_struct, small=false, is_captain=false ) {
 	
 		var sr_display = document.createElement("span");
 		sr_display.id = "sr_display_"+player_struct.id;
-		var sr_text = player_struct.sr;
+		var sr_text = player_sr;
 		if( player_struct.empty ) {
 			sr_text = '\u00A0';
 		}
@@ -2128,22 +2227,22 @@ function draw_player_cell( player_struct, small=false, is_captain=false ) {
 	
 	new_player_item.appendChild(player_name);
 	
-	// class icons
-	if ( player_struct.top_classes !== undefined ) {
-		for(var i=0; i<player_struct.top_classes.length; i++) {
+	// active classes icons
+	if ( player_struct.classes !== undefined ) {
+		for(var i=0; i<player_struct.classes.length; i++) {
 			var class_icon = document.createElement("img");
 			class_icon.className = "class-icon";
-			if ( small ) {
-				class_icon.classList.add("class-icon-small");
-			}
 			if( i != 0 )  {
 				class_icon.classList.add("secondary-class");
+			}
+			if ( small ) {
+				class_icon.classList.add("class-icon-small");
 			}
 			if( player_struct.ce === true ) {
 				class_icon.classList.add("class-edited");
 			}
-			class_icon.src = "class_icons/"+player_struct.top_classes[i]+".png";
-			class_icon.title = player_struct.top_classes[i];
+			class_icon.src = "class_icons/"+player_struct.classes[i]+".png";
+			class_icon.title = player_struct.classes[i] + " " + is_undefined(player_struct.sr_by_class[player_struct.classes[i]],0) + " SR";
 			new_player_item.appendChild(class_icon);
 		}
 	}
@@ -2173,27 +2272,30 @@ function fill_edit_team_dlg() {
 	
 	document.getElementById("dlg_edit_team_captain").innerHTML = "";
 	
+	// empty option to remove captain
 	var select_option = document.createElement("option");
-	select_option.value = -1;
+	select_option.value = "";
 	var text_node = document.createTextNode("-");
 	select_option.appendChild(text_node);
 	document.getElementById("dlg_edit_team_captain").appendChild(select_option);
 	
-	for ( var p in team_being_edited.players ) {
-		var select_option = document.createElement("option");
-		select_option.value = p;
-		if ( p == team_being_edited.captain_index ) {
-			select_option.selected = true;
+	for ( var class_name in team_being_edited.slots ) {
+		for (var p in team_being_edited.slots[class_name]) {
+			var current_player = team_being_edited.slots[class_name][p];
+			var select_option = document.createElement("option");
+			select_option.value = current_player.id;
+			if ( current_player.id == team_being_edited.captain_id ) {
+				select_option.selected = true;
+			}
+			var text_node = document.createTextNode(current_player.display_name);
+			select_option.appendChild(text_node);
+					
+			document.getElementById("dlg_edit_team_captain").appendChild(select_option);
 		}
-		var text_node = document.createTextNode(team_being_edited.players[p].display_name);
-		select_option.appendChild(text_node);
-				
-		document.getElementById("dlg_edit_team_captain").appendChild(select_option);
 	}
-	
 }
 
-function fill_player_stats_dlg() {
+function fill_player_stats_dlg(clear_errors=true) {
 	if (player_being_edited === undefined) {
 		return;
 	}
@@ -2236,14 +2338,7 @@ function fill_player_stats_dlg() {
 		document.getElementById("dlg_player_name_edited").style.visibility = "visible";
 	} else {
 		document.getElementById("dlg_player_name_edited").style.visibility = "";
-	}
-	
-	document.getElementById("dlg_player_sr").value = player_struct.sr;
-	if( player_struct.se === true )  {
-		document.getElementById("dlg_player_sr_edited").style.visibility = "visible";
-	} else {
-		document.getElementById("dlg_player_sr_edited").style.visibility = "";
-	}
+	}	
 	
 	document.getElementById("dlg_player_level").value = player_struct.level;
 	if( player_struct.le === true )  {
@@ -2252,21 +2347,64 @@ function fill_player_stats_dlg() {
 		document.getElementById("dlg_player_level_edited").style.visibility = "";
 	}
 	
-	if ( Array.isArray(player_struct.top_classes) ) {
-		if ( player_struct.top_classes.length > 0 ) {
-			document.getElementById("dlg_main_class").value = player_struct.top_classes[0];
+	// fill class table	
+	document.getElementById("dlg_player_class_table").innerHTML = "";
+	// prepare array of classes, ordered for specified player (main class is first)
+	var class_order = [];
+	if ( Array.isArray(player_struct.classes) ) {
+		for( i=0; i<player_struct.classes.length; i++ ) {
+			class_order.push( player_struct.classes[i] );
+		}
+	}
+	for( let class_name of class_names ) {
+		if ( class_order.indexOf(class_name) == -1 ) {
+			class_order.push( class_name );
+		}
+	}
+	for( let class_name of class_order ) {
+		var class_row = player_class_row_add();
+		
+		//var class_name = player_struct.classes[i];
+		var class_checkbox = class_row.getElementsByClassName("dlg-class-enabled-checkbox")[0];
+		if ( player_struct.classes.indexOf(class_name) == -1 ) {
+			class_checkbox.checked = false;
+			class_row.classList.add("class-disabled");
 		} else {
-			document.getElementById("dlg_main_class").value = "dps";
+			class_checkbox.checked = true;
 		}
 		
-		if ( player_struct.top_classes.length > 1 ) {
-			document.getElementById("dlg_secondary_class").value = player_struct.top_classes[1];
-		} else {
-			document.getElementById("dlg_secondary_class").value = "";
+		var class_title = class_row.getElementsByClassName("dlg-class-name")[0];
+		class_title.innerHTML = class_name;		
+		
+		var class_img = class_row.getElementsByClassName("class-icon-dlg")[0];
+		class_img.src = "class_icons/"+class_name+".png";
+		
+		var sr_edit = class_row.getElementsByClassName("dlg-sr-by-class")[0];
+		var sr = player_struct.sr_by_class[class_name];
+		if ( sr == undefined ) {
+			sr = 0;
 		}
-	} else {
-		document.getElementById("dlg_main_class").value = "dps";
-		document.getElementById("dlg_secondary_class").value = "";
+		sr_edit.value = sr;
+		
+		var rank_name = get_rank_name( sr );
+		var sr_img = class_row.getElementsByClassName("rank-icon-dlg")[0];	
+		sr_img.src = "rank_icons/"+rank_name+"_small.png";
+		sr_img.title = rank_name;
+		
+		var time_played = player_struct.playtime_by_class[class_name];
+		if ( time_played == undefined ) {
+			time_played = 0;
+		}
+		var time_span = class_row.getElementsByClassName("dlg-payer-class-playtime")[0];
+		time_span.innerHTML =  time_played + " hrs";
+	}
+	
+	
+	if( player_struct.se === true ) {
+		var marks = document.getElementById("dlg_player_class_table").getElementsByClassName("dlg-edited-mark-sr");
+		for( i=0; i<marks.length; i++ ) {
+			marks[i].style.visibility = "visible";
+		}
 	}
 	
 	document.getElementById("dlg_top_heroes_icons").innerHTML = "";
@@ -2289,23 +2427,18 @@ function fill_player_stats_dlg() {
 	}
 	
 	if( player_struct.ce === true )  {
-		document.getElementById("dlg_player_class1_edited").style.visibility = "visible";
-		document.getElementById("dlg_player_class2_edited").style.visibility = "visible";
+		document.getElementById("dlg_player_class1_edited").style.visibility = "visible";		
 	} else {
 		document.getElementById("dlg_player_class1_edited").style.visibility = "";
-		document.getElementById("dlg_player_class2_edited").style.visibility = "";
 	}
 	
 	document.getElementById("dlg_edit_player_last_updated").innerHTML = print_date(player_struct.last_updated);
-	
 	document.getElementById("dlg_update_player_stats_loader").style.display = "none";
-	document.getElementById("dlg_edit_player_update_result").style.display = "none";
-	document.getElementById("dlg_edit_player_update_result").innerHTML = "";
 	
-	// icons
-	on_player_edit_sr_change();
-	on_player_edit_main_class_change();
-	on_player_edit_secondary_class_change();
+	if (clear_errors) {
+		document.getElementById("dlg_edit_player_update_result").style.display = "none";
+		document.getElementById("dlg_edit_player_update_result").innerHTML = "";
+	};
 }
 
 function fill_settings_dlg( settings_obj ) {
@@ -2367,6 +2500,18 @@ function get_balance_triangle_dimensions() {
 	};
 }
 
+function get_parent_element( current_element, parent_tagname ) {
+	var parent_element = current_element;
+	// ascend in dom tree 
+	while ( parent_element.tagName != parent_tagname ) {
+		parent_element = parent_element.parentElement;
+		if ( parent_element == null ) {
+			return null;
+		}
+	}
+	return parent_element;
+}
+
 function highlight_player( player_id ) {
 	document.getElementById(player_id).classList.toggle("player-highlighted", true);
 	setTimeout( reset_highlighted_players, 2000 );
@@ -2397,6 +2542,87 @@ function log_stats_update_error( msg ) {
 
 function open_dialog( dialog_id ) {
 	document.getElementById( dialog_id ).style.display = "block";
+}
+
+function player_class_row_add() {
+	var class_table = document.getElementById("dlg_player_class_table");
+	var row = class_table.insertRow(-1);
+	row.className = "dlg-player-class-row";
+
+	var cell, img, input_node, text_node, span_node;
+
+	cell = row.insertCell(-1);
+	input_node = document.createElement("input");
+	input_node.type = "checkbox";
+	input_node.title = "class enabled for balance";
+	input_node.className = "dlg-class-enabled-checkbox";
+	input_node.checked = true;
+	input_node.onchange = function(event){on_player_edit_class_toggled(event);};
+	cell.appendChild(input_node);
+
+
+	cell = row.insertCell(-1);
+	cell.style = "text-align: left;";
+	img = document.createElement("img");
+	img.className = "class-icon-dlg";
+	img.src = "class_icons/"+class_names[0]+".png";
+	cell.appendChild(img);
+	span_node = document.createElement("span");
+	span_node.className = "dlg-class-name";
+	text_node = document.createTextNode( "class_name" );
+	span_node.appendChild(text_node);
+	cell.appendChild(span_node);
+
+
+	cell = row.insertCell(-1);
+	img = document.createElement("img");
+	img.className = "rank-icon-dlg";
+	img.src = "rank_icons/unranked_small.png";
+	cell.appendChild(img);
+	input_node = document.createElement("input");
+	input_node.className = "dlg-sr-by-class";
+	input_node.type = "number";
+	input_node.min = 0;
+	input_node.max = 4999;
+	input_node.value = 0;
+	input_node.oninput = function(event){on_player_class_sr_changed(event);};
+	cell.appendChild(input_node);
+	text_node = document.createTextNode( " SR " );
+	cell.appendChild(text_node);
+	span_node = document.createElement("span");
+	span_node.className = "dlg-edited-mark-sr";
+	span_node.title = "SR was manually edited";
+	span_node.style.visibility = "hidden";
+	span_node.onclick = function(event){clear_edited_mark('se');};
+	text_node = document.createTextNode( "\u270D" );
+	span_node.appendChild(text_node);
+	cell.appendChild(span_node);
+
+
+	cell = row.insertCell(-1);
+	span_node = document.createElement("span");
+	span_node.className = "dlg-payer-class-playtime";
+	text_node = document.createTextNode( "0 hrs" );
+	span_node.appendChild(text_node);
+	cell.appendChild(span_node);
+
+
+	cell = row.insertCell(-1);
+	input_node = document.createElement("input");
+	input_node.type = "button";
+	input_node.value = "\u2191";
+	input_node.onclick = function(event){player_class_row_moveup(event);};
+	input_node.title = "move class higher";
+	cell.appendChild(input_node);
+	input_node = document.createElement("input");
+	input_node.type = "button";
+	input_node.value = "\u2193";
+	input_node.onclick = function(event){player_class_row_movedown(event);};
+	input_node.title = "move class lower";
+	cell.appendChild(input_node);
+	input_node = document.createElement("input");
+
+	return row;
 }
 
 function read_balance_prority_input(ev) {
@@ -2452,7 +2678,7 @@ function redraw_lobby() {
 			count_active++;
 		}
 	}
-	for( i=lobby.length; i<Settings.team_size; i++) {
+	for( i=lobby.length; i<get_team_size(); i++) {
 		var player_widget = draw_player( create_empty_player() );
 		team_container.appendChild(player_widget);
 	}
@@ -2480,15 +2706,24 @@ function redraw_player( player_struct ) {
 	var is_captain = false;
 	var player_team = get_player_team( player_struct.id );
 	if (player_team !== undefined ) {
-		if ( player_team.players[player_team.captain_index] == player_struct ) {
+		if ( player_team.captain_id == player_struct.id ) {
 			is_captain = true;
 		}
 	}
 	
-	var player_item_row = document.getElementById( player_struct.id ).parentElement;
-	var player_cell = draw_player_cell( player_struct, is_small, is_captain );
-	player_item_row.innerHTML = "";
-	player_item_row.appendChild(player_cell);
+	var player_cell_old = document.getElementById( player_struct.id );
+	var player_item_row = player_cell_old.parentElement;
+	
+	var slot_class = undefined;
+	if (is_small && (player_team !== undefined)) {
+		// find player slot
+		slot_class = get_player_role( player_team, player_struct );
+	}
+	
+	var player_cell_new = draw_player_cell( player_struct, is_small, false, slot_class );
+	player_item_row.replaceChild( player_cell_new, player_cell_old );
+	
+	//update_teams_sr(); ???
 }
 
 function redraw_teams() {
@@ -2557,7 +2792,7 @@ function redraw_teams() {
 		current_team_table.className = "small-team-table";
 		
 		var team_title_row = document.createElement("div");
-		team_title_row.className = "row";
+		team_title_row.className = "row table-caption";
 		var team_title_cell = document.createElement("div");
 		team_title_cell.className = "cell team-title-small";
 		
@@ -2577,16 +2812,24 @@ function redraw_teams() {
 		team_title_row.oncontextmenu = function(event){team_contextmenu(event);};
 		current_team_table.appendChild(team_title_row);
 		
-		// team players as rows
-		for( var p=0; p<teams[t].players.length; p++) {
-			var is_captain = (p == teams[t].captain_index);
-			var player_widget = draw_player( teams[t].players[p], true, is_captain );
-			current_team_table.appendChild(player_widget);
-		}
-		// empty slots
-		for( p=teams[t].players.length; p<Settings.team_size; p++) {
-			var player_widget = draw_player( create_empty_player(), true );
-			current_team_table.appendChild(player_widget);
+		// draw players from slots (role lock)
+		for( let class_name of class_names ) {
+			var players_drawn = 0;
+			
+			if ( teams[t].slots[class_name] != undefined ) {
+				for( var i=0; i<teams[t].slots[class_name].length; i++) {
+					var is_captain = (teams[t].slots[class_name][i].id == teams[t].captain_id);
+					var player_widget = draw_player( teams[t].slots[class_name][i], true, is_captain, class_name );
+					current_team_table.appendChild(player_widget);
+					players_drawn++;
+				}
+			}
+			
+			// add empty slots up to slots count
+			for( var i=players_drawn; i<Settings["slots_count"][class_name]; i++) {
+				var player_widget = draw_player( create_empty_player(), true, false, class_name );
+				current_team_table.appendChild(player_widget);
+			}
 		}
 		
 		current_team_container.appendChild(current_team_table);
@@ -2606,7 +2849,9 @@ function reset_highlighted_players() {
 
 function reset_roll() {
 	for( t in teams ) {
-		lobby = lobby.concat( teams[t].players.splice( 0, teams[t].players.length) );
+		for ( class_name in teams[t].slots ) {
+			lobby = lobby.concat( teams[t].slots[class_name].splice( 0, teams[t].slots[class_name].length) );
+		}
 	}
 	teams.splice( 0, teams.length );
 	

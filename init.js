@@ -22,6 +22,7 @@ for( let item_name of old_stogage_items ) {
 }
 
 // restore settings
+Settings = get_default_settings();
 var saved_settings_json = localStorage.getItem(storage_prefix+"settings");
 if ( saved_settings_json != null ) {
 	var saved_settings = JSON.parse(saved_settings_json);

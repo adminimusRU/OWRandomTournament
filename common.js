@@ -117,6 +117,7 @@ function create_random_player( id ) {
 			display_name: "player "+id,
 			twitch_name: "",
 			sr_by_class: {},
+			playtime_by_class: {},
 			level: Math.round(Math.random()*2000),
 			empty: false,
 			classes: top_classes,
@@ -124,7 +125,7 @@ function create_random_player( id ) {
 			last_updated: new Date(0),
 			captain: false,
 			fake_id: true,
-			private_profile: false
+			private_profile: false,
 			order: 0,
 		};
 		
@@ -199,6 +200,29 @@ function find_player_by_twitch_name( twitch_name, additional_player_array=[] ) {
 	return undefined;
 }
 
+function find_team_with_free_slot( player ) {
+	// find team with empty slot
+	// 1. try to find empty role slot for player classes
+	for ( let class_name of player.classes ) {
+		for ( let team of teams ) {
+			if ( team.slots[class_name].length < Settings.slots_count[class_name] ) {
+				return team.slots[class_name];
+			}
+		}
+	}
+	
+	// 2. try any empty role slot
+	for ( let team of teams ) {
+		for ( let class_name in team.slots ) {
+			if ( team.slots[class_name].length < Settings.slots_count[class_name] ) {
+				return team.slots[class_name];
+			}
+		}
+	}
+	
+	return undefined;
+}
+
 function format_player_id( id ) {
 	return id.trim().replace("#", "-");
 }
@@ -263,15 +287,15 @@ function get_new_player_order() {
 	return max_order+1;
 }
 
-/*function get_player_index( player_id, team ) {
-	for( var i=0; i<team.length; i++) {
-		if ( player_id == team[i].id) {
+function get_player_index( player_id, players_array ) {
+	for( var i=0; i<players_array.length; i++) {
+		if ( player_id == players_array[i].id) {
 			return i;
 		}
 	}
 	
 	return -1;
-}*/
+}
 
 function get_player_at_index( team_struct, player_index ) {
 	var current_index = 0;
@@ -313,13 +337,23 @@ function get_player_role( team_struct, player ) {
 	}
 }
 
-function get_player_sr( player_struct, class_name ) {
+function get_player_sr( player_struct, class_name=undefined ) {
+	if( class_name === undefined ) {
+		// for lobby - return sr for main class
+		var main_class = player_struct.classes[0];
+		if ( main_class !== undefined ) {
+			return is_undefined( player_struct.sr_by_class[main_class], 0 );
+		} else {
+			return 0;
+		}
+	}
+	
 	if ( class_names.indexOf(class_name) == -1 ) {
 		return 0;
 	}
 	if ( player_struct.sr_by_class[class_name] !== undefined ) {
 		if ( player_struct.classes.indexOf(class_name) != -1 ) {
-			return player_struct.sr_by_class[class_name];
+			return is_undefined( player_struct.sr_by_class[class_name], 0 );
 		} else {
 			return 0;
 		}
@@ -469,6 +503,22 @@ function print_time( date_value ) {
 	}
 	var result = hr+":"+min+":"+sec;
 	return result;
+}
+
+// random number with normal distribution ("bell curve")
+// using Box–Muller transform
+function randn_bm(min, max, skew=1) {
+	var u = 0, v = 0;
+	while(u === 0) u = Math.random(); //Converting [0,1) to (0,1)
+	while(v === 0) v = Math.random();
+	let num = Math.sqrt( -2.0 * Math.log( u ) ) * Math.cos( 2.0 * Math.PI * v );
+
+	num = num / 10.0 + 0.5; // Translate to 0 -> 1
+	if (num > 1 || num < 0) num = randn_bm(min, max, skew); // resample between 0 and 1 if out of range
+	num = Math.pow(num, skew); // Skew
+	num *= max - min; // Stretch to fill range
+	num += min; // offset to min
+	return num;
 }
 
 function round_to( value, precision ) {

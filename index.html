@@ -25,7 +25,7 @@
 <body>
 
 <div class="page-title">Overwatch random tournament</div>
-<div class="copyright">2018-2019 by <a href="https://github.com/adminimusRU">l33t m3at</a> | Stats data by <a href="https://github.com/SunDwarf/OWAPI">OWAPI</a></div>
+<div class="copyright">2018-2020 by <a href="https://github.com/adminimusRU">l33t m3at</a> | Stats data by <a href="https://github.com/SunDwarf/OWAPI">OWAPI</a></div>
 <br/>
 
 <br/>
@@ -181,7 +181,7 @@
 				</div>
 				<br/>
 								
-				<div style="display: none;">
+				<div style="display: block;">
 					<!-- test buttons -->
 					<input class="medium-btn" type="button" onclick="generate_random_players();" value="+ random players" />
 									
@@ -254,8 +254,8 @@
 			
 			<div style="text-align: left;">
 			For table and csv formats fields should be in following order:<br/>
-			<span style="font-family: courier;color: blue;font-weight: bold;">battletag, [twitch_name, SR, class, offclass]</span><br/>
-			twitch name, SR, class and offclass are optional.<br/>
+			<span style="font-family: courier;color: blue;font-weight: bold;">battletag, [twitch_name, tank SR, DPS SR, support SR, main class, secondary class, third class]</span><br/>
+			twitch name, SR and classes are optional.<br/>
 			<br/>
 			"Table" format is used for copy&paste from spreadsheets like Excel. Fields are separated by single tabulation. <br/>
 			<br/>
@@ -452,42 +452,21 @@
 							<span id="dlg_player_level_edited" class="dlg-edited-mark" title="Level was manually edited" onclick="clear_edited_mark('le');">&#9997;</span>
 						</div>
 					</div>
+					
 					<div class="row">
-						<div class="cell"><label for="dlg_player_sr">SR:</label></div>
 						<div class="cell">
-							<img id="dlg_player_sr_icon" style="width: 24px; vertical-align: text-bottom;">
-							<input id="dlg_player_sr" type="number" min=0 max=5000 style="width: 4em;" onchange="on_player_edit_sr_change();">
-							<span id="dlg_player_sr_edited" class="dlg-edited-mark" title="SR was manually edited" onclick="clear_edited_mark('se');">&#9997;</span>
-						</div>
-					</div>
-					<div class="row">
-						<div class="cell">Main class: </div>
-						<div class="cell">
-							<img id="dlg_player_main_class_icon" style="width: 24px; vertical-align: text-bottom;">
-							<select id="dlg_main_class" autocomplete="off" onchange="on_player_edit_main_class_change();">
-								<option value="maintank">main tank</option>
-								<option value="offtank">off tank</option>
-								<option value="dps" selected>dps</option>
-								<option value="support">support</option>
-							</select>
+							Classes:
 							<span id="dlg_player_class1_edited" class="dlg-edited-mark" title="Classes were manually edited" onclick="clear_edited_mark('ce');">&#9997;</span>
 						</div>
+						<div class="cell"></div>
 					</div>
-					<div class="row">
-						<div class="cell">Secondary class: </div>
-						<div class="cell">
-							<img id="dlg_player_secondary_class_icon" style="width: 24px; vertical-align: text-bottom;">
-							<select id="dlg_secondary_class" onchange="on_player_edit_secondary_class_change();">
-								<option value="">-</option>							
-								<option value="maintank">main tank</option>
-								<option value="offtank">off tank</option>
-								<option value="dps">dps</option>
-								<option value="support">support</option>
-							</select>
-							<span id="dlg_player_class2_edited" class="dlg-edited-mark" title="Classes were manually edited" onclick="clear_edited_mark('ce');">&#9997;</span>
-						</div>
-					</div>	
+					
 				</div>
+				
+				<table id="dlg_player_class_table">
+					<!-- class rows here -->
+				</table>
+				
 				<div id="dlg_top_heroes">
 					<span>Top heroes:</span>
 					<br/>

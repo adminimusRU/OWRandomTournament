@@ -21,7 +21,7 @@ var team_being_edited;
 var lobby_filter_timer = 0;
 
 // global settings
-var Settings = get_default_settings();
+var Settings = {};
 const storage_prefix = "owrt_";
 
 // class icons in data:url strings

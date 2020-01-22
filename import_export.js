@@ -642,6 +642,17 @@ function restore_saved_teams() {
 				new_team.players.push( player_struct );
 			}
 			
+			for ( let class_name in saved_team_setup[t].slots ) {
+				for ( var i in saved_team_setup[t].slots[class_name] ) {
+					var player_struct = sanitize_player_struct(saved_team_setup[t].slots[class_name][i], saved_format);
+					if ( player_struct.order <= 0 ) {
+						player_struct.order = order;
+						order++;
+					}
+					new_team.slots[class_name].push( player_struct );
+				}
+			}
+			
 			if ( saved_format < 9 ) {
 				// convert structure from plain array to classes
 				if ( new_team.captain_index != -1 ) {
@@ -752,10 +763,10 @@ function sanitize_player_struct( player_struct, saved_format ) {
 		// merge offtank and maintank to tank
 		for (var i=0; i<player_struct.classes.length; i++) {
 			if (player_struct.classes[i] == "offtank") {
-				player_struct.classes[i] == "tank";
+				player_struct.classes[i] = "tank";
 			}
 			if (player_struct.classes[i] == "maintank") {
-				player_struct.classes[i] == "tank";
+				player_struct.classes[i] = "tank";
 			}
 		}
 	}
@@ -769,10 +780,9 @@ function sanitize_player_struct( player_struct, saved_format ) {
 		}
 	}
 	
-	// class duplicates
-	if( player_struct.top_classes[0] === player_struct.top_classes[1] ) {
-		player_struct.top_classes.pop();
-	}
+	// remove class duplicates
+	player_struct.classes = player_struct.classes.filter( 
+		(class_name, class_index, classes) => classes.indexOf(class_name) === class_index ); 
 	
 	return player_struct;
 }
