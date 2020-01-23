@@ -59,7 +59,7 @@ function export_lobby( format ) {
 		for( i in lobby) {
 			var player_id = lobby[i].id.trim().replace("-", "#");
 			var main_class = "";
-			if( lobby[i].top_classes[0] !== undefined ) main_class = lobby[i].top_classes[0];
+			if( lobby[i].classes[0] !== undefined ) main_class = lobby[i].classes[0];
 			var main_hero = "";
 			if( lobby[i].top_heroes[0] !== undefined ) main_hero = lobby[i].top_heroes[0].hero;
 			var last_updated = lobby[i].last_updated.toISOString();
@@ -94,7 +94,7 @@ function export_teams( format, include_players, include_sr, include_classes, inc
 		for ( var t in teams ) {
 			setup_str += teams[t].name + "\n";
 			if ( include_players ) {
-				for( var class_name in teams[t] ) {
+				for( var class_name in teams[t].slots ) {
 					for ( var player of teams[t].slots[class_name] ) {
 						var player_str = "";
 							
@@ -104,7 +104,20 @@ function export_teams( format, include_players, include_sr, include_classes, inc
 							var player_sr = get_player_sr( player, class_name );
 							player_str += player_sr + "\t";
 						}
-						player_str += player.display_name + "\t";
+						
+						var player_name = player_name = player[name_field];
+						if ( name_field == "id" ) {
+							player_name = player_name.replace("-", "#");
+						}
+						player_str += player_name;
+						
+						if ( include_captains ) {
+							if ( teams[t].captain_id == player.id ) {
+								player_str += " \u265B";
+							}
+						}
+						
+						player_str += "\t";
 						
 						if ( include_classes ) {
 							player_str += player.classes.join("/");
@@ -199,8 +212,8 @@ function export_teams_html( format, include_players, include_sr, include_classes
 						borders += "border-right: 1px solid gray;";
 					}
 					setup_str += "<td style='text-align: left; padding: 0.2em; white-space: nowrap; "+borders+"'>";
-					if ( p < teams[t].players.length ) {
-						var player_name = player_name = teams[t].players[p][name_field];
+					if ( p < team_length ) {
+						var player_name = player_name = player[name_field];
 						if ( name_field == "id" ) {
 							player_name = player_name.replace("-", "#");
 						}
@@ -627,20 +640,43 @@ function restore_saved_teams() {
 	if ( saved_team_setup_json != null ) {
 		var saved_team_setup = JSON.parse(saved_team_setup_json);
 		for ( var t in saved_team_setup ) {
+			if ( saved_format < 9 ) {
+				// convert structure from plain array to classes
+				if ( saved_team_setup[t].captain_index != -1 ) {
+					saved_team_setup[t].captain_id = is_undefined( saved_team_setup[t].players[saved_team_setup[t].captain_index].id, "" );
+				}
+				delete saved_team_setup[t].captain_index;
+				
+				saved_team_setup[t].slots = {};
+				for( let class_name of class_names ) {
+					saved_team_setup[t].slots[class_name] = [];
+				}
+				
+				for( let class_name of class_names ) {
+					for( var i=0; i<Settings.slots_count[class_name]; i++ ) {
+						var player_struct = saved_team_setup[t].players.shift();
+						saved_team_setup[t].slots[class_name].push(player_struct);
+					}
+				}
+				
+				delete saved_team_setup[t].players;
+			}
+			
 			var new_team = create_empty_team();
 			new_team.name = saved_team_setup[t].name;
-			new_team.captain_index = saved_team_setup[t].captain_index;
-			if ( new_team.captain_index === undefined ) {
-				new_team.captain_index = -1;
+			new_team.captain_id = saved_team_setup[t].captain_id;
+			if ( new_team.captain_id === undefined ) {
+				new_team.captain_id = "";
 			}
-			for ( var i in saved_team_setup[t].players ) {
+			
+			/*for ( var i in saved_team_setup[t].players ) {
 				var player_struct = sanitize_player_struct(saved_team_setup[t].players[i], saved_format);
 					if ( player_struct.order <= 0 ) {
 					player_struct.order = order;
 					order++;
 				}
 				new_team.players.push( player_struct );
-			}
+			}*/
 			
 			for ( let class_name in saved_team_setup[t].slots ) {
 				for ( var i in saved_team_setup[t].slots[class_name] ) {
@@ -652,29 +688,7 @@ function restore_saved_teams() {
 					new_team.slots[class_name].push( player_struct );
 				}
 			}
-			
-			if ( saved_format < 9 ) {
-				// convert structure from plain array to classes
-				if ( new_team.captain_index != -1 ) {
-					new_team.captain_id = is_undefined( new_team.players[new_team.captain_index].id, "" );
-				}
-				delete new_team.captain_index;
-				
-				new_team.slots = {};
-				for( let class_name of class_names ) {
-					new_team.slots[class_name] = [];
-				}
-				
-				for( let class_name of class_names ) {
-					for( var i=0; i<Settings.slots_count[class_name]; i++ ) {
-						var player_struct = new_team.players.shift();
-						new_team.slots[class_name].push(player_struct);
-					}
-				}
-				
-				delete new_team.players;
-			}
-			
+
 			teams.push( new_team );
 		}
 	}

@@ -41,11 +41,29 @@ function apply_settings() {
 	var need_redraw_lobby = false;
 	
 	// check if team size changed
-	if ( (Settings["team_size"] != Number(document.getElementById("team_size").value)) && (teams.length > 0) ) {
+	var slots_count_setting = "slots_count";
+	// compare slots count for each role, move players to lobby if slots reduced
+	for ( class_name in Settings[slots_count_setting] ) {
+		var setting_input = document.getElementById(slots_count_setting+"_"+class_name);
+		var old_slot_count = Settings[slots_count_setting][class_name];
+		new_slot_count = Number(setting_input.value);
+		
+		if ( new_slot_count < old_slot_count ) {
+			need_redraw_teams = true;
+			break;
+		}
+	}
+	if ( need_redraw_teams ) {
 		if ( ! confirm("Team size setting changed. All teams will be deleted!") ) {
 			return;
 		}
 		reset_roll();
+	}
+	
+	for ( class_name in Settings[slots_count_setting] ) {
+		var setting_input = document.getElementById(slots_count_setting+"_"+class_name);		
+		new_slot_count = Number(setting_input.value);
+		Settings[slots_count_setting][class_name] = new_slot_count;
 	}
 	
 	if ( Settings["show_numeric_sr"] != (document.getElementById("show_numeric_sr").value) ) {
@@ -57,6 +75,9 @@ function apply_settings() {
 	}
 	
 	for ( setting_name in Settings ) {
+		if ( setting_name == "slots_count" ) {
+			continue;
+		}
 		var setting_input = document.getElementById(setting_name);
 		var setting_value;
 		
@@ -104,22 +125,23 @@ function assign_captains() {
 		lobby[i].captain = false;
 	}
 	
-	var captains_count = Math.floor( lobby.length / Settings.team_size );
+	var captains_count = Math.floor( lobby.length / get_team_size() );
 	
 	while( captains_count > 0 ) {
 		//find highest ranked player
 		var highest_sr = 0;
 		var highest_sr_index = -1;
 		for (var i=0; i<lobby.length; i++) {
-			if ( lobby[i].sr <  min_captain_sr ) {
+			var player_sr = get_player_sr(lobby[i]);
+			if ( player_sr <  min_captain_sr ) {
 				continue;
 			}
 			if ( lobby[i].captain ) {
 				continue;
 			}
 			
-			if ( lobby[i].sr > highest_sr ) {
-				highest_sr = lobby[i].sr;
+			if ( player_sr > highest_sr ) {
+				highest_sr = player_sr;
 				highest_sr_index = i;
 			}
 		}
@@ -231,7 +253,9 @@ function delete_team( team_index ) {
 	if ( ! confirm("Delete team?") ) {
 		return;
 	}
-	lobby = lobby.concat( teams[team_index].players.splice( 0, teams[team_index].players.length) );
+	for ( let class_name in teams[team_index].slots ) {
+		lobby = lobby.concat( teams[team_index].slots[class_name].splice( 0, teams[team_index].slots[class_name].length) );
+	}
 	teams.splice( team_index, 1 );
 	save_players_list();
 	redraw_lobby();
@@ -257,10 +281,12 @@ function edit_player_ok() {
 			}
 		}
 		for( var t=0; t<teams.length; t++) {
-			for( var i=0; i<teams[t].players.length; i++) {
-				if ( (twitch_name.toLowerCase() == teams[t].players[i].twitch_name.toLowerCase()) && (teams[t].players[i].id != player_struct.id) ) {
-					alert("Twitch nickname already used: "+teams[t].players[i].id);
-					return;
+			for ( let class_name in teams[t].slots ) {
+				for( var i=0; i<teams[t].slots[class_name].length; i++) {
+					if ( (twitch_name.toLowerCase() == teams[t].slots[class_name][i].twitch_name.toLowerCase()) && (teams[t].slots[class_name][i].id != player_struct.id) ) {
+						alert("Twitch nickname already used: "+teams[t].slots[class_name][i].id);
+						return;
+					}
 				}
 			}
 		}
@@ -772,7 +798,7 @@ function roll_teams() {
 	}
 	
 	var rtb_settings = {
-		team_size: Settings.team_size,
+		slots_count: Settings.slots_count,
 		team_count_power2: Settings.roll_team_count_power2,
 		
 		adjust_sr: Settings.roll_adjust_sr,
@@ -904,17 +930,24 @@ function sort_manual_chekin_table( sort_column_index ) {
 }
 
 function sort_team( team_index, sort_field = 'sr', order_inverse=false ) {	
-	if ( teams[team_index].captain_index !== -1 ) {
-		var captain = teams[team_index].players[teams[team_index].captain_index];
-	}
-	sort_players( teams[team_index].players, sort_field, order_inverse );
-	if ( teams[team_index].captain_index !== -1 ) {
-		teams[team_index].captain_index = teams[team_index].players.indexOf( captain );
+	for ( let class_name in teams[team_index].slots ) {
+		sort_players( teams[team_index].slots[class_name], sort_field, order_inverse, class_name );
 	}
 }
 
 function sort_team_click( team_index, sort_field = 'sr', button_element=undefined ) {
-	sort_team( team_index, sort_field, button_element );
+	// @ToDo: inverse order not working: team buttons will be deleted on redraw and order_inverse will be lost... 
+	var order_inverse = false;
+	if (button_element !== undefined) {
+		if (button_element.hasAttribute("order_inverse")) {
+			order_inverse = true;
+			button_element.removeAttribute("order_inverse");
+		} else {
+			button_element.setAttribute("order_inverse", "");
+		}
+	}
+	
+	sort_team( team_index, sort_field, order_inverse );
 	save_players_list();
 	// @ToDo: redraw only one team
 	redraw_teams();
@@ -933,16 +966,16 @@ function sort_teams(button_element=undefined, sort_field = 'name') {
 	
 	if ( sort_field == 'captain_sr' ) {
 		teams.sort( function(team1, team2){
-					if ( team1.captain_index >= 0 ) {
-						var val1 = team1.players[team1.captain_index].sr;
+					if ( team1.captain_id != "" ) {
+						var val1 = get_player_sr( get_team_captain(team1) );
 					} else {
-						var val1 = team1.players[0].sr;
+						var val1 = get_player_sr( get_player_at_index(team1, 0) );
 					}
 					
 					if ( team2.captain_index >= 0 ) {
-						var val2 = team2.players[team2.captain_index].sr;
+						var val2 = get_player_sr(get_team_captain(team2) );
 					} else {
-						var val2 = team2.players[0].sr;
+						var val2 = get_player_sr(get_player_at_index(team2, 0) );
 					}
 					return order *( val1<val2 ? -1 : (val1>val2?1:0) );
 				} );
@@ -1410,7 +1443,7 @@ function player_drop(ev) {
 	// update captain_id
 	if ( dragged_team_struct !== undefined ) {
 		// captain moved out of team
-		if ( (dragged_team_struct.captain_id == dragged_id) && ( dragged_team !== target_team ) ) {
+		if ( (dragged_team_struct.captain_id == dragged_id) && ( dragged_team_struct !== target_team_struct ) ) {
 			dragged_team_struct.captain_id = "";
 		}
 		
@@ -2443,6 +2476,9 @@ function fill_player_stats_dlg(clear_errors=true) {
 
 function fill_settings_dlg( settings_obj ) {
 	for ( setting_name in settings_obj ) {
+		if ( setting_name == "slots_count" ) {
+			continue;
+		}
 		var setting_value = settings_obj[setting_name];
 		var setting_input = document.getElementById(setting_name);
 		if (setting_input === null) { alert("input not found: "+setting_name); continue;}
@@ -2458,6 +2494,14 @@ function fill_settings_dlg( settings_obj ) {
 		if (setting_input.type != "number") {
 			setting_input.dispatchEvent(new Event("change"));
 		}
+	}
+	
+	var setting_name = "slots_count";
+	for ( class_name in settings_obj[setting_name] ) {
+		var setting_input = document.getElementById(setting_name+"_"+class_name);
+		if (setting_input === null) { alert("broken setting: "+setting_name);}
+		var setting_value = settings_obj[setting_name][class_name];
+		setting_input.value = setting_value;
 	}
 	
 	// init balance priority input canvas
@@ -2746,7 +2790,7 @@ function redraw_teams() {
 		toolbar_btn.onclick = delete_team.bind(this,t);
 		current_team_toolbar.appendChild(toolbar_btn);
 		
-		var toolbar_btn = document.createElement("button");
+		/*var toolbar_btn = document.createElement("button");
 		toolbar_btn.className = "team_btn";
 		var text_node = document.createTextNode("\u2191\u2193");
 		toolbar_btn.appendChild(text_node);
@@ -2756,7 +2800,7 @@ function redraw_teams() {
 		toolbar_btn.appendChild(img);
 		toolbar_btn.title = "Sort players by class";
 		toolbar_btn.onclick = sort_team_click.bind(this, t, 'class', toolbar_btn);
-		current_team_toolbar.appendChild(toolbar_btn);
+		current_team_toolbar.appendChild(toolbar_btn);*/
 		
 		var toolbar_btn = document.createElement("input");
 		toolbar_btn.type = "button";

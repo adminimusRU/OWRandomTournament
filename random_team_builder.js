@@ -17,7 +17,8 @@ var RandomTeamBuilder = {
 	onDebugMessage: undefined,
 	
 	// settings
-	team_size: 6,
+	// slots count by each class. Example: {'dps':2, 'tank':2, 'support':2}
+	slots_count: {},
 	// rolled team count should be power of 2, for better distribution in single elemination bracked (all teams will be in first round)
 	team_count_power2: false,
 	// while calculating player's SR will be adjusted by given percent, depenging on player's main class
@@ -55,7 +56,11 @@ var RandomTeamBuilder = {
 	OF_max_thresold: 50,
 	roll_debug: false,
 	
+	
 	// internal
+	
+	team_size: 0,
+	
 	balance_max_sr_diff: 100,
 	roll_random_limit: 25, // max amount of remaining players for random rolls. Otherwise incremental roll is used
 	
@@ -74,27 +79,37 @@ var RandomTeamBuilder = {
 	
 	// public methods
 	rollTeams: function() {
+		var start_time = performance.now();
+		
+		// calc total team size
+		this.team_size = 0;
+		for( let class_name in this.slots_count ) {
+			this.team_size += this.slots_count[class_name];
+		}
+		
+		// check if we have enough players
 		if ( this.players.length < this.team_size ) {
+			this.debugMsg( "not enough players" );
 			return;
 		}
 		
-		if (this.roll_debug) {
-			if(typeof this.onDebugMessage == "function") {
-				this.onDebugMessage.call( undefined, "team_size = "+this.team_size );
-				this.onDebugMessage.call( undefined, "team_count_power2 = "+this.team_count_power2 );
-				this.onDebugMessage.call( undefined, "adjust_sr = "+this.adjust_sr );
-				this.onDebugMessage.call( undefined, "adjust_sr_by_class = "+JSON.stringify(this.adjust_sr_by_class) );
-				this.onDebugMessage.call( undefined, "sr_exp_scale = "+JSON.stringify(this.sr_exp_scale) );
-				this.onDebugMessage.call( undefined, "balance_priority_sr = "+this.balance_priority_sr );
-				this.onDebugMessage.call( undefined, "balance_priority_class = "+this.balance_priority_class );
-				this.onDebugMessage.call( undefined, "balance_priority_dispersion = "+this.balance_priority_dispersion );
-				this.onDebugMessage.call( undefined, "target_sr_stdev_adjust = "+this.target_sr_stdev_adjust );				
-				this.onDebugMessage.call( undefined, "separate_otps = "+this.separate_otps );
-				this.onDebugMessage.call( undefined, "max_combinations = "+this.max_combinations );
-				this.onDebugMessage.call( undefined, "OF_min_thresold = "+this.OF_min_thresold );
-				this.onDebugMessage.call( undefined, "OF_max_thresold = "+this.OF_max_thresold );
-			}
+		var slots_count_str = "";
+		for ( let class_name in this.slots_count ) {
+			slots_count_str += class_name+"="+this.slots_count[class_name]+",";
 		}
+		this.debugMsg( "slots_count = "+slots_count_str );
+		this.debugMsg( "team_count_power2 = "+this.team_count_power2 );
+		this.debugMsg( "adjust_sr = "+this.adjust_sr );
+		this.debugMsg( "adjust_sr_by_class = "+JSON.stringify(this.adjust_sr_by_class) );
+		this.debugMsg( "sr_exp_scale = "+JSON.stringify(this.sr_exp_scale) );
+		this.debugMsg( "balance_priority_sr = "+this.balance_priority_sr );
+		this.debugMsg( "balance_priority_class = "+this.balance_priority_class );
+		this.debugMsg( "balance_priority_dispersion = "+this.balance_priority_dispersion );
+		this.debugMsg( "target_sr_stdev_adjust = "+this.target_sr_stdev_adjust );				
+		this.debugMsg( "separate_otps = "+this.separate_otps );
+		this.debugMsg( "max_combinations = "+this.max_combinations );
+		this.debugMsg( "OF_min_thresold = "+this.OF_min_thresold );
+		this.debugMsg( "OF_max_thresold = "+this.OF_max_thresold );
 		
 		// filter players without stats
 		this.filtered_players = [];
@@ -143,12 +158,57 @@ var RandomTeamBuilder = {
 		// shuffle players, so every roll will be different
 		this.players = array_shuffle( this.players );
 		
-		// calculate average class count, sr dispersion and SR per team  -> balance target 
-		var total_class_count = {};
+		// calc target team count, with possible restriction
 		var target_team_count = Math.floor( this.players.length / this.team_size );
 		if (this.team_count_power2) {
 			target_team_count = Math.pow(2, Math.floor(Math.log2(target_team_count)));
 		}
+		
+		// count predefined captains
+		this.predefined_captains_count = 0;
+		for ( var i=this.players.length-1; i>=0; i-- ) {
+			if ( this.players[i].captain ) {
+				this.predefined_captains_count++;
+			}
+		}
+		if ( this.predefined_captains_count > target_team_count ) {
+			this.predefined_captains_count = target_team_count;
+		}
+		
+		// possible roll algorithms selection here...
+		this.rollTeamsRolelock();
+		
+		// reduce team count if needed
+		if (this.team_count_power2 && (this.teams.length < target_team_count)) {
+			var teams_to_delete = this.teams.length-Math.floor(target_team_count/2);
+			this.debugMsg( "Reducing team count, teams deleted = "+teams_to_delete );
+			
+			for ( var t=0; t<teams_to_delete; t++ ) {
+				var removed_team = this.teams.pop();
+				this.players = this.players.concat( removed_team.players );
+			}
+		}
+		
+		// return excluded players to lobby
+		this.players = this.players.concat(this.filtered_players);
+		
+		var execTime = performance.now() - start_time;
+		this.debugMsg( "Exec time "+execTime+" ms" );
+	},
+	
+	// private methods
+	
+	// new roll algorithm with role lock
+	rollTeamsRolelock: function() {
+		
+	},
+	
+	// old roll algorithm without role lock
+	// not used, just for history
+	rollTeamsClassic: function() {
+		// calculate average class count, sr dispersion and SR per team  -> balance target 
+		var total_class_count = {};
+		
 		this.target_class_count = {};
 		this.target_team_sr = 0;
 			
@@ -179,26 +239,9 @@ var RandomTeamBuilder = {
 			this.target_sr_stdev = 0;
 		}
 		
-		// count predefined captains
-		this.predefined_captains_count = 0;
-		for ( var i=this.players.length-1; i>=0; i-- ) {
-			if ( this.players[i].captain ) {
-				this.predefined_captains_count++;
-			}
-		}
-		if ( this.predefined_captains_count > target_team_count ) {
-			this.predefined_captains_count = target_team_count;
-		}
-		
-		if (this.roll_debug) {
-			if(typeof this.onDebugMessage == "function") {
-				this.onDebugMessage.call( undefined, "Target SR = "+this.target_team_sr );
-				this.onDebugMessage.call( undefined, "Target classes = "+JSON.stringify(this.target_class_count) );
-				this.onDebugMessage.call( undefined, "Target sr stdev = "+JSON.stringify(this.target_sr_stdev) );				
-			}
-		}
-		
-		var start_time = performance.now();
+		this.debugMsg( "Target SR = "+this.target_team_sr );
+		this.debugMsg( "Target classes = "+JSON.stringify(this.target_class_count) );
+		this.debugMsg( "Target sr stdev = "+JSON.stringify(this.target_sr_stdev) );				
 		
 		// roll teams
 		while ( this.players.length >= this.team_size ) {
@@ -283,19 +326,15 @@ var RandomTeamBuilder = {
 			
 			this.teams.push( new_team );
 			
-			if (this.roll_debug) {
-				if(typeof this.onDebugMessage == "function") {
-					var team_sr = this.calcTeamSR(new_team.players);
-					var sr_diff = Math.abs( team_sr - this.target_team_sr );
-					var class_unevenness = this.calcClassUnevenness( new_team.players );
-					var sr_stdev = this.calcSRStDev( new_team.players, team_sr );
-					this.onDebugMessage.call( undefined, "team name = "+new_team.name );
-					this.onDebugMessage.call( undefined, "OF sr diff = "+sr_diff );
-					this.onDebugMessage.call( undefined, "OF CU = "+class_unevenness );
-					this.onDebugMessage.call( undefined, "OF sr_stdiv= "+sr_stdev );
-				}
-			}
-			
+			var team_sr = this.calcTeamSR(new_team.players);
+			var sr_diff = Math.abs( team_sr - this.target_team_sr );
+			var class_unevenness = this.calcClassUnevenness( new_team.players );
+			var sr_stdev = this.calcSRStDev( new_team.players, team_sr );
+			this.debugMsg( "team name = "+new_team.name );
+			this.debugMsg( "OF sr diff = "+sr_diff );
+			this.debugMsg( "OF CU = "+class_unevenness );
+			this.debugMsg( "OF sr_stdiv= "+sr_stdev );
+
 			if(typeof this.onProgressChange == "function") {
 				var current_progress = Math.round( (this.teams.length / target_team_count)*100 );
 				this.onProgressChange.call( undefined, current_progress );
@@ -305,33 +344,7 @@ var RandomTeamBuilder = {
 				break;
 			}
 		}
-		
-		// reduce team count if needed
-		if (this.team_count_power2 && (this.teams.length < target_team_count)) {
-			var teams_to_delete = this.teams.length-Math.floor(target_team_count/2);
-			if (this.roll_debug) {
-				if(typeof this.onDebugMessage == "function") {
-					this.onDebugMessage.call( undefined, "Reducing team count, teams deleted = "+teams_to_delete );
-				}
-			}
-			for ( var t=0; t<teams_to_delete; t++ ) {
-				var removed_team = this.teams.pop();
-				this.players = this.players.concat( removed_team.players );
-			}
-		}
-		
-		// return excluded players to lobby
-		this.players = this.players.concat(this.filtered_players);
-		
-		var execTime = performance.now() - start_time;
-		if (this.roll_debug) {
-			if(typeof this.onDebugMessage == "function") {
-				this.onDebugMessage.call( undefined, "Exec time "+execTime+" ms" );
-			}
-		}
 	},
-	
-	// private methods
 	
 	findNextMask: function() {
 		if ( this.players.length > this.roll_random_limit ) {
@@ -548,6 +561,16 @@ var RandomTeamBuilder = {
 			return 0;
 		} else {
 			return 10000;
+		}
+	},
+	
+	// debug functions
+	
+	debugMsg: function ( msg, msg_debug_level=0 ) {
+		if ( this.roll_debug && (msg_debug_level<=this.debug_level) ) {
+			if(typeof this.onDebugMessage == "function") {					
+				this.onDebugMessage.call( undefined, msg );
+			}
 		}
 	},
 }

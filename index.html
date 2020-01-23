@@ -215,7 +215,7 @@
 					<div class="dropdown-content">
 						<div onclick="sort_teams_players('display_name', this);">by name</div>
 						<div onclick="sort_teams_players('sr', this);">by SR</div>
-						<div onclick="sort_teams_players('class', this);">by class</div>
+						<!--<div onclick="sort_teams_players('class', this);">by class</div>-->
 					</div>
 				</div>
 				
@@ -524,8 +524,8 @@
 								
 								<br/>
 								<div style="text-align: left;">
-									<label for="roll_balance_priority_class" title="Equal distribution of tanks, dps and supports in rolled teams">
-									Classes: </label>
+									<label for="roll_balance_priority_class" title="Players on their main classes">
+									Main classes: </label>
 									<input id="roll_balance_priority_class" type="number" class="roll_balance_priority_input" value="0" min="0" max="100" autocomplete="off" onchange="roll_balance_priority_input_change(this);">
 									%
 								
@@ -612,12 +612,8 @@
 							<label for="roll_adjust_sr">Adjust player SR by main class</label>
 							</br>
 							<div class="subgroup" id="roll_adjust_sr_sub">
-								<img src="class_icons/maintank.png" style="height: 1em;" title="main tank"/>
-								<input disabled id="roll_adjust_maintank" title="main tank" class="percent" type="number" size=3 min=0 max=999 autocomplete="off" value="100"/>
-								% &nbsp;
-								
-								<img src="class_icons/offtank.png" style="height: 1em;" title="off tank"/>
-								<input disabled id="roll_adjust_offtank" title="off tank" class="percent" type="number" size=3 min=0 max=999 autocomplete="off" value="100"/>
+								<img src="class_icons/tank.png" style="height: 1em;" title="tank"/>
+								<input disabled id="roll_adjust_tank" title="tank" class="percent" type="number" size=3 min=0 max=999 autocomplete="off" value="100"/>
 								% &nbsp;
 								
 								<img src="class_icons/dps.png" style="height: 1em;" title="dps"/>
@@ -653,9 +649,22 @@
 							Main
 						</div>
 						<div class="group-content">
-							<label for="team_size">Team size</label>
-							<input id="team_size" type="number" size=3 min=1 max=12 style="width: 3em;" value=""/> players
+							Team slots
 							</br>
+							<div class="subgroup" id="slots_count_group">
+								<img src="class_icons/tank.png" style="height: 1em;"/>
+								<input id="slots_count_tank" class="percent" type="number" size=3 min=0 max=12 autocomplete="off" value="2"/>
+								&nbsp;
+								
+								<img src="class_icons/dps.png" style="height: 1em;"/>
+								<input id="slots_count_dps" class="percent" type="number" size=3 min=0 max=12 autocomplete="off" value="2"/>
+								&nbsp;
+								
+								<img src="class_icons/support.png" style="height: 1em;"/>
+								<input id="slots_count_support" class="percent" type="number" size=3 min=0 max=12 autocomplete="off" value="2"/>
+								</br>
+							</div>
+							<br/>
 							
 							<input type="checkbox" id="show_numeric_sr">
 							<label for="show_numeric_sr">Show numeric SR values in teams table</label>

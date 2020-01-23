@@ -43,6 +43,7 @@ function calc_team_sr( team ) {
 		}
 	}
 	
+	team_sr = Math.round(team_sr / get_team_size());
 	return team_sr;
 }
 
@@ -238,11 +239,9 @@ function get_default_settings() {
 		
 		roll_adjust_sr: false,
 		roll_adjust_dps: 110,
-		roll_adjust_maintank: 100,
-		roll_adjust_offtank: 100,
+		roll_adjust_tank: 100,
 		roll_adjust_support: 90,
 		roll_sr_scale: 0,
-		// @todo settings for new alg
 		roll_balance_priority_sr: 34,
 		roll_balance_priority_class: 33,
 		roll_balance_priority_dispersion: 33,
@@ -400,6 +399,20 @@ function get_scrollbar_width() {
 	return widthNoScroll - widthWithScroll;
 }
 
+function get_team_captain( team_struct ) {
+	if (team_struct.captain_id == "") {
+		return undefined;
+	}
+	for( let class_name in team_struct.slots ) {
+		for (let player_struct of team_struct.slots[class_name] ) {
+			if ( player_struct.id == team_struct.captain_id ) {
+				return player_struct;
+			}
+		}
+	}
+	return undefined;
+}
+
 function get_team_player_count( team_struct ) {
 	var player_count = 0;
 	for( let class_name in team_struct.slots ) {
@@ -416,14 +429,6 @@ function get_team_size() {
 		}
 	}
 	return team_size;
-}
-
-function get_team_player_count( team_slots ) {
-	var player_count = 0;
-	for( let class_name in team_slots ) {
-		player_count += team_slots[class_name].length;
-	}
-	return player_count;
 }
 
 function is_active_player( player_struct ) {
@@ -525,7 +530,7 @@ function round_to( value, precision ) {
 	return Math.round(value * Math.pow(10, precision)) / Math.pow(10, precision);
 }
 
-function sort_players( team, sort_field = 'sr', order_asc=false ) {
+function sort_players( team, sort_field = 'sr', order_asc=false, slot_class=undefined ) {
 	var order = 1;
 	if (order_asc) {
 		order = -1;
@@ -533,20 +538,26 @@ function sort_players( team, sort_field = 'sr', order_asc=false ) {
 	if ( sort_field == 'class' ) {
 		team.sort( function(player1, player2){
 				var val1 = -1;
-				if (player1.top_classes.length > 0) {
-					val1 = 10 * (class_names.indexOf( player1.top_classes[0] )+1);
+				if (player1.classes.length > 0) {
+					val1 = 10 * (class_names.indexOf( player1.classes[0] )+1);
 				}
-				if (player1.top_classes.length > 1) {
-					val1 += class_names.indexOf( player1.top_classes[1] ) + 1;
+				if (player1.classes.length > 1) {
+					val1 += class_names.indexOf( player1.classes[1] ) + 1;
 				}
 				var val2 = -1;
-				if (player2.top_classes.length > 0) {
-					val2 = 10 * (class_names.indexOf( player2.top_classes[0] )+1);
+				if (player2.classes.length > 0) {
+					val2 = 10 * (class_names.indexOf( player2.classes[0] )+1);
 				}
-				if (player2.top_classes.length > 1) {
-					val2 += class_names.indexOf( player2.top_classes[1] ) + 1;
+				if (player2.classes.length > 1) {
+					val2 += class_names.indexOf( player2.classes[1] ) + 1;
 				}
 				return order * (val1 - val2);
+			} );
+	} else if ( sort_field == 'sr' ) {
+		team.sort( function(player1, player2){
+				var val1 = get_player_sr( player1, slot_class );
+				var val2 = get_player_sr( player2, slot_class );
+				return order *(val2 - val1);
 			} );
 	} else if ( sort_field == 'checkin' ) {
 		team.sort( function(player1, player2){
