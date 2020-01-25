@@ -7,6 +7,8 @@
 <meta name="description" content="Overwatch random tournament">
 <link rel="stylesheet" href="style.css">
 
+<script src="globals.js"></script>
+
 <script src="ow_defines.js"></script>
 <script src="common.js"></script>
 <script src="owapi.js"></script>
@@ -16,59 +18,14 @@
 <script src="twitch.js"></script>
 <script src="twitch_chat.js"></script>
 
+<script src="init.js" defer></script>
+
 </head>
-
-<script language="JavaScript" type="text/javascript">
-// global variables
-var lobby = [];
-var teams = [];
-
-var checkin_list = []; //id's of checked-in players
-
-var twitch_subs_list = []; //id's of twitch subscribers
-var twitch_sub_icon_src = "";
-
-var twitch_checkin_keyword = "";
-var twitch_chat_max_messages = 200;
-var twitch_chat_debug = false;
-
-var player_being_added;
-var player_being_edited;
-var team_being_edited;
-var lobby_filter_timer = 0;
-
-var Settings = get_default_settings();
-const storage_prefix = "owrt_";
-
-// class icons in data:url strings
-var class_icons_datauri = {};
-var rank_icons_datauri = {};
-
-
-// init stats updater
-StatsUpdater.onPlayerUpdated = on_player_stats_updated;
-StatsUpdater.onComplete = on_stats_update_complete;
-StatsUpdater.onStart = on_stats_update_start;
-StatsUpdater.onProgressChange = on_stats_update_progress;
-StatsUpdater.onError = on_stats_update_error;
-StatsUpdater.onWarning = on_stats_update_warning;
-
-
-// team builder
-// RandomTeamBuilder object inside worker thread
-var RtbWorker;
-var roll_debug = false;
-
-// balance priority canvas input
-var balance_priority_mouse_moving = false;
-var balance_priority_canvas_gradient;
-
-</script>
 
 <body>
 
 <div class="page-title">Overwatch random tournament</div>
-<div class="copyright">2018-2019 by <a href="https://github.com/adminimusRU">l33t m3at</a> | Stats data by <a href="https://github.com/SunDwarf/OWAPI">OWAPI</a></div>
+<div class="copyright">2018-2020 by <a href="https://github.com/adminimusRU">l33t m3at</a> | Stats data by <a href="https://github.com/SunDwarf/OWAPI">OWAPI</a></div>
 <br/>
 
 <br/>
@@ -119,7 +76,7 @@ var balance_priority_canvas_gradient;
 			<br/>
 					
 			<span id="lobby_count">0</span> players, 
-			<span id="lobby_captain_count">0</span> captains
+			<span id="lobby_captain_count">0</span> captains,
 			<span title="excluding players without twitch sub or not checked-in"><span id="lobby_active_count" >0</span> active</span>
 			<br/>
 			
@@ -224,7 +181,7 @@ var balance_priority_canvas_gradient;
 				</div>
 				<br/>
 								
-				<div style="display: none;">
+				<div style="display: block;">
 					<!-- test buttons -->
 					<input class="medium-btn" type="button" onclick="generate_random_players();" value="+ random players" />
 									
@@ -258,7 +215,7 @@ var balance_priority_canvas_gradient;
 					<div class="dropdown-content">
 						<div onclick="sort_teams_players('display_name', this);">by name</div>
 						<div onclick="sort_teams_players('sr', this);">by SR</div>
-						<div onclick="sort_teams_players('class', this);">by class</div>
+						<!--<div onclick="sort_teams_players('class', this);">by class</div>-->
 					</div>
 				</div>
 				
@@ -297,8 +254,8 @@ var balance_priority_canvas_gradient;
 			
 			<div style="text-align: left;">
 			For table and csv formats fields should be in following order:<br/>
-			<span style="font-family: courier;color: blue;font-weight: bold;">battletag, [twitch_name, SR, class, offclass]</span><br/>
-			twitch name, SR, class and offclass are optional.<br/>
+			<span style="font-family: courier;color: blue;font-weight: bold;">battletag, [twitch_name, tank SR, DPS SR, support SR, main class, secondary class, third class]</span><br/>
+			twitch name, SR and classes are optional.<br/>
 			<br/>
 			"Table" format is used for copy&paste from spreadsheets like Excel. Fields are separated by single tabulation. <br/>
 			<br/>
@@ -495,42 +452,21 @@ var balance_priority_canvas_gradient;
 							<span id="dlg_player_level_edited" class="dlg-edited-mark" title="Level was manually edited" onclick="clear_edited_mark('le');">&#9997;</span>
 						</div>
 					</div>
+					
 					<div class="row">
-						<div class="cell"><label for="dlg_player_sr">SR:</label></div>
 						<div class="cell">
-							<img id="dlg_player_sr_icon" style="width: 24px; vertical-align: text-bottom;">
-							<input id="dlg_player_sr" type="number" min=0 max=5000 style="width: 4em;" onchange="on_player_edit_sr_change();">
-							<span id="dlg_player_sr_edited" class="dlg-edited-mark" title="SR was manually edited" onclick="clear_edited_mark('se');">&#9997;</span>
-						</div>
-					</div>
-					<div class="row">
-						<div class="cell">Main class: </div>
-						<div class="cell">
-							<img id="dlg_player_main_class_icon" style="width: 24px; vertical-align: text-bottom;">
-							<select id="dlg_main_class" autocomplete="off" onchange="on_player_edit_main_class_change();">
-								<option value="maintank">main tank</option>
-								<option value="offtank">off tank</option>
-								<option value="dps" selected>dps</option>
-								<option value="support">support</option>
-							</select>
+							Classes:
 							<span id="dlg_player_class1_edited" class="dlg-edited-mark" title="Classes were manually edited" onclick="clear_edited_mark('ce');">&#9997;</span>
 						</div>
+						<div class="cell"></div>
 					</div>
-					<div class="row">
-						<div class="cell">Secondary class: </div>
-						<div class="cell">
-							<img id="dlg_player_secondary_class_icon" style="width: 24px; vertical-align: text-bottom;">
-							<select id="dlg_secondary_class" onchange="on_player_edit_secondary_class_change();">
-								<option value="">-</option>							
-								<option value="maintank">main tank</option>
-								<option value="offtank">off tank</option>
-								<option value="dps">dps</option>
-								<option value="support">support</option>
-							</select>
-							<span id="dlg_player_class2_edited" class="dlg-edited-mark" title="Classes were manually edited" onclick="clear_edited_mark('ce');">&#9997;</span>
-						</div>
-					</div>	
+					
 				</div>
+				
+				<table id="dlg_player_class_table">
+					<!-- class rows here -->
+				</table>
+				
 				<div id="dlg_top_heroes">
 					<span>Top heroes:</span>
 					<br/>
@@ -588,8 +524,8 @@ var balance_priority_canvas_gradient;
 								
 								<br/>
 								<div style="text-align: left;">
-									<label for="roll_balance_priority_class" title="Equal distribution of tanks, dps and supports in rolled teams">
-									Classes: </label>
+									<label for="roll_balance_priority_class" title="Players on their main classes">
+									Main classes: </label>
 									<input id="roll_balance_priority_class" type="number" class="roll_balance_priority_input" value="0" min="0" max="100" autocomplete="off" onchange="roll_balance_priority_input_change(this);">
 									%
 								
@@ -676,12 +612,8 @@ var balance_priority_canvas_gradient;
 							<label for="roll_adjust_sr">Adjust player SR by main class</label>
 							</br>
 							<div class="subgroup" id="roll_adjust_sr_sub">
-								<img src="class_icons/maintank.png" style="height: 1em;" title="main tank"/>
-								<input disabled id="roll_adjust_maintank" title="main tank" class="percent" type="number" size=3 min=0 max=999 autocomplete="off" value="100"/>
-								% &nbsp;
-								
-								<img src="class_icons/offtank.png" style="height: 1em;" title="off tank"/>
-								<input disabled id="roll_adjust_offtank" title="off tank" class="percent" type="number" size=3 min=0 max=999 autocomplete="off" value="100"/>
+								<img src="class_icons/tank.png" style="height: 1em;" title="tank"/>
+								<input disabled id="roll_adjust_tank" title="tank" class="percent" type="number" size=3 min=0 max=999 autocomplete="off" value="100"/>
 								% &nbsp;
 								
 								<img src="class_icons/dps.png" style="height: 1em;" title="dps"/>
@@ -717,9 +649,22 @@ var balance_priority_canvas_gradient;
 							Main
 						</div>
 						<div class="group-content">
-							<label for="team_size">Team size</label>
-							<input id="team_size" type="number" size=3 min=1 max=12 style="width: 3em;" value=""/> players
+							Team slots
 							</br>
+							<div class="subgroup" id="slots_count_group">
+								<img src="class_icons/tank.png" style="height: 1em;"/>
+								<input id="slots_count_tank" class="percent" type="number" size=3 min=0 max=12 autocomplete="off" value="2"/>
+								&nbsp;
+								
+								<img src="class_icons/dps.png" style="height: 1em;"/>
+								<input id="slots_count_dps" class="percent" type="number" size=3 min=0 max=12 autocomplete="off" value="2"/>
+								&nbsp;
+								
+								<img src="class_icons/support.png" style="height: 1em;"/>
+								<input id="slots_count_support" class="percent" type="number" size=3 min=0 max=12 autocomplete="off" value="2"/>
+								</br>
+							</div>
+							<br/>
 							
 							<input type="checkbox" id="show_numeric_sr">
 							<label for="show_numeric_sr">Show numeric SR values in teams table</label>
@@ -1063,91 +1008,5 @@ var balance_priority_canvas_gradient;
 
 <div id="debug_log"></div>
 
-<script>
-// rename old storage items
-var old_stogage_items = ["settings", "lobby", "saved_format", "team_setup"];
-for( let item_name of old_stogage_items ) {
-	var item_value = localStorage.getItem(item_name);
-	if ( item_value !== null ) {
-		localStorage.setItem( storage_prefix+item_name, item_value );
-		localStorage.removeItem( item_name );
-	}
-}
-
-// restore settings
-var saved_settings_json = localStorage.getItem(storage_prefix+"settings");
-if ( saved_settings_json != null ) {
-	var saved_settings = JSON.parse(saved_settings_json);
-	for ( var i in Settings ) {
-		if ( (saved_settings[i] !== undefined) && Settings.hasOwnProperty(i) ) {
-			Settings[i] = saved_settings[i];
-		}
-	}
-}
-
-//restore saved players to teams
-restore_saved_teams();
-
-restore_checkin_list();
-restore_twitch_subs_list();
-redraw_lobby();
-
-apply_stats_updater_settings();
-
-// adjust lobby margin to account scrollbar width
-var lobby_container = document.getElementsByClassName("lobby-container").item(0);
-lobby_container.style.marginRight = "-"+get_scrollbar_width()+"px";
-lobby_container.style.paddingRight = ""+get_scrollbar_width()+"px";
-
-// load class and rank icons and convert them to data:uri strings, for team export
-prepare_datauri_icons();
-
-
-
-// twitch api init
-let client_id = "x4ywn8cwvjvvipexitcdidxhoz1kem";
-let	redirect_uri = "https://adminimusru.github.io/OWRandomTournament/index.html";
-let	scope = "channel:read:subscriptions chat:read";
-let twitch_access_token = localStorage.getItem(storage_prefix+"twitch_token");
-let twitch_state = localStorage.getItem(storage_prefix+"twitch_state");
-localStorage.removeItem( storage_prefix+"twitch_state" );
-let twitch_logged_out = ( localStorage.getItem(storage_prefix+"twitch_logged_out") === 'true' );
-
-Twitch.init( client_id, redirect_uri, scope, twitch_access_token, twitch_state, twitch_logged_out );
-document.getElementById("twitch_signin_link").href = Twitch.getLoginURL();
-
-let url_hash = document.location.hash;
-document.location.hash = "";
-if ( url_hash.startsWith('#') ) {
-	url_hash = url_hash.substring(1);
-}
-if (url_hash != "" ) {
-	// process twitch response after redirect
-	let result = Twitch.authenticate( url_hash );
-	if ( result === true ) {
-		// save token
-		localStorage.setItem( storage_prefix+"twitch_token", Twitch.getToken() );
-		localStorage.setItem( storage_prefix+"twitch_logged_out", false );
-	} else if ( typeof result === 'string' ) {
-		alert("Twitch login failed: "+result);
-	}
-}
-
-if ( Twitch.isLoggedIn() ) {
-	// user logged in - show name and icon
-	Twitch.getAuthorizedUserInfo( on_twitch_getuser_success, on_twitch_getuser_fail, on_twitch_unathorized );
-	document.getElementById("twitch_signin").style.display = "none";
-	document.getElementById("twitch_user_info").style.display = "block";
-}
-
-let twitch_subs_last_checked = localStorage.getItem(storage_prefix+"twitch_subs_last_checked");
-if ( twitch_subs_last_checked === null ) {
-	twitch_subs_last_checked = new Date(0);
-} else {
-	twitch_subs_last_checked = new Date( twitch_subs_last_checked );
-}
-document.getElementById("twitch_subs_last_checked_date").innerHTML = print_date( twitch_subs_last_checked, true );
-
-</script>
 </body>
 </html>

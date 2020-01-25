@@ -1,6 +1,5 @@
 var class_names = [
-	"maintank",
-	"offtank",
+	"tank",
 	"dps",
 	"support"
 ];
@@ -14,6 +13,7 @@ var hero_classes = {
 	dva:			"offtank",
 	roadhog:		"offtank",
 	zarya:			"offtank",
+	sigma:			"offtank",
 	
 	ashe:			"dps",
 	bastion:		"dps",

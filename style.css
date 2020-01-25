@@ -50,6 +50,10 @@ input.team-title:hover {
     display: table-row;
 }
 
+.table-caption {
+	display: table-caption;
+}
+
 .cell {
 	display: table-cell;
 }
@@ -144,8 +148,10 @@ input.team-title:hover {
 
 
 .icon-sr {
-	display: inline;
+	display: inline-block;
 	font-size: 8pt;
+	width: 2em;
+	text-align: left;
 }
 
 span.sr-edited {
@@ -161,7 +167,7 @@ span.sr-edited {
 	display: inline-block;
 	font-size: 14pt;
 	white-space: nowrap;
-	width: 7em;
+	width: 5em;
 	overflow-x: hidden;
 }
 
@@ -409,7 +415,7 @@ input[readonly] {
 
 .hero-icon {
 	display: inline;
-	height: 64px;
+	height: 48px;
 	margin-right: 0.5em;
 }
 
@@ -420,10 +426,13 @@ div[id="stats_update_log"] {
 }
 
 .team-title-small {
+	display: block;
 	background-color: gray;
 	cursor: grab;
 	color: white;
 	padding-left: 0.5em;
+	margin: 0.3em;
+	margin-bottom: 0;
 }
 
 .team-title-name {
@@ -732,4 +741,63 @@ fieldset.edit-player-fieldset {
 
 fieldset.edit-player-fieldset input,select {
 	vertical-align: text-bottom;
-}	
+}
+
+/* 
+	classes table in player dialog
+*/
+
+table[id="dlg_player_class_table"] {
+	min-width: 25em;
+	border-collapse: collapse;
+}
+
+table[id="dlg_player_class_table"] tr:first-child {
+	background-color: yellow;
+}
+
+.dlg-player-class-row td {
+	padding-top: 0.5em;
+	padding-bottom: 0.5em;
+	border-top: 1px solid gray;
+	border-bottom: 1px solid gray;
+}
+
+.class-disabled {
+	filter: opacity(40%);
+}
+
+.class-icon-dlg {
+	height: 1.2em;
+	vertical-align: text-bottom;
+}
+
+.rank-icon-dlg {
+	height: 1.2em;
+	vertical-align: text-bottom;
+}
+
+.dlg-sr-by-class {
+	width: 4em;
+}
+
+.big-checkbox {
+	transform: scale(1.5);
+}
+
+.big-label {
+	font-size: 13pt;
+}
+
+.class-cell {
+	width: 0.5em;
+}
+
+.class-icon-slot {
+	height: 1.5em;
+	vertical-align: text-bottom;
+}
+
+.dlg-class-enabled-checkbox {
+	transform: scale(1.5);
+}
