@@ -48,6 +48,9 @@ function export_lobby( format ) {
 		fields.push("DPS SR");
 		fields.push("Support SR");
 		fields.push("Main_class");
+		fields.push("Secondary_class");
+		fields.push("Third_class");
+		fields.push("Main_class");
 		fields.push("Main_hero");
 		fields.push("Captain");
 		fields.push("Display_Name");
@@ -58,8 +61,14 @@ function export_lobby( format ) {
 		
 		for( i in lobby) {
 			var player_id = lobby[i].id.trim().replace("-", "#");
+			
 			var main_class = "";
 			if( lobby[i].classes[0] !== undefined ) main_class = lobby[i].classes[0];
+			var second_class = "";
+			if( lobby[i].classes[1] !== undefined ) second_class = lobby[i].classes[1];
+			var third_class = "";
+			if( lobby[i].classes[2] !== undefined ) third_class = lobby[i].classes[2];
+			
 			var main_hero = "";
 			if( lobby[i].top_heroes[0] !== undefined ) main_hero = lobby[i].top_heroes[0].hero;
 			var last_updated = lobby[i].last_updated.toISOString();
@@ -74,6 +83,8 @@ function export_lobby( format ) {
 			fields.push(sr_dps);
 			fields.push(sr_support);
 			fields.push(main_class);
+			fields.push(second_class);
+			fields.push(third_class);
 			fields.push(main_hero);
 			fields.push(lobby[i].captain);
 			fields.push(lobby[i].display_name);
@@ -400,6 +411,11 @@ function import_lobby( format, import_str ) {
 		try {
 			var battletag_list = import_str.trim().split("\n");
 			for( i in battletag_list ) {
+				// skip empty lines
+				if ( battletag_list[i].trim().length == 0 ) {
+					continue;
+				}
+				
 				// @todo create google form template for import
 				// split string to fields (btag, twitch name, tank SR, DPS SR, support SR, main class, secondary class, third class)
 				var separator_regex = /[ \t.,;|]/;
@@ -407,6 +423,13 @@ function import_lobby( format, import_str ) {
 					separator_regex = /\t/;
 				}
 				var fields = battletag_list[i].split( separator_regex );
+				
+				// try to guess if there is header row and skip it
+				if ( i==0 ) {
+					if ( (fields[0] == "BattleTag") || (fields[0] == "Twitch_name") ) {
+						continue;
+					}
+				}
 				
 				// try to guess if field order is [btag,twitch] or [twitch,btag] 
 				var btag = undefined;
@@ -457,9 +480,9 @@ function import_lobby( format, import_str ) {
 						}
 						
 						new_player.sr_by_class[ class_names[class_index] ] = class_sr;
+						field_index++;
 					}
 					new_player.last_updated = new Date;
-					field_index++;
 				}
 				if ( field_index < fields.length ) {
 					var last_class_field_index = Math.min(fields.length, field_index+class_names.length);
@@ -490,8 +513,8 @@ function import_lobby( format, import_str ) {
 							throw new Error("Incorrect class name '"+fields[c]+"' on row #"+String(Number(i)+1));
 						}
 						new_player.classes.push( class_name );
+						field_index++;
 					}
-					field_index++;
 				}
 				
 				// check twitch duplicates
