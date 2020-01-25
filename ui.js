@@ -802,9 +802,8 @@ function roll_teams() {
 		team_count_power2: Settings.roll_team_count_power2,
 		
 		adjust_sr: Settings.roll_adjust_sr,
-		adjust_sr_by_class: {
-			maintank: Settings.roll_adjust_maintank,
-			offank: Settings.roll_adjust_offtank,
+		adjust_sr_by_class: {			
+			tank: Settings.roll_adjust_tank,
 			dps: Settings.roll_adjust_dps,
 			support: Settings.roll_adjust_support,
 		},

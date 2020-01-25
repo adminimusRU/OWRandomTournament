@@ -2,6 +2,8 @@ importScripts("ow_defines.js");
 importScripts("common.js");
 importScripts("random_team_builder.js");
 
+// hint: for debugging worker in firefox (>68) set privacy.file_unique_origin = false in about:config
+
 onmessage = function(e) {
 	if ( ! Array.isArray(e.data) ) {
 		return;
