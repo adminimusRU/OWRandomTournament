@@ -192,7 +192,7 @@ var RandomTeamBuilder = {
 		}
 		
 		// possible roll algorithms selection here...
-		this.rollTeamsRolelock();
+		this.rollTeamsRoleLock();
 		
 		// reduce team count if needed
 		if (this.team_count_power2 && (this.teams.length < this.target_team_count)) {
@@ -215,7 +215,7 @@ var RandomTeamBuilder = {
 	// private methods
 	
 	// new roll algorithm with role lock
-	rollTeamsRolelock: function() {
+	rollTeamsRoleLock: function() {
 		// calculate average team SR and sr dispersion -> balance target
 		this.target_team_sr = 0;
 		for( p in this.players ) {
@@ -404,7 +404,7 @@ var RandomTeamBuilder = {
 				total_class_count[this.players[p].top_classes[0]] += 1;
 			}
 			
-			this.target_team_sr += this.calcPlayerSR( this.players[p] );
+			this.target_team_sr += this.calcPlayerSRClassic( this.players[p] );
 		}
 		this.target_team_sr = Math.round( this.target_team_sr / this.players.length );
 		
@@ -505,7 +505,7 @@ var RandomTeamBuilder = {
 			
 			this.teams.push( new_team );
 			
-			var team_sr = this.calcTeamSR(new_team.players);
+			var team_sr = this.calcTeamSRClassic(new_team.players);
 			var sr_diff = Math.abs( team_sr - this.target_team_sr );
 			var class_unevenness = this.calcClassUnevenness( new_team.players );
 			var sr_stdev = this.calcSRStDev( new_team.players, team_sr );
@@ -704,8 +704,8 @@ var RandomTeamBuilder = {
 	
 	// private calculation functions for classic algorithm	(deprecated)
 	
-	calcObjectiveFunction: function( picked_players ) {
-		var team_sr = this.calcTeamSR(picked_players);
+	calcObjectiveFunctionClassic: function( picked_players ) {
+		var team_sr = this.calcTeamSRClassic(picked_players);
 		var sr_diff = Math.abs( team_sr - this.target_team_sr );
 		var class_unevenness = this.calcClassUnevenness( picked_players );
 		var otp_conflicts = 0;
@@ -715,11 +715,11 @@ var RandomTeamBuilder = {
 		var captains_conflicts = this.calcCaptainsConflicts( picked_players );
 		var sr_stdev = this.calcSRStDev( picked_players, team_sr );
 		
-		var objective_func = this.calcObjectiveFunctionValue( sr_diff, class_unevenness, otp_conflicts, sr_stdev, captains_conflicts );			
+		var objective_func = this.calcObjectiveFunctionValueClassic( sr_diff, class_unevenness, otp_conflicts, sr_stdev, captains_conflicts );			
 		return objective_func;
 	},
 	
-	calcObjectiveFunctionValue: function( sr_diff, class_unevenness, otp_conflicts, sr_stdev, captains_conflicts ) {
+	calcObjectiveFunctionValueClassic: function( sr_diff, class_unevenness, otp_conflicts, sr_stdev, captains_conflicts ) {
 		var OF = 
 			(class_unevenness * this.balance_priority_class
 			+ (sr_diff/this.balance_max_sr_diff*100)*this.balance_priority_sr
@@ -731,12 +731,12 @@ var RandomTeamBuilder = {
 		return round_to( OF, 1 );
 	},
 	
-	calcTeamSR: function( team ) {
+	calcTeamSRClassic: function( team ) {
 		var team_sr = 0;
 		if (team.length > 0) {
 			for( var i=0; i<team.length; i++) {
 				var player_sr = team[i].sr;
-				player_sr = this.calcPlayerSR( team[i] );
+				player_sr = this.calcPlayerSRClassic( team[i] );
 				team_sr += player_sr;
 			}
 			team_sr = Math.round(team_sr / this.team_size);
@@ -744,7 +744,7 @@ var RandomTeamBuilder = {
 		return team_sr;
 	},
 	
-	calcPlayerSR: function ( player ) {
+	calcPlayerSRClassic: function ( player ) {
 		var player_sr = player.sr;
 		
 		// adjust sr by main class
@@ -815,7 +815,7 @@ var RandomTeamBuilder = {
 	calcSRStDevClassic: function( team, team_sr ) {
 		var sr_stdev = 0;
 		for( p in team) {
-			sr_stdev += (this.calcPlayerSR(team[p]) - team_sr)*(this.calcPlayerSR(team[p]) - team_sr);
+			sr_stdev += (this.calcPlayerSRClassic(team[p]) - team_sr)*(this.calcPlayerSRClassic(team[p]) - team_sr);
 		}
 		sr_stdev = Math.round( Math.sqrt( sr_stdev / (team.length-1) ) );
 		return sr_stdev;
@@ -893,7 +893,7 @@ var RandomTeamBuilder = {
 				var class_sr = is_undefined( player_struct.sr_by_class[class_name], 0 );
 				// adjust sr by class
 				if ( this.adjust_sr ) {
-					class_sr = Math.round( class_sr * is_undefined(this.adjust_sr_by_class[top_class],100)/100 );
+					class_sr = Math.round( class_sr * is_undefined(this.adjust_sr_by_class[class_name],100)/100 );
 				}
 				
 				// exponential scale
