@@ -241,6 +241,7 @@ var RandomTeamBuilder = {
 		// roll teams
 		while ( this.players.length >= this.team_size ) {
 			var combinations_checked = 0;
+			var player_combinations_checked = 0;
 			
 			// init
 			this.initPlayerMask();			
@@ -253,6 +254,7 @@ var RandomTeamBuilder = {
 			// best balanced combinations have minimum OF value, 0 = perfect
 			while ( this.findNextPlayerMask() ) {
 				this.picked_players = this.pickPlayersByMask( this.player_selection_mask );
+				player_combinations_checked++;
 				
 				// iterate through all possible player classes combinations for current team
 				this.class_selection_mask = Array(this.team_size).fill(0);
@@ -292,11 +294,18 @@ var RandomTeamBuilder = {
 			this.debugMsg( "Team #"+(this.teams.length+1) );
 			this.debugMsg( "Best OF = "+this.OF_min );
 			this.debugMsg( "Combinations checked = "+combinations_checked );
+			this.debugMsg( "Player Combinations checked = "+player_combinations_checked );
 			
 			// check thresold
 			if ( this.OF_min > this.OF_max_thresold ) {
 				// all combinations are heavily unbalanced, stop rolling
 				this.debugMsg( "OF_max_thresold reached, stop roll" );
+				break;
+			}
+			
+			// check if any valid team found
+			if ( this.best_roll_players_mask == "" ) {
+				this.debugMsg( "No valid combination found, stop roll" );
 				break;
 			}
 			
@@ -341,8 +350,9 @@ var RandomTeamBuilder = {
 			
 			// team name
 			if (new_team.captain_id == "") {
-				new_team.name = "Team "+(this.teams.length+1).toString().padStart( target_team_count.toString().length, " ");
+				new_team.name = "Team "+(this.teams.length+1).toString().padStart( this.target_team_count.toString().length, " ");
 			} else {
+				// find captain by id
 				var captain_struct = undefined;
 				for ( let class_name in new_team.slots ) {
 					for (let p in new_team.slots[class_name] ) {
