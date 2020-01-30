@@ -250,6 +250,9 @@ var RandomTeamBuilder = {
 			this.best_roll_players_mask = "";
 			this.best_roll_slots_mask = "";
 			
+			// @todo: implement "true random" picking of combined mask [players+classes]
+			// instead of random player pick + iterating class mask
+			
 			// iterate through some possible player and class combinations and calc objective function (OF) for each
 			// best balanced combinations have minimum OF value, 0 = perfect
 			while ( this.findNextPlayerMask() ) {
@@ -1023,7 +1026,7 @@ var RandomTeamBuilder = {
 	},
 }
 
-// Algorithm testing
+// Algorithm testing (classic)
 //
 // incremental roll:
 // 20 players = 38k combinations = 0.5 seconds roll
@@ -1049,3 +1052,14 @@ var RandomTeamBuilder = {
 // 1k combinations limit = 0.7 seconds, 0 team with OF=0, 3 teams with OF < 10, 2 trash teams with OF>50
 // 500 combinations limit = 0.3 seconds, 0 team with OF=0, 2 teams with OF < 10, 3 trash teams with OF>50
 // 100 combinations limit = 0.1 seconds, 0 team with OF=0, 2 teams with OF < 10, 7 trash teams with OF>50
+//
+//
+// Role lock algorithm testing (v1 - random player pick, iterate all class combinations)
+//
+// overall performance test, 200 players, max 33 teams rolled. Firefox 72 64bit, Ryzen 1600
+// 5k combinations limit = 10 seconds, 31 teams created, 0 team with OF=0, 14 teams with OF < 10, 4 trash teams with OF>50
+// 10k combinations limit = 16 seconds, 31 teams created, 0 team with OF=0, 20 teams with OF < 10, 3 trash teams with OF>50
+// 50k combinations limit = 66 seconds, 31 teams created, 0 team with OF=0, 21 teams with OF < 10, 4 trash teams with OF>50
+// 100k combinations limit = 111 seconds, 31 teams created, 0 team with OF=0, 23 teams with OF < 10, 4 trash teams with OF>50
+// 200k combinations limit = 200 seconds, 31 teams created, 0 team with OF=0, 21 teams with OF < 10, 4 trash teams with OF>50
+
