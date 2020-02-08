@@ -417,7 +417,7 @@ function import_lobby( format, import_str ) {
 				}
 				
 				// @todo create google form template for import
-				// split string to fields (btag, twitch name, tank SR, DPS SR, support SR, main class, secondary class, third class)
+				// split string to fields (btag, twitch name, main class, secondary class, third class, tank SR, DPS SR, support SR )
 				var separator_regex = /[ \t.,;|]/;
 				if (format == "csv-tab") {
 					separator_regex = /\t/;
@@ -467,23 +467,7 @@ function import_lobby( format, import_str ) {
 				new_player.order = order_base;
 				order_base++;
 				
-				// additional fields
-				if ( field_index < fields.length ) {
-					for ( var class_index in class_names ) {
-						var class_sr_text = Number( fields[field_index] );
-						var class_sr = Number(class_sr_text);
-						if ( Number.isNaN(class_sr) ) {
-							throw new Error("Incorrect SR number "+class_sr_text);
-						}
-						if ( class_sr < 0 || class_sr > 5000 ) {
-							throw new Error("Incorrect SR value "+class_sr);
-						}
-						
-						new_player.sr_by_class[ class_names[class_index] ] = class_sr;
-						field_index++;
-					}
-					new_player.last_updated = new Date;
-				}
+				// additional fields: classes
 				if ( field_index < fields.length ) {
 					var last_class_field_index = Math.min(fields.length, field_index+class_names.length);
 					for ( var c = field_index; c < last_class_field_index; c++ ) {
@@ -523,6 +507,25 @@ function import_lobby( format, import_str ) {
 					}
 				}
 				
+				// additional fields: sr per role
+				if ( field_index < fields.length ) {
+					for ( var class_index in class_names ) {
+						var class_sr_text = Number( fields[field_index] );
+						var class_sr = Number(class_sr_text);
+						if ( Number.isNaN(class_sr) ) {
+							throw new Error("Incorrect SR number "+class_sr_text);
+						}
+						if ( class_sr < 0 || class_sr > 5000 ) {
+							throw new Error("Incorrect SR value "+class_sr);
+						}
+						
+						new_player.sr_by_class[ class_names[class_index] ] = class_sr;
+						field_index++;
+					}
+					new_player.last_updated = new Date;
+				}
+				
+				
 				// check twitch duplicates
 				if ( new_player.twitch_name != "" ) {
 					if (find_player_by_twitch_name(new_player.twitch_name, added_players) !== undefined ) {
@@ -530,9 +533,9 @@ function import_lobby( format, import_str ) {
 					}
 				}
 				
-				if ( new_player.sr == 0 ) {
+				/*if ( new_player.sr == 0 ) {
 					players_for_update.push( new_player );
-				}
+				}*/
 				added_players.push( new_player );
 			}
 		} 
