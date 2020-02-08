@@ -496,16 +496,22 @@ function import_lobby( format, import_str ) {
 							case "off tank":
 							case "maintank":
 							case "main tank":
+							case "танк":
 								class_name = "tank";
 								break;
 							case "dps":
 							case "damage":
 							case "dd":
+							case "дд":
+							case "дпс":
+							case "урон":
 								class_name = "dps";
 								break;
 							case "support":
 							case "sup":
 							case "healer":
+							case "сапорт":
+							case "поддержка":
 								class_name = "support";
 								break;
 						}
