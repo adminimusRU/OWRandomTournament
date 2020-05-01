@@ -5,15 +5,15 @@ var class_names = [
 ];
 
 var hero_classes = {
-	orisa:			"maintank",
-	reinhardt:		"maintank",
-	winston:		"maintank",
-	wrecking_ball:	"maintank",
+	orisa:			"tank",
+	reinhardt:		"tank",
+	winston:		"tank",
+	wrecking_ball:	"tank",
 	
-	dva:			"offtank",
-	roadhog:		"offtank",
-	zarya:			"offtank",
-	sigma:			"offtank",
+	dva:			"tank",
+	roadhog:		"tank",
+	zarya:			"tank",
+	sigma:			"tank",
 	
 	ashe:			"dps",
 	bastion:		"dps",
@@ -31,6 +31,7 @@ var hero_classes = {
 	torbjorn:		"dps",
 	tracer:			"dps",	
 	widowmaker:		"dps",
+	echo:			"dps",
 	
 	ana:			"support",
 	baptiste:		"support",
